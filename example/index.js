@@ -1,6 +1,9 @@
 import * as opaque from "opaque";
 window.opaque = opaque;
-opaque.greet();
+// opaque.greet();
+
+const clientStart = opaque.clientRegisterStart("password");
+console.log(clientStart);
 
 // client side
 // let client = new opaque.ClientRegistration();

@@ -49,7 +49,9 @@ fn account_registration(
     password: &String,
 ) -> Vec<u8> {
     let mut client_rng = OsRng;
+    let mut client_rng2 = OsRng;
 
+    console_log!("ACCOUNT REGISTRATION");
     console_log!("{:?}", client_rng);
 
     let client_registration_start_result =
@@ -57,6 +59,9 @@ fn account_registration(
             .unwrap();
 
     console_log!("{:?}", client_rng);
+
+    let clientSerializedState = client_registration_start_result.state.serialize();
+    console_log!("STATE {:?}", clientSerializedState);
 
     let registration_request_bytes = client_registration_start_result.message.serialize();
 
@@ -71,11 +76,10 @@ fn account_registration(
     let registration_response_bytes = server_registration_start_result.message.serialize();
 
     // Server sends registration_response_bytes to client
-
     let client_finish_registration_result = client_registration_start_result
         .state
         .finish(
-            &mut client_rng,
+            &mut client_rng2,
             password.as_bytes(),
             RegistrationResponse::deserialize(&registration_response_bytes).unwrap(),
             ClientRegistrationFinishParameters::default(),
@@ -117,6 +121,7 @@ fn account_login(
     )
     .unwrap();
     let credential_response_bytes = server_login_start_result.message.serialize();
+    let serverSerializedState = server_login_start_result.state.serialize();
 
     // Server sends credential_response_bytes to client
 
@@ -154,14 +159,22 @@ pub fn greet() {
 
     let password_file_bytes = account_registration(&server_setup, &user, &pass);
 
-    let login_result = account_login(
-        &server_setup,
-        &user,
-        &String::from("password2"),
-        &password_file_bytes,
-    );
+    let login_result = account_login(&server_setup, &user, &pass, &password_file_bytes);
 
     console_log!("Hello {:?}!", login_result);
 
     // alert("Hello, opaque im here!");
+}
+
+#[wasm_bindgen]
+pub fn clientRegisterStart(password: String) -> Vec<u8> {
+    let mut client_rng = OsRng;
+
+    let client_registration_start_result =
+        ClientRegistration::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes())
+            .unwrap();
+
+    // let client_serialized_state = client_registration_start_result.state.serialize();
+    let registration_request_bytes = client_registration_start_result.message.serialize();
+    return registration_request_bytes.to_vec();
 }
