@@ -9,6 +9,8 @@ use opaque_ke::{
     CredentialResponse, RegistrationRequest, RegistrationResponse, RegistrationUpload, ServerLogin,
     ServerLoginStartParameters, ServerRegistration, ServerRegistrationLen, ServerSetup,
 };
+
+use rand::RngCore;
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -47,9 +49,15 @@ fn account_registration(
     password: &String,
 ) -> Vec<u8> {
     let mut client_rng = OsRng;
+
+    console_log!("{:?}", client_rng);
+
     let client_registration_start_result =
         ClientRegistration::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes())
             .unwrap();
+
+    console_log!("{:?}", client_rng);
+
     let registration_request_bytes = client_registration_start_result.message.serialize();
 
     // Client sends registration_request_bytes to server
@@ -138,6 +146,7 @@ fn account_login(
 #[wasm_bindgen]
 pub fn greet() {
     let mut rng = OsRng;
+
     let server_setup = ServerSetup::<DefaultCipherSuite>::new(&mut rng);
 
     let user = String::from("user");
@@ -153,5 +162,6 @@ pub fn greet() {
     );
 
     console_log!("Hello {:?}!", login_result);
+
     // alert("Hello, opaque im here!");
 }
