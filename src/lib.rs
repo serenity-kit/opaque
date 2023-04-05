@@ -54,52 +54,82 @@ fn b64_decode(data: String) -> Vec<u8> {
 }
 
 #[wasm_bindgen]
-#[allow(non_snake_case)]
-pub fn serverLoginStart(
-    username: String,
-    password_file: String,
-    credential_request: String,
-) -> ServerLoginStart {
-    let password_file_bytes = b64_decode(password_file);
-    let credential_request_bytes = b64_decode(credential_request);
-    let mut rng: OsRng = OsRng;
-    let server_setup = ServerSetup::<DefaultCipherSuite>::new(&mut rng);
-    let password_file =
-        ServerRegistration::<DefaultCipherSuite>::deserialize(&password_file_bytes).unwrap();
+pub struct Server {
+    setup: ServerSetup<DefaultCipherSuite>,
+}
 
-    let server_login_start_result = ServerLogin::start(
-        &mut rng,
-        &server_setup,
-        Some(password_file),
-        CredentialRequest::deserialize(&credential_request_bytes).unwrap(),
-        username.as_bytes(),
-        ServerLoginStartParameters::default(),
-    )
-    .unwrap();
+#[wasm_bindgen]
+impl Server {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Server {
+        let mut rng: OsRng = OsRng;
+        Server {
+            setup: ServerSetup::<DefaultCipherSuite>::new(&mut rng),
+        }
+    }
 
-    ServerLoginStart {
-        start_result: server_login_start_result,
+    #[allow(non_snake_case)]
+    pub fn startLogin(
+        &self,
+        username: String,
+        password_file: String,
+        credential_request: String,
+    ) -> ServerLoginStart {
+        let password_file_bytes = b64_decode(password_file);
+        let credential_request_bytes = b64_decode(credential_request);
+        let mut rng: OsRng = OsRng;
+        let password_file =
+            ServerRegistration::<DefaultCipherSuite>::deserialize(&password_file_bytes).unwrap();
+
+        let server_login_start_result = ServerLogin::start(
+            &mut rng,
+            &self.setup,
+            Some(password_file),
+            CredentialRequest::deserialize(&credential_request_bytes).unwrap(),
+            username.as_bytes(),
+            ServerLoginStartParameters::default(),
+        )
+        .unwrap();
+
+        ServerLoginStart {
+            // start_result: server_login_start_result,
+            state: server_login_start_result.state,
+            credentialResponse: b64_encode(server_login_start_result.message.serialize().to_vec()),
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn startRegistration(&self, username: String, registration_request: String) -> String {
+        let registration_request_bytes = b64_decode(registration_request);
+        let server_registration_start_result = ServerRegistration::<DefaultCipherSuite>::start(
+            &self.setup,
+            RegistrationRequest::deserialize(&registration_request_bytes).unwrap(),
+            username.as_bytes(),
+        )
+        .unwrap();
+        let registration_response_bytes = server_registration_start_result.message.serialize();
+        return b64_encode(registration_response_bytes.to_vec());
     }
 }
 
 #[wasm_bindgen]
 pub struct ServerLoginStart {
-    start_result: ServerLoginStartResult<DefaultCipherSuite>,
+    state: ServerLogin<DefaultCipherSuite>,
+    credentialResponse: String,
 }
 
 #[wasm_bindgen]
 impl ServerLoginStart {
     #[allow(non_snake_case)]
     pub fn getCredentialResponse(&self) -> String {
-        return b64_encode(self.start_result.message.serialize().to_vec());
+        return self.credentialResponse.clone();
     }
 
     pub fn finish(&self, credential_finalization: String) -> String {
         let credential_finalization_bytes = b64_decode(credential_finalization);
         let server_login_finish_result = self
-            .start_result
-            .clone()
             .state
+            .clone()
             .finish(CredentialFinalization::deserialize(&credential_finalization_bytes).unwrap())
             .unwrap();
         return b64_encode(server_login_finish_result.session_key.to_vec());
@@ -114,25 +144,31 @@ pub fn clientLoginStart(password: String) -> ClientLoginStart {
         ClientLogin::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes()).unwrap();
 
     return ClientLoginStart {
-        start_result: client_login_start_result,
+        state: client_login_start_result.state,
+        credentialRequest: b64_encode(client_login_start_result.message.serialize().to_vec()),
     };
 }
 
 #[wasm_bindgen]
 pub struct ClientLoginStart {
-    start_result: ClientLoginStartResult<DefaultCipherSuite>,
+    state: ClientLogin<DefaultCipherSuite>,
+    credentialRequest: String,
 }
 
 #[wasm_bindgen]
 impl ClientLoginStart {
     #[allow(non_snake_case)]
-    pub fn getMessage(&self) -> String {
-        return b64_encode(self.start_result.message.serialize().to_vec());
+    pub fn getCredentialRequest(&self) -> String {
+        return self.credentialRequest.clone();
     }
 
-    pub fn finish(&self, password: String, credential_response: String) -> Option<String> {
+    pub fn finish(
+        &self,
+        password: String,
+        credential_response: String,
+    ) -> Option<ClientLoginResult> {
         let credential_response_bytes = b64_decode(credential_response);
-        let result = self.start_result.clone().state.finish(
+        let result = self.state.clone().finish(
             password.as_bytes(),
             CredentialResponse::deserialize(&credential_response_bytes).unwrap(),
             ClientLoginFinishParameters::default(),
@@ -143,26 +179,31 @@ impl ClientLoginStart {
             return None;
         }
         let client_login_finish_result = result.unwrap();
-        return Some(b64_encode(
-            client_login_finish_result.message.serialize().to_vec(),
-        ));
+        let session_key = client_login_finish_result.session_key;
+        return Some(ClientLoginResult {
+            credentialFinalization: b64_encode(
+                client_login_finish_result.message.serialize().to_vec(),
+            ),
+            sessionKey: b64_encode(session_key.to_vec()),
+        });
     }
 }
 
 #[wasm_bindgen]
-#[allow(non_snake_case)]
-pub fn serverRegisterStart(username: String, registration_request: String) -> String {
-    let registration_request_bytes = b64_decode(registration_request);
-    let mut rng: OsRng = OsRng;
-    let server_setup = ServerSetup::<DefaultCipherSuite>::new(&mut rng);
-    let server_registration_start_result = ServerRegistration::<DefaultCipherSuite>::start(
-        &server_setup,
-        RegistrationRequest::deserialize(&registration_request_bytes).unwrap(),
-        username.as_bytes(),
-    )
-    .unwrap();
-    let registration_response_bytes = server_registration_start_result.message.serialize();
-    return b64_encode(registration_response_bytes.to_vec());
+pub struct ClientLoginResult {
+    credentialFinalization: String,
+    sessionKey: String,
+}
+
+#[wasm_bindgen]
+impl ClientLoginResult {
+    pub fn getCredentialFinalization(&self) -> String {
+        return self.credentialFinalization.clone();
+    }
+
+    pub fn getSessionKey(&self) -> String {
+        return self.sessionKey.clone();
+    }
 }
 
 #[wasm_bindgen]
@@ -185,30 +226,35 @@ pub fn clientRegisterStart(password: String) -> ClientRegisterStart {
             .unwrap();
 
     return ClientRegisterStart {
-        start_result: client_registration_start_result,
+        state: client_registration_start_result.state,
+        registrationRequest: b64_encode(
+            client_registration_start_result
+                .message
+                .serialize()
+                .to_vec(),
+        ),
     };
 }
 
 #[wasm_bindgen]
 pub struct ClientRegisterStart {
-    start_result: ClientRegistrationStartResult<DefaultCipherSuite>,
+    state: ClientRegistration<DefaultCipherSuite>,
+    registrationRequest: String,
 }
 
 #[wasm_bindgen]
 impl ClientRegisterStart {
     #[allow(non_snake_case)]
     pub fn getRegistrationRequest(&self) -> String {
-        let registration_request_bytes = self.start_result.message.serialize();
-        return b64_encode(registration_request_bytes.to_vec());
+        return self.registrationRequest.clone();
     }
 
     pub fn finish(&self, password: String, registration_response: String) -> String {
         let registration_response_bytes = b64_decode(registration_response);
         let mut rng: OsRng = OsRng;
         let client_finish_registration_result = self
-            .start_result
-            .clone()
             .state
+            .clone()
             .finish(
                 &mut rng,
                 password.as_bytes(),
