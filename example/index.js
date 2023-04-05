@@ -5,7 +5,7 @@ window.opaque = opaque;
 
 // on client; start registration request process
 const clientStart = opaque.clientRegisterStart("password");
-const registrationRequest = clientStart.getRegistrationRequestBytes();
+const registrationRequest = clientStart.getRegistrationRequest();
 console.log("registrationRequest", registrationRequest);
 
 // ... client sends registrationRequest to server ...

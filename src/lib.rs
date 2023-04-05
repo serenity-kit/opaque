@@ -11,6 +11,7 @@ use opaque_ke::{
     ServerRegistration, ServerSetup,
 };
 
+use base64::{engine::general_purpose as b64, Engine as _};
 use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -26,7 +27,6 @@ extern "C" {
     fn log(s: &str);
 }
 
-#[allow(dead_code)]
 struct DefaultCipherSuite;
 
 impl CipherSuite for DefaultCipherSuite {
@@ -37,71 +37,31 @@ impl CipherSuite for DefaultCipherSuite {
     type Ksf = Argon2<'static>;
 }
 
-macro_rules! console_log {
-    // Note that this is using the `log` function imported above during
-    // `bare_bones`
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+// macro_rules! console_log {
+//     // Note that this is using the `log` function imported above during
+//     // `bare_bones`
+//     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+// }
+
+fn b64_encode(data: Vec<u8>) -> String {
+    b64::STANDARD_NO_PAD.encode(data)
 }
 
-// fn account_login(
-//     server_setup: &ServerSetup<DefaultCipherSuite>,
-//     username: &String,
-//     password: &String,
-//     password_file_bytes: &[u8],
-// ) -> bool {
-//     let mut client_rng = OsRng;
-//     let client_login_start_result =
-//         ClientLogin::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes()).unwrap();
-//     let credential_request_bytes = client_login_start_result.message.serialize();
-
-//     // Client sends credential_request_bytes to server
-
-//     let password_file =
-//         ServerRegistration::<DefaultCipherSuite>::deserialize(password_file_bytes).unwrap();
-//     let mut server_rng = OsRng;
-//     let server_login_start_result = ServerLogin::start(
-//         &mut server_rng,
-//         server_setup,
-//         Some(password_file),
-//         CredentialRequest::deserialize(&credential_request_bytes).unwrap(),
-//         username.as_bytes(),
-//         ServerLoginStartParameters::default(),
-//     )
-//     .unwrap();
-//     let credential_response_bytes = server_login_start_result.message.serialize();
-
-//     // Server sends credential_response_bytes to client
-
-//     let result = client_login_start_result.state.finish(
-//         password.as_bytes(),
-//         CredentialResponse::deserialize(&credential_response_bytes).unwrap(),
-//         ClientLoginFinishParameters::default(),
-//     );
-
-//     if result.is_err() {
-//         // Client-detected login failure
-//         return false;
-//     }
-//     let client_login_finish_result = result.unwrap();
-//     let credential_finalization_bytes = client_login_finish_result.message.serialize();
-
-//     // Client sends credential_finalization_bytes to server
-
-//     let server_login_finish_result = server_login_start_result
-//         .state
-//         .finish(CredentialFinalization::deserialize(&credential_finalization_bytes).unwrap())
-//         .unwrap();
-
-//     client_login_finish_result.session_key == server_login_finish_result.session_key
-// }
+fn b64_decode(data: String) -> Vec<u8> {
+    b64::STANDARD_NO_PAD
+        .decode(data)
+        .expect("failed to decode as base64")
+}
 
 #[wasm_bindgen]
 #[allow(non_snake_case)]
 pub fn serverLoginStart(
     username: String,
-    password_file_bytes: Vec<u8>,
-    credential_request_bytes: Vec<u8>,
+    password_file: String,
+    credential_request: String,
 ) -> ServerLoginStart {
+    let password_file_bytes = b64_decode(password_file);
+    let credential_request_bytes = b64_decode(credential_request);
     let mut rng: OsRng = OsRng;
     let server_setup = ServerSetup::<DefaultCipherSuite>::new(&mut rng);
     let password_file =
@@ -130,18 +90,19 @@ pub struct ServerLoginStart {
 #[wasm_bindgen]
 impl ServerLoginStart {
     #[allow(non_snake_case)]
-    pub fn getCredentialResponseBytes(&self) -> Vec<u8> {
-        return self.start_result.message.serialize().to_vec();
+    pub fn getCredentialResponse(&self) -> String {
+        return b64_encode(self.start_result.message.serialize().to_vec());
     }
 
-    pub fn finish(&self, credential_finalization_bytes: Vec<u8>) -> Vec<u8> {
+    pub fn finish(&self, credential_finalization: String) -> String {
+        let credential_finalization_bytes = b64_decode(credential_finalization);
         let server_login_finish_result = self
             .start_result
             .clone()
             .state
             .finish(CredentialFinalization::deserialize(&credential_finalization_bytes).unwrap())
             .unwrap();
-        return server_login_finish_result.session_key.to_vec();
+        return b64_encode(server_login_finish_result.session_key.to_vec());
     }
 }
 
@@ -165,11 +126,12 @@ pub struct ClientLoginStart {
 #[wasm_bindgen]
 impl ClientLoginStart {
     #[allow(non_snake_case)]
-    pub fn getMessageBytes(&self) -> Vec<u8> {
-        return self.start_result.message.serialize().to_vec();
+    pub fn getMessage(&self) -> String {
+        return b64_encode(self.start_result.message.serialize().to_vec());
     }
 
-    pub fn finish(&self, password: String, credential_response_bytes: Vec<u8>) -> Option<Vec<u8>> {
+    pub fn finish(&self, password: String, credential_response: String) -> Option<String> {
+        let credential_response_bytes = b64_decode(credential_response);
         let result = self.start_result.clone().state.finish(
             password.as_bytes(),
             CredentialResponse::deserialize(&credential_response_bytes).unwrap(),
@@ -181,13 +143,16 @@ impl ClientLoginStart {
             return None;
         }
         let client_login_finish_result = result.unwrap();
-        return Some(client_login_finish_result.message.serialize().to_vec());
+        return Some(b64_encode(
+            client_login_finish_result.message.serialize().to_vec(),
+        ));
     }
 }
 
 #[wasm_bindgen]
 #[allow(non_snake_case)]
-pub fn serverRegisterStart(username: String, registration_request_bytes: Vec<u8>) -> Vec<u8> {
+pub fn serverRegisterStart(username: String, registration_request: String) -> String {
+    let registration_request_bytes = b64_decode(registration_request);
     let mut rng: OsRng = OsRng;
     let server_setup = ServerSetup::<DefaultCipherSuite>::new(&mut rng);
     let server_registration_start_result = ServerRegistration::<DefaultCipherSuite>::start(
@@ -197,16 +162,17 @@ pub fn serverRegisterStart(username: String, registration_request_bytes: Vec<u8>
     )
     .unwrap();
     let registration_response_bytes = server_registration_start_result.message.serialize();
-    return registration_response_bytes.to_vec();
+    return b64_encode(registration_response_bytes.to_vec());
 }
 
 #[wasm_bindgen]
 #[allow(non_snake_case)]
-pub fn serverRegisterFinish(message_bytes: Vec<u8>) -> Vec<u8> {
+pub fn serverRegisterFinish(message: String) -> String {
+    let message_bytes = b64_decode(message);
     let password_file = ServerRegistration::finish(
         RegistrationUpload::<DefaultCipherSuite>::deserialize(&message_bytes).unwrap(),
     );
-    password_file.serialize().to_vec()
+    b64_encode(password_file.serialize().to_vec())
 }
 
 #[wasm_bindgen]
@@ -231,12 +197,13 @@ pub struct ClientRegisterStart {
 #[wasm_bindgen]
 impl ClientRegisterStart {
     #[allow(non_snake_case)]
-    pub fn getRegistrationRequestBytes(&self) -> Vec<u8> {
+    pub fn getRegistrationRequest(&self) -> String {
         let registration_request_bytes = self.start_result.message.serialize();
-        return registration_request_bytes.to_vec();
+        return b64_encode(registration_request_bytes.to_vec());
     }
 
-    pub fn finish(&self, password: String, registration_response_bytes: Vec<u8>) -> Vec<u8> {
+    pub fn finish(&self, password: String, registration_response: String) -> String {
+        let registration_response_bytes = b64_decode(registration_response);
         let mut rng: OsRng = OsRng;
         let client_finish_registration_result = self
             .start_result
@@ -250,6 +217,6 @@ impl ClientRegisterStart {
             )
             .unwrap();
         let message_bytes = client_finish_registration_result.message.serialize();
-        return message_bytes.to_vec();
+        return b64_encode(message_bytes.to_vec());
     }
 }
