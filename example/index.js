@@ -1,29 +1,37 @@
 import * as opaque from "opaque";
 window.opaque = opaque;
-// opaque.greet();
 
+// -------------------- registration flow example --------------------
+
+// on client; start registration request process
 const clientStart = opaque.clientRegisterStart("password");
-console.log(clientStart);
+const registrationRequest = clientStart.getRegistrationRequestBytes();
+console.log("registrationRequest", registrationRequest);
 
-// client side
-// let client = new opaque.ClientRegistration();
-// const registrationMessage = client.start("password");
+// ... client sends registrationRequest to server ...
 
-// let response = await fetch("/register/start", {
-//   body: JSON.stringify({ registrationMessage }),
-// });
+// on server start registration process
+const registrationResponse = opaque.serverRegisterStart(
+  "foobar",
+  registrationRequest
+);
+console.log("registrationResponse", registrationResponse);
 
-// let registationResult = client.finish("password", response);
+// ... server sends registrationResponse to client ...
 
-// let response2 = await fetch("/register/finish", {
-//   body: JSON.stringify({ registrationResult }),
-// });
+// on client finish registration with server registrationResponse to obtain registrationMessage
+const registrationMessage = clientStart.finish(
+  "password",
+  registrationResponse
+);
+console.log("registrationMessage", registrationMessage);
 
-// // server side
-// let server = new opaque.ServerRegistration({ privateKey: "..." });
-// function handlePost(payload) {
-//   server.start({
-//     userName: payload.userName,
-//     message: payload.message,
-//   });
-// }
+// ... client sends registrationMessage to server ...
+
+// on server finish with registrationMessage to obtain passwordFile credentials
+const passwordFile = opaque.serverRegisterFinish(registrationMessage);
+console.log("passwordFile", passwordFile);
+
+// -------------------- login flow example --------------------
+
+// TODO
