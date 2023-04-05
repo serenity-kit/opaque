@@ -4,11 +4,10 @@ use argon2::Argon2;
 use opaque_ke::ciphersuite::CipherSuite;
 use opaque_ke::rand::rngs::OsRng;
 use opaque_ke::{
-    ClientLogin, ClientLoginFinishParameters, ClientLoginStartResult, ClientRegistration,
-    ClientRegistrationFinishParameters, ClientRegistrationStartResult, CredentialFinalization,
-    CredentialRequest, CredentialResponse, RegistrationRequest, RegistrationResponse,
-    RegistrationUpload, ServerLogin, ServerLoginStartParameters, ServerLoginStartResult,
-    ServerRegistration, ServerSetup,
+    ClientLogin, ClientLoginFinishParameters, ClientRegistration,
+    ClientRegistrationFinishParameters, CredentialFinalization, CredentialRequest,
+    CredentialResponse, RegistrationRequest, RegistrationResponse, RegistrationUpload, ServerLogin,
+    ServerLoginStartParameters, ServerRegistration, ServerSetup,
 };
 
 use base64::{engine::general_purpose as b64, Engine as _};
@@ -20,12 +19,18 @@ use wasm_bindgen::prelude::*;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
+// #[wasm_bindgen]
+// extern "C" {
+//     fn alert(s: &str);
+//     #[wasm_bindgen(js_namespace = console)]
+//     fn log(s: &str);
+// }
+
+// macro_rules! console_log {
+//     // Note that this is using the `log` function imported above during
+//     // `bare_bones`
+//     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+// }
 
 struct DefaultCipherSuite;
 
@@ -36,12 +41,6 @@ impl CipherSuite for DefaultCipherSuite {
 
     type Ksf = Argon2<'static>;
 }
-
-// macro_rules! console_log {
-//     // Note that this is using the `log` function imported above during
-//     // `bare_bones`
-//     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-// }
 
 fn b64_encode(data: Vec<u8>) -> String {
     b64::STANDARD_NO_PAD.encode(data)
@@ -92,7 +91,6 @@ impl Server {
         .unwrap();
 
         ServerLoginStart {
-            // start_result: server_login_start_result,
             state: server_login_start_result.state,
             credentialResponse: b64_encode(server_login_start_result.message.serialize().to_vec()),
         }
@@ -113,6 +111,7 @@ impl Server {
 }
 
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 pub struct ServerLoginStart {
     state: ServerLogin<DefaultCipherSuite>,
     credentialResponse: String,
@@ -150,6 +149,7 @@ pub fn clientLoginStart(password: String) -> ClientLoginStart {
 }
 
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 pub struct ClientLoginStart {
     state: ClientLogin<DefaultCipherSuite>,
     credentialRequest: String,
@@ -190,12 +190,14 @@ impl ClientLoginStart {
 }
 
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 pub struct ClientLoginResult {
     credentialFinalization: String,
     sessionKey: String,
 }
 
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 impl ClientLoginResult {
     pub fn getCredentialFinalization(&self) -> String {
         return self.credentialFinalization.clone();
@@ -237,6 +239,7 @@ pub fn clientRegisterStart(password: String) -> ClientRegisterStart {
 }
 
 #[wasm_bindgen]
+#[allow(non_snake_case)]
 pub struct ClientRegisterStart {
     state: ClientRegistration<DefaultCipherSuite>,
     registrationRequest: String,
