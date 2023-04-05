@@ -1,11 +1,64 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Hello wasm-pack!</title>
+    <style>
+      .container {
+        display: flex;
+        gap: 8px;
+      }
+      #side {
+        width: 200px;
+        flex-shrink: 0;
+      }
+      #users {
+        border: 1px solid #ccc;
+        min-height: 100px;
+      }
+      #form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+    </style>
   </head>
   <body>
-    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <div class="container">
+      <form id="form" onsubmit="handleSubmit()">
+        <div>Login/Register</div>
+        <div>
+          <input
+            name="username"
+            placeholder="Username"
+            type="text"
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <input
+            name="password"
+            placeholder="Password"
+            type="password"
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <button name="login">Login</button>
+          <button name="register">Register</button>
+        </div>
+      </form>
+      <div id="side">
+        <div>Registered Users:</div>
+        <div id="users"></div>
+      </div>
+    </div>
+
+    <noscript
+      >This page contains webassembly and javascript content, please enable
+      javascript in your browser.</noscript
+    >
     <script src="./bootstrap.js"></script>
   </body>
 </html>

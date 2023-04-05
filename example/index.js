@@ -81,9 +81,37 @@ function accountLogin(username, password, passwordFile) {
   return serverSessionKey === clientSessionKey;
 }
 
-console.log("-------------------- register --------------------");
-let passwordFile = accountRegistration("user", "password");
+const registeredUsers = {};
 
-console.log("-------------------- login --------------------");
-const success = accountLogin("user", "password", passwordFile);
-console.log("login success", success);
+window.handleSubmit = function handleSubmit() {
+  event.preventDefault();
+
+  const username = event.target.username.value;
+  const password = event.target.password.value;
+  const action = event.submitter.name;
+
+  if (action === "login") {
+    const passwordFile = registeredUsers[username];
+    if (passwordFile == null) {
+      alert(`User "${username}" is not registered`);
+      return;
+    }
+    const ok = accountLogin(username, password, passwordFile);
+    if (ok) {
+      alert(`User "${username}" logged in successfully`);
+    } else {
+      alert(`User "${username}" login failed`);
+    }
+  } else if (action === "register") {
+    if (registeredUsers[username] != null) {
+      alert(`User "${username}" is already registered`);
+      return;
+    }
+    const passwordFile = accountRegistration(username, password);
+    registeredUsers[username] = passwordFile;
+
+    const elem = document.createElement("div");
+    elem.appendChild(document.createTextNode(username));
+    window.users.appendChild(elem);
+  }
+};
