@@ -3,7 +3,7 @@
 const { spawn } = require("child_process");
 const fs = require("fs");
 
-let folderName = '.';
+let folderName = ".";
 
 if (process.argv.length >= 3) {
   folderName = process.argv[2];
@@ -12,11 +12,15 @@ if (process.argv.length >= 3) {
   }
 }
 
-const clone = spawn("git", ["clone", "https://github.com/rustwasm/create-wasm-app.git", folderName]);
+const clone = spawn("git", [
+  "clone",
+  "https://github.com/rustwasm/create-wasm-app.git",
+  folderName,
+]);
 
-clone.on("close", code => {
+clone.on("close", (code) => {
   if (code !== 0) {
-    console.error("cloning the template failed!")
+    console.error("cloning the template failed!");
     process.exit(code);
   } else {
     console.log("🦀 Rust + 🕸 Wasm = ❤");
