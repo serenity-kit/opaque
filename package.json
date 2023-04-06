@@ -1,0 +1,9 @@
+{
+  "name": "opaque",
+  "version": "0.0.0",
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^2.8.7"
+  }
+}
