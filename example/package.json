@@ -7,7 +7,7 @@
     "start": "webpack-dev-server"
   },
   "dependencies": {
-    "opaque": "file:../pkg"
+    "opaque": "file:../dist/bundler"
   },
   "devDependencies": {
     "hello-wasm-pack": "^0.1.0",
