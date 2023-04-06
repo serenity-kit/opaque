@@ -43,11 +43,11 @@ impl CipherSuite for DefaultCipherSuite {
 }
 
 fn b64_encode(data: Vec<u8>) -> String {
-    b64::STANDARD_NO_PAD.encode(data)
+    b64::URL_SAFE_NO_PAD.encode(data)
 }
 
 fn b64_decode(data: String) -> Vec<u8> {
-    b64::STANDARD_NO_PAD
+    b64::URL_SAFE_NO_PAD
         .decode(data)
         .expect("failed to decode as base64")
 }
