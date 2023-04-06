@@ -1,0 +1,28 @@
+name: Lint and format
+
+on: [push]
+
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+      - name: Install dependencies
+        run: pnpm install
+      - name: prettier-check
+        run: npx prettier --check .
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install rustup
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+          sh rustup-init.sh -y --default-toolchain none
+      - name: install rustfmt
+        run: rustup component add rustfmt
+      - name: rustfmt
+        run: cargo fmt --all -- --check
