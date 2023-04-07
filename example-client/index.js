@@ -44,6 +44,9 @@ async function login(username, password) {
   }).then((res) => res.json());
 
   const loginResult = loginStart.finish(password, credentialResponse);
+  if (!loginResult) {
+    return null;
+  }
   const credentialFinalization = loginResult.getCredentialFinalization();
   const res = await request("POST", "/login/finish", {
     username,
