@@ -42,15 +42,7 @@ impl CipherSuite for DefaultCipherSuite {
     type Ksf = Argon2<'static>;
 }
 
-fn b64_encode(data: Vec<u8>) -> String {
-    b64::URL_SAFE_NO_PAD.encode(data)
-}
-
-fn b64_decode(data: String) -> Vec<u8> {
-    b64::URL_SAFE_NO_PAD
-        .decode(data)
-        .expect("failed to decode as base64")
-}
+const BASE64: b64::GeneralPurpose = b64::URL_SAFE_NO_PAD;
 
 #[wasm_bindgen]
 pub struct Server {
@@ -74,8 +66,8 @@ impl Server {
         password_file: String,
         credential_request: String,
     ) -> ServerLoginStart {
-        let password_file_bytes = b64_decode(password_file);
-        let credential_request_bytes = b64_decode(credential_request);
+        let password_file_bytes = BASE64.decode(password_file).unwrap();
+        let credential_request_bytes = BASE64.decode(credential_request).unwrap();
         let mut rng: OsRng = OsRng;
         let password_file =
             ServerRegistration::<DefaultCipherSuite>::deserialize(&password_file_bytes).unwrap();
@@ -92,13 +84,14 @@ impl Server {
 
         ServerLoginStart {
             state: server_login_start_result.state,
-            credentialResponse: b64_encode(server_login_start_result.message.serialize().to_vec()),
+            credentialResponse: BASE64
+                .encode(server_login_start_result.message.serialize().to_vec()),
         }
     }
 
     #[allow(non_snake_case)]
     pub fn startRegistration(&self, username: String, registration_request: String) -> String {
-        let registration_request_bytes = b64_decode(registration_request);
+        let registration_request_bytes = BASE64.decode(registration_request).unwrap();
         let server_registration_start_result = ServerRegistration::<DefaultCipherSuite>::start(
             &self.setup,
             RegistrationRequest::deserialize(&registration_request_bytes).unwrap(),
@@ -106,7 +99,7 @@ impl Server {
         )
         .unwrap();
         let registration_response_bytes = server_registration_start_result.message.serialize();
-        return b64_encode(registration_response_bytes.to_vec());
+        return BASE64.encode(registration_response_bytes.to_vec());
     }
 }
 
@@ -125,13 +118,13 @@ impl ServerLoginStart {
     }
 
     pub fn finish(&self, credential_finalization: String) -> String {
-        let credential_finalization_bytes = b64_decode(credential_finalization);
+        let credential_finalization_bytes = BASE64.decode(credential_finalization).unwrap();
         let server_login_finish_result = self
             .state
             .clone()
             .finish(CredentialFinalization::deserialize(&credential_finalization_bytes).unwrap())
             .unwrap();
-        return b64_encode(server_login_finish_result.session_key.to_vec());
+        return BASE64.encode(server_login_finish_result.session_key.to_vec());
     }
 }
 
@@ -144,7 +137,7 @@ pub fn clientLoginStart(password: String) -> ClientLoginStart {
 
     return ClientLoginStart {
         state: client_login_start_result.state,
-        credentialRequest: b64_encode(client_login_start_result.message.serialize().to_vec()),
+        credentialRequest: BASE64.encode(client_login_start_result.message.serialize().to_vec()),
     };
 }
 
@@ -167,7 +160,7 @@ impl ClientLoginStart {
         password: String,
         credential_response: String,
     ) -> Option<ClientLoginResult> {
-        let credential_response_bytes = b64_decode(credential_response);
+        let credential_response_bytes = BASE64.decode(credential_response).unwrap();
         let result = self.state.clone().finish(
             password.as_bytes(),
             CredentialResponse::deserialize(&credential_response_bytes).unwrap(),
@@ -181,10 +174,9 @@ impl ClientLoginStart {
         let client_login_finish_result = result.unwrap();
         let session_key = client_login_finish_result.session_key;
         return Some(ClientLoginResult {
-            credentialFinalization: b64_encode(
-                client_login_finish_result.message.serialize().to_vec(),
-            ),
-            sessionKey: b64_encode(session_key.to_vec()),
+            credentialFinalization: BASE64
+                .encode(client_login_finish_result.message.serialize().to_vec()),
+            sessionKey: BASE64.encode(session_key.to_vec()),
         });
     }
 }
@@ -211,11 +203,11 @@ impl ClientLoginResult {
 #[wasm_bindgen]
 #[allow(non_snake_case)]
 pub fn serverRegisterFinish(message: String) -> String {
-    let message_bytes = b64_decode(message);
+    let message_bytes = BASE64.decode(message).unwrap();
     let password_file = ServerRegistration::finish(
         RegistrationUpload::<DefaultCipherSuite>::deserialize(&message_bytes).unwrap(),
     );
-    b64_encode(password_file.serialize().to_vec())
+    BASE64.encode(password_file.serialize().to_vec())
 }
 
 #[wasm_bindgen]
@@ -229,7 +221,7 @@ pub fn clientRegisterStart(password: String) -> ClientRegisterStart {
 
     return ClientRegisterStart {
         state: client_registration_start_result.state,
-        registrationRequest: b64_encode(
+        registrationRequest: BASE64.encode(
             client_registration_start_result
                 .message
                 .serialize()
@@ -253,7 +245,7 @@ impl ClientRegisterStart {
     }
 
     pub fn finish(&self, password: String, registration_response: String) -> String {
-        let registration_response_bytes = b64_decode(registration_response);
+        let registration_response_bytes = BASE64.decode(registration_response).unwrap();
         let mut rng: OsRng = OsRng;
         let client_finish_registration_result = self
             .state
@@ -266,6 +258,6 @@ impl ClientRegisterStart {
             )
             .unwrap();
         let message_bytes = client_finish_registration_result.message.serialize();
-        return b64_encode(message_bytes.to_vec());
+        return BASE64.encode(message_bytes.to_vec());
     }
 }
