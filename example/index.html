@@ -3,57 +3,44 @@
   <head>
     <meta charset="utf-8" />
     <title>Hello wasm-pack!</title>
-    <style>
-      .container {
-        display: flex;
-        gap: 8px;
-      }
-      #side {
-        width: 200px;
-        flex-shrink: 0;
-      }
-      #users {
-        border: 1px solid #ccc;
-        min-height: 100px;
-      }
-      #form {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
-    <div class="container">
-      <form id="form" onsubmit="handleSubmit()">
-        <div>Login/Register</div>
+    <form id="form" class="p-12 space-y-4 max-w-xl" onsubmit="handleSubmit()">
+      <h1 class="text-xl font-semibold">Login/Register</h1>
+      <div class="space-y-2 flex flex-col">
+        <input
+          class="border border-slate-300 p-1"
+          name="username"
+          placeholder="Username"
+          type="text"
+          autocomplete="off"
+        />
+
+        <input
+          class="border border-slate-300 p-1"
+          name="password"
+          placeholder="Password"
+          type="password"
+          autocomplete="off"
+        />
+
         <div>
-          <input
-            name="username"
-            placeholder="Username"
-            type="text"
-            autocomplete="off"
-          />
+          <button
+            name="login"
+            class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+          >
+            Login
+          </button>
+          <button
+            name="register"
+            class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+          >
+            Register
+          </button>
         </div>
-        <div>
-          <input
-            name="password"
-            placeholder="Password"
-            type="password"
-            autocomplete="off"
-          />
-        </div>
-        <div>
-          <button name="login">Login</button>
-          <button name="register">Register</button>
-        </div>
-      </form>
-      <div id="side">
-        <div>Registered Users:</div>
-        <div id="users"></div>
       </div>
-    </div>
+    </form>
 
     <noscript
       >This page contains webassembly and javascript content, please enable

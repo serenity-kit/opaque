@@ -1,117 +1,84 @@
 import * as opaque from "opaque";
-window.opaque = opaque;
 
-const server = new opaque.Server();
-// console.log(server);
+const host = "http://localhost:8089";
 
-// -------------------- registration flow example --------------------
-
-function accountRegistration(username, password) {
-  // on client; start registration request process
-  const clientRegistration = opaque.clientRegisterStart(password);
-  const registrationRequest = clientRegistration.getRegistrationRequest();
-  console.log("registrationRequest", registrationRequest);
-
-  // ... client sends registrationRequest to server ...
-
-  // on server start registration process
-  const registrationResponse = server.startRegistration(
-    username,
-    registrationRequest
-  );
-  console.log("registrationResponse", registrationResponse);
-
-  // ... server sends registrationResponse to client ...
-
-  // on client finish registration with server registrationResponse to obtain registrationMessage
-  const registrationMessage = clientRegistration.finish(
-    password,
-    registrationResponse
-  );
-  console.log("registrationMessage", registrationMessage);
-
-  // ... client sends registrationMessage to server ...
-
-  // on server finish with registrationMessage to obtain passwordFile credentials
-  const passwordFile = opaque.serverRegisterFinish(registrationMessage);
-  console.log("passwordFile", passwordFile);
-
-  return passwordFile;
-}
-
-// -------------------- login flow example --------------------
-
-function accountLogin(username, password, passwordFile) {
-  // on client; start login process
-  const clientLogin = opaque.clientLoginStart(password);
-  const credentialRequest = clientLogin.getCredentialRequest();
-  console.log("credentialRequest", credentialRequest);
-
-  // ... client sends credential request to server ...
-
-  // on server; start login process with credentialRequest from client
-  const serverLogin = server.startLogin(
-    username,
-    passwordFile,
-    credentialRequest
-  );
-  const credentialResponse = serverLogin.getCredentialResponse();
-  console.log("credentialResponse", credentialResponse);
-
-  // ... server sends credentialResponse to client ...
-
-  // on client; finish login with credentialResponse
-  const loginResult = clientLogin.finish(password, credentialResponse);
-
-  if (!loginResult) {
-    // client detected login failure
-    return false;
+async function request(method, path, body = undefined) {
+  console.log(`${method} ${host}${path}`, body);
+  const res = await fetch(`${host}${path}`, {
+    method,
+    body: body && JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const { error } = await res.json();
+    console.log(error);
+    throw new Error(error);
   }
-
-  const credentialFinalization = loginResult.getCredentialFinalization();
-  const clientSessionKey = loginResult.getSessionKey();
-  console.log("loginResult", { credentialFinalization, clientSessionKey });
-
-  // ... client sends credentialFinalization to server ...
-
-  // on server; finish login
-  const serverSessionKey = serverLogin.finish(credentialFinalization);
-
-  console.log("serverSessionKey", serverSessionKey);
-  return serverSessionKey === clientSessionKey;
+  return res;
 }
 
-const registeredUsers = {};
+async function register(username, password) {
+  const regStart = opaque.clientRegisterStart(password);
+  const registrationRequest = regStart.getRegistrationRequest();
+  const { registrationResponse } = await request("POST", `/register/start`, {
+    username,
+    registrationRequest,
+  }).then((res) => res.json());
 
-window.handleSubmit = function handleSubmit() {
+  console.log("registrationResponse", registrationResponse);
+  const registrationMessage = regStart.finish(password, registrationResponse);
+  const res = await request("POST", `/register/finish`, {
+    username,
+    registrationMessage,
+  });
+  console.log("finish successful", res.ok);
+  return res.ok;
+}
+
+async function login(username, password) {
+  const loginStart = opaque.clientLoginStart(password);
+  const credentialRequest = loginStart.getCredentialRequest();
+  const { credentialResponse } = await request("POST", "/login/start", {
+    username,
+    credentialRequest,
+  }).then((res) => res.json());
+
+  const loginResult = loginStart.finish(password, credentialResponse);
+  const credentialFinalization = loginResult.getCredentialFinalization();
+  const res = await request("POST", "/login/finish", {
+    username,
+    credentialFinalization,
+  });
+  const sessionKey = loginResult.getSessionKey();
+  return res.ok ? sessionKey : null;
+}
+
+window.handleSubmit = async function handleSubmit() {
   event.preventDefault();
 
   const username = event.target.username.value;
   const password = event.target.password.value;
   const action = event.submitter.name;
 
-  if (action === "login") {
-    const passwordFile = registeredUsers[username];
-    if (passwordFile == null) {
-      alert(`User "${username}" is not registered`);
-      return;
+  try {
+    if (action === "login") {
+      const sessionKey = await login(username, password);
+      if (sessionKey) {
+        alert(
+          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
+        );
+      } else {
+        alert(`User "${username}" login failed`);
+      }
+    } else if (action === "register") {
+      const ok = await register(username, password);
+      if (ok) {
+        alert(`User "${username}" registered successfully`);
+      } else {
+        alert(`Failed to register user "${username}"`);
+      }
     }
-    const ok = accountLogin(username, password, passwordFile);
-    if (ok) {
-      alert(`User "${username}" logged in successfully`);
-    } else {
-      alert(`User "${username}" login failed`);
-    }
-  } else if (action === "register") {
-    if (registeredUsers[username] != null) {
-      alert(`User "${username}" is already registered`);
-      return;
-    }
-    const passwordFile = accountRegistration(username, password);
-    registeredUsers[username] = passwordFile;
-
-    const elem = document.createElement("div");
-    elem.appendChild(document.createTextNode(username));
-    window.users.appendChild(elem);
+  } catch (err) {
+    alert(err);
   }
 };
