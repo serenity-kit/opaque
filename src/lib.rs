@@ -59,6 +59,19 @@ impl Server {
         }
     }
 
+    pub fn serialize(&self) -> String {
+        return BASE64.encode(self.setup.serialize());
+    }
+
+    pub fn deserialize(encoded_bytes: String) -> Self {
+        return Server {
+            setup: ServerSetup::<DefaultCipherSuite>::deserialize(
+                &BASE64.decode(encoded_bytes).unwrap(),
+            )
+            .unwrap(),
+        };
+    }
+
     #[allow(non_snake_case)]
     pub fn startLogin(
         &self,
