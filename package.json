@@ -7,7 +7,7 @@
     "prettier": "^2.8.7"
   },
   "scripts": {
-    "build": "wasm-pack build",
+    "build": "./build.sh",
     "example:dev": "cd example && pnpm dev"
   }
 }
