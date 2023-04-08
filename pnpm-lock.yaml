@@ -11,12 +11,12 @@ importers:
   example:
     specifiers:
       copy-webpack-plugin: ^11.0.0
-      opaque: file:../pkg
+      opaque: workspace:*
       webpack: ^5.77.0
       webpack-cli: ^5.0.1
       webpack-dev-server: ^4.13.2
     dependencies:
-      opaque: file:pkg
+      opaque: link:../pkg
     devDependencies:
       copy-webpack-plugin: 11.0.0_webpack@5.78.0
       webpack: 5.78.0_webpack-cli@5.0.1
@@ -2231,9 +2231,3 @@ packages:
       utf-8-validate:
         optional: true
     dev: true
-
-  file:pkg:
-    resolution: {directory: pkg, type: directory}
-    name: opaque
-    version: 0.1.0
-    dev: false

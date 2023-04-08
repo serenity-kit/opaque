@@ -4,10 +4,10 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "start": "webpack-dev-server"
+    "dev": "webpack-dev-server"
   },
   "dependencies": {
-    "opaque": "file:../pkg"
+    "opaque": "workspace:*"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
