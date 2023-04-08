@@ -11,7 +11,6 @@ importers:
   example:
     specifiers:
       copy-webpack-plugin: ^11.0.0
-      hello-wasm-pack: ^0.1.0
       opaque: file:../pkg
       webpack: ^5.77.0
       webpack-cli: ^5.0.1
@@ -20,7 +19,6 @@ importers:
       opaque: file:pkg
     devDependencies:
       copy-webpack-plugin: 11.0.0_webpack@5.78.0
-      hello-wasm-pack: 0.1.0
       webpack: 5.78.0_webpack-cli@5.0.1
       webpack-cli: 5.0.1_e4thbbqo4lsvf5jmejawxymgvi
       webpack-dev-server: 4.13.2_jzzaom6j5rdli5c2mboo3iep6m
@@ -1059,10 +1057,6 @@ packages:
     engines: {node: '>= 0.4.0'}
     dependencies:
       function-bind: 1.1.1
-    dev: true
-
-  /hello-wasm-pack/0.1.0:
-    resolution: {integrity: sha512-3hx0GDkDLf/a9ThCMV2qG4mwza8N/MCtm8aeFFc/cdBCL2zMJ1kW1wjNl7xPqD1lz8Yl5+uhnc/cpui4dLwz/w==}
     dev: true
 
   /hpack.js/2.1.6:
