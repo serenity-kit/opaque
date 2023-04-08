@@ -1,3 +1,4 @@
 target/
 pkg/
 example/dist/
+pnpm-lock.yaml
