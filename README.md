@@ -1,5 +1,13 @@
 # Opaque
 
+## Development
+
+```sh
+pnpm install
+```
+
+### Build the library
+
 ## Acknowledgement
 
 This project was supported by the [Netidee funding campaign](https://www.netidee.at/).
