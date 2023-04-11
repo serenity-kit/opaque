@@ -4,16 +4,15 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "start": "webpack-dev-server"
+    "dev": "webpack-dev-server"
   },
   "dependencies": {
-    "opaque": "file:../pkg"
+    "opaque": "workspace:*"
   },
   "devDependencies": {
-    "hello-wasm-pack": "^0.1.0",
+    "copy-webpack-plugin": "^11.0.0",
     "webpack": "^5.77.0",
     "webpack-cli": "^5.0.1",
-    "webpack-dev-server": "^4.13.2",
-    "copy-webpack-plugin": "^11.0.0"
+    "webpack-dev-server": "^4.13.2"
   }
 }
