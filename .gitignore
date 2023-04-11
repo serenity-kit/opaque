@@ -4,10 +4,5 @@ Cargo.lock
 bin/
 pkg/
 wasm-pack.log
-/target
-**/*.rs.bk
-Cargo.lock
-bin/
-pkg/
-wasm-pack.log
 node_modules
+build/

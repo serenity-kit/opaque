@@ -8,6 +8,9 @@ importers:
     devDependencies:
       prettier: 2.8.7
 
+  build:
+    specifiers: {}
+
   example:
     specifiers:
       copy-webpack-plugin: ^11.0.0
@@ -16,15 +19,12 @@ importers:
       webpack-cli: ^5.0.1
       webpack-dev-server: ^4.13.2
     dependencies:
-      opaque: link:../pkg
+      opaque: link:../build
     devDependencies:
       copy-webpack-plugin: 11.0.0_webpack@5.78.0
       webpack: 5.78.0_webpack-cli@5.0.1
       webpack-cli: 5.0.1_e4thbbqo4lsvf5jmejawxymgvi
       webpack-dev-server: 4.13.2_jzzaom6j5rdli5c2mboo3iep6m
-
-  pkg:
-    specifiers: {}
 
 packages:
 
