@@ -4,10 +4,11 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "prettier": "^2.8.7"
+    "prettier": "^2.8.7",
+    "shelljs": "^0.8.5"
   },
   "scripts": {
-    "build": "./build.sh",
+    "build": "node ./bin/build.js",
     "example:client:dev": "cd example-client && pnpm dev",
     "example:server:dev": "cd example-server && pnpm dev"
   }

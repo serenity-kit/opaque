@@ -1,6 +1,4 @@
-//
-// This example code is the JS equivalent of the simple_login.rs example in opaque-ke
-//
+import * as opaque from "opaque";
 
 const server = new opaque.Server();
 
