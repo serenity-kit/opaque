@@ -2,43 +2,39 @@
 
 ## Development
 
-We are using `pnpm`.
+Prerequisites:
 
-To run the wasm-pack builds for both nodejs and bundler targets you can run
+- pnpm
+- rust toolchain
+- wasm-pack
+
+To run the wasm-pack build you can run
 
 ```
 pnpm build
 ```
 
+The project is set up as a workspace with the following packages below.
+These packages depend on the built `./build` directory so make sure to run `pnpm build` and `pnpm install` before trying to run them.
+
 ### example-server
 
-A server-side nodejs example is currently located in `./example-server`.
-It depends on the built `./dist/nodejs` directory.
-After running `pnpm install` in the example-server directory you can start the server by executing the `server.js` file with node:
+A server-side nodejs example located in `./example-server`.
+You can start the server with
 
 ```
-node ./server.js
-```
-
-To quickly verify that it actually works you can run the `client.js` script which will try to register a user and login:
-
-```
-node ./client.js
+pnpm example:server:dev
 ```
 
 ### example-client
 
-An client-side example login/registration form is currently located in `./example-client`.
-It depends on the built `./dist/bundler` directory.
-In the example directory you can run
+A client-side example login/registration form is located in `./example-client`.
+Expects the example-server to be running at `localhost:8089` (currently hardcoded).
+You can start the client with
 
 ```
-pnpm install
-pnpm start
+pnpm example:client:dev
 ```
-
-to run the example. On form submit it will attempt to register/login with the example-server running at `localhost:8089` (currently hardcoded)
-so you need to have the server running to try it.
 
 ## Acknowledgement
 
