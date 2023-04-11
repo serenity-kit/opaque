@@ -1,5 +1,5 @@
 import * as opaque from "opaque";
-window.opaque = opaque;
+
 const host = "http://localhost:8089";
 
 async function request(method, path, body = undefined) {
