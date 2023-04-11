@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hello wasm-pack!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <form id="form" class="p-12 space-y-4 max-w-xl" onsubmit="handleSubmit()">
+      <h1 class="text-xl font-semibold">Login/Register</h1>
+      <div class="space-y-2 flex flex-col">
+        <input
+          class="border border-slate-300 p-1"
+          name="username"
+          placeholder="Username"
+          type="text"
+          autocomplete="off"
+        />
+
+        <input
+          class="border border-slate-300 p-1"
+          name="password"
+          placeholder="Password"
+          type="password"
+          autocomplete="off"
+        />
+
+        <div>
+          <button
+            name="login"
+            class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+          >
+            Login
+          </button>
+          <button
+            name="register"
+            class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+          >
+            Register
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <noscript
+      >This page contains webassembly and javascript content, please enable
+      javascript in your browser.</noscript
+    >
+    <script src="./bootstrap.js"></script>
+  </body>
+</html>

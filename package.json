@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "node ./bin/build.js",
-    "example:dev": "cd example && pnpm dev"
+    "example:client:dev": "cd example-client && pnpm dev",
+    "example:server:dev": "cd example-server && pnpm dev"
   }
 }
