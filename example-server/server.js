@@ -6,7 +6,7 @@ const registeredUsers = {};
 const pendingLogins = {};
 const activeSessions = {};
 
-const opaqueServer = new opaque.Server();
+const server = opaque.serverSetup();
 
 const app = express();
 app.use(express.json());
@@ -26,10 +26,12 @@ app.post("/register/start", (req, res) => {
   if (registeredUsers[username] != null)
     return sendError(res, 400, "user already registered");
 
-  const registrationResponse = opaqueServer.startRegistration(
+  const registrationResponse = opaque.serverRegistrationStart({
+    server,
     username,
-    registrationRequest
-  );
+    registrationRequest,
+  });
+
   res.send({ registrationResponse });
   res.end();
 });
@@ -39,7 +41,7 @@ app.post("/register/finish", (req, res) => {
   if (!username) return sendError(res, 400, "missing username");
   if (!registrationMessage)
     return sendError(res, 400, "missing registrationMessage");
-  const passwordFile = opaque.serverRegisterFinish(registrationMessage);
+  const passwordFile = opaque.serverRegistrationFinish(registrationMessage);
   registeredUsers[username] = passwordFile;
   res.writeHead(200);
   res.end();
@@ -56,13 +58,14 @@ app.post("/login/start", (req, res) => {
   if (pendingLogins[username] != null)
     return sendError(res, 400, "login already started");
 
-  const login = opaqueServer.startLogin(
+  const { state, credentialResponse } = opaque.serverLoginStart({
+    server,
     username,
     passwordFile,
-    credentialRequest
-  );
-  const credentialResponse = login.getCredentialResponse();
-  pendingLogins[username] = login;
+    credentialRequest,
+  });
+
+  pendingLogins[username] = state;
   res.send({ credentialResponse });
   res.end();
 });
@@ -76,7 +79,12 @@ app.post("/login/finish", (req, res) => {
     return sendError(res, 400, "missing credentialFinalization");
   if (!login) return sendError(res, 400, "login not started");
 
-  const sessionKey = login.finish(credentialFinalization);
+  const sessionKey = opaque.serverLoginFinish({
+    server,
+    credentialFinalization,
+    state: login,
+  });
+
   activeSessions[sessionKey] = username;
   delete pendingLogins[username];
   res.writeHead(200);

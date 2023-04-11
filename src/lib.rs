@@ -243,20 +243,20 @@ pub fn client_login_finish(props: JsValue) -> Result<JsValue, JsError> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(non_snake_case)]
-pub struct ClientRegisterStartResult {
+pub struct ClientRegistrationStartResult {
     state: String,
     registrationRequest: String,
 }
 
-#[wasm_bindgen(js_name = clientRegisterStart)]
-pub fn client_register_start(password: String) -> Result<JsValue, JsError> {
+#[wasm_bindgen(js_name = clientRegistrationStart)]
+pub fn client_registration_start(password: String) -> Result<JsValue, JsError> {
     let mut client_rng = OsRng;
 
     let client_registration_start_result =
         ClientRegistration::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes())
             .map_err(|_| JsError::new("failed to start client registration"))?;
 
-    let result = ClientRegisterStartResult {
+    let result = ClientRegistrationStartResult {
         state: BASE64.encode(client_registration_start_result.state.serialize()),
         registrationRequest: BASE64.encode(
             client_registration_start_result
@@ -271,15 +271,15 @@ pub fn client_register_start(password: String) -> Result<JsValue, JsError> {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(non_snake_case)]
-struct ClientRegisterFinishProps {
+struct ClientRegistrationFinishProps {
     password: String,
     registrationResponse: String,
     state: String,
 }
 
-#[wasm_bindgen(js_name = clientRegisterFinish)]
-pub fn client_register_finish(props: JsValue) -> Result<JsValue, JsError> {
-    let input: ClientRegisterFinishProps = serde_wasm_bindgen::from_value(props)?;
+#[wasm_bindgen(js_name = clientRegistrationFinish)]
+pub fn client_registration_finish(props: JsValue) -> Result<JsValue, JsError> {
+    let input: ClientRegistrationFinishProps = serde_wasm_bindgen::from_value(props)?;
     let registration_response_bytes = BASE64.decode(input.registrationResponse)?;
     let mut rng: OsRng = OsRng;
     let state = ClientRegistration::<DefaultCipherSuite>::deserialize(&BASE64.decode(input.state)?)
