@@ -10,9 +10,6 @@ To run the wasm-pack builds for both nodejs and bundler targets you can run
 pnpm build
 ```
 
-This will run `wasm-pack` both for the nodejs and bundler target.
-The build output is in `./dist/nodejs` and `./dist/bundler`.
-
 ### example-server
 
 A server-side nodejs example is currently located in `./example-server`.

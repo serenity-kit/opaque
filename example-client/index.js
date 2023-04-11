@@ -82,6 +82,7 @@ window.handleSubmit = async function handleSubmit() {
       }
     }
   } catch (err) {
+    console.error(err);
     alert(err);
   }
 };

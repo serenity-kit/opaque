@@ -3,12 +3,13 @@
   "version": "0.0.0",
   "author": "",
   "license": "MIT",
-  "scripts": {
-    "build": "pnpm run build:bundler && pnpm run build:node",
-    "build:bundler": "wasm-pack build --out-dir dist/bundler",
-    "build:node": "wasm-pack build --target nodejs --out-dir dist/node"
-  },
   "devDependencies": {
-    "prettier": "^2.8.7"
+    "prettier": "^2.8.7",
+    "shelljs": "^0.8.5"
+  },
+  "scripts": {
+    "build": "node ./bin/build.js",
+    "example:client:dev": "cd example-client && pnpm dev",
+    "example:server:dev": "cd example-server && pnpm dev"
   }
 }
