@@ -1,5 +1,4 @@
 import * as opaque from "opaque";
-window.opaque = opaque;
 
 const server = new opaque.Server();
 // console.log(server);
