@@ -1,0 +1,4 @@
+packages:
+  - "example-client"
+  - "example-server"
+  - "build"
