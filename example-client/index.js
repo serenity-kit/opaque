@@ -18,15 +18,20 @@ async function request(method, path, body = undefined) {
 }
 
 async function register(username, password) {
-  const regStart = opaque.clientRegisterStart(password);
-  const registrationRequest = regStart.getRegistrationRequest();
+  const { state, registrationRequest } =
+    opaque.clientRegistrationStart(password);
   const { registrationResponse } = await request("POST", `/register/start`, {
     username,
     registrationRequest,
   }).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
-  const registrationMessage = regStart.finish(password, registrationResponse);
+  const registrationMessage = opaque.clientRegistrationFinish({
+    state,
+    registrationResponse,
+    password,
+  });
+
   const res = await request("POST", `/register/finish`, {
     username,
     registrationMessage,
@@ -36,23 +41,27 @@ async function register(username, password) {
 }
 
 async function login(username, password) {
-  const loginStart = opaque.clientLoginStart(password);
-  const credentialRequest = loginStart.getCredentialRequest();
+  const { state, credentialRequest } = opaque.clientLoginStart(password);
+
   const { credentialResponse } = await request("POST", "/login/start", {
     username,
     credentialRequest,
   }).then((res) => res.json());
 
-  const loginResult = loginStart.finish(password, credentialResponse);
+  const loginResult = opaque.clientLoginFinish({
+    state,
+    credentialResponse,
+    password,
+  });
+
   if (!loginResult) {
     return null;
   }
-  const credentialFinalization = loginResult.getCredentialFinalization();
+  const { sessionKey, credentialFinalization } = loginResult;
   const res = await request("POST", "/login/finish", {
     username,
     credentialFinalization,
   });
-  const sessionKey = loginResult.getSessionKey();
   return res.ok ? sessionKey : null;
 }
 
