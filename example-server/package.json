@@ -7,6 +7,6 @@
     "opaque": "workspace:*"
   },
   "scripts": {
-    "dev": "node ./server.js"
+    "dev": "node ./src/server.js"
   }
 }

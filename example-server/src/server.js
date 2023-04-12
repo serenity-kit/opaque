@@ -1,12 +1,25 @@
 import cors from "cors";
 import express from "express";
 import * as opaque from "opaque";
+import Database from "./database.js";
 
-const registeredUsers = {};
-const pendingLogins = {};
 const activeSessions = {};
 
-const server = opaque.serverSetup();
+const dbFile = "./data.json";
+
+function initDatabase(filePath) {
+  try {
+    return Database.open(filePath);
+  } catch (err) {
+    console.log("failed to open database, initializing empty", err);
+    const db = Database.create(filePath, opaque.serverSetup());
+    db.writeFile();
+    return db;
+  }
+}
+
+const db = initDatabase(dbFile);
+const server = db.serverSetup;
 
 const app = express();
 app.use(express.json());
@@ -23,7 +36,7 @@ app.post("/register/start", (req, res) => {
   if (!username) return sendError(res, 400, "missing username");
   if (!registrationRequest)
     return sendError(res, 400, "missing registrationRequest");
-  if (registeredUsers[username] != null)
+  if (db.hasUser(username))
     return sendError(res, 400, "user already registered");
 
   const registrationResponse = opaque.serverRegistrationStart({
@@ -42,20 +55,20 @@ app.post("/register/finish", (req, res) => {
   if (!registrationMessage)
     return sendError(res, 400, "missing registrationMessage");
   const passwordFile = opaque.serverRegistrationFinish(registrationMessage);
-  registeredUsers[username] = passwordFile;
+  db.setUser(username, passwordFile);
   res.writeHead(200);
   res.end();
 });
 
 app.post("/login/start", (req, res) => {
   const { username, credentialRequest } = req.body || {};
-  const passwordFile = username && registeredUsers[username];
+  const passwordFile = username && db.getUser(username);
 
   if (!username) return sendError(res, 400, "missing username");
   if (!credentialRequest)
     return sendError(res, 400, "missing credentialRequest");
   if (!passwordFile) return sendError(res, 400, "user not registered");
-  if (pendingLogins[username] != null)
+  if (db.hasLogin(username))
     return sendError(res, 400, "login already started");
 
   const { state, credentialResponse } = opaque.serverLoginStart({
@@ -65,14 +78,14 @@ app.post("/login/start", (req, res) => {
     credentialRequest,
   });
 
-  pendingLogins[username] = state;
+  db.setLogin(username, state);
   res.send({ credentialResponse });
   res.end();
 });
 
 app.post("/login/finish", (req, res) => {
   const { username, credentialFinalization } = req.body || {};
-  const login = username && pendingLogins[username];
+  const login = username && db.getLogin(username);
 
   if (!username) return sendError(res, 400, "missing username");
   if (!credentialFinalization)
@@ -86,7 +99,7 @@ app.post("/login/finish", (req, res) => {
   });
 
   activeSessions[sessionKey] = username;
-  delete pendingLogins[username];
+  db.removeLogin();
   res.writeHead(200);
   res.end();
 });
