@@ -271,9 +271,9 @@ pub fn client_registration_start(
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[allow(non_snake_case)]
 pub struct ClientRegistrationFinishProps {
-    pub password: String,
-    pub registrationResponse: String,
-    pub state: String,
+    password: String,
+    registrationResponse: String,
+    state: String,
 }
 
 #[wasm_bindgen(js_name = clientRegistrationFinish)]
