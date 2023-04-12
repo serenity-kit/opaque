@@ -19,7 +19,7 @@ function initDatabase(filePath) {
 }
 
 const db = initDatabase(dbFile);
-const server = db.serverSetup;
+const serverSetup = db.serverSetup;
 
 const app = express();
 app.use(express.json());
@@ -40,7 +40,7 @@ app.post("/register/start", (req, res) => {
     return sendError(res, 400, "user already registered");
 
   const registrationResponse = opaque.serverRegistrationStart({
-    server,
+    serverSetup,
     username,
     registrationRequest,
   });
@@ -71,8 +71,8 @@ app.post("/login/start", (req, res) => {
   if (db.hasLogin(username))
     return sendError(res, 400, "login already started");
 
-  const { state, credentialResponse } = opaque.serverLoginStart({
-    server,
+  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+    serverSetup,
     username,
     passwordFile,
     credentialRequest,
@@ -85,17 +85,17 @@ app.post("/login/start", (req, res) => {
 
 app.post("/login/finish", (req, res) => {
   const { username, credentialFinalization } = req.body || {};
-  const login = username && db.getLogin(username);
+  const serverLogin = username && db.getLogin(username);
 
   if (!username) return sendError(res, 400, "missing username");
   if (!credentialFinalization)
     return sendError(res, 400, "missing credentialFinalization");
-  if (!login) return sendError(res, 400, "login not started");
+  if (!serverLogin) return sendError(res, 400, "login not started");
 
   const sessionKey = opaque.serverLoginFinish({
-    server,
+    serverSetup,
     credentialFinalization,
-    state: login,
+    serverLogin,
   });
 
   activeSessions[sessionKey] = username;
