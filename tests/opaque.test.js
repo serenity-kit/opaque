@@ -86,5 +86,5 @@ test("full registration & login with bad password", () => {
     password: "hunter23",
   });
 
-  expect(loginResult).toBe(null);
+  expect(loginResult).toBeUndefined();
 });
