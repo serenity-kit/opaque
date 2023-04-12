@@ -6,7 +6,7 @@ const registeredUsers = {};
 const pendingLogins = {};
 const activeSessions = {};
 
-const server = opaque.serverSetup();
+const serverSetup = opaque.serverSetup();
 
 const app = express();
 app.use(express.json());
@@ -27,7 +27,7 @@ app.post("/register/start", (req, res) => {
     return sendError(res, 400, "user already registered");
 
   const registrationResponse = opaque.serverRegistrationStart({
-    server,
+    serverSetup,
     username,
     registrationRequest,
   });
@@ -58,31 +58,31 @@ app.post("/login/start", (req, res) => {
   if (pendingLogins[username] != null)
     return sendError(res, 400, "login already started");
 
-  const { state, credentialResponse } = opaque.serverLoginStart({
-    server,
+  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+    serverSetup,
     username,
     passwordFile,
     credentialRequest,
   });
 
-  pendingLogins[username] = state;
+  pendingLogins[username] = serverLogin;
   res.send({ credentialResponse });
   res.end();
 });
 
 app.post("/login/finish", (req, res) => {
   const { username, credentialFinalization } = req.body || {};
-  const login = username && pendingLogins[username];
+  const serverLogin = username && pendingLogins[username];
 
   if (!username) return sendError(res, 400, "missing username");
   if (!credentialFinalization)
     return sendError(res, 400, "missing credentialFinalization");
-  if (!login) return sendError(res, 400, "login not started");
+  if (!serverLogin) return sendError(res, 400, "login not started");
 
   const sessionKey = opaque.serverLoginFinish({
-    server,
+    serverSetup,
     credentialFinalization,
-    state: login,
+    serverLogin,
   });
 
   activeSessions[sessionKey] = username;

@@ -74,7 +74,8 @@ fn decode_server_setup(data: String) -> Result<ServerSetup<DefaultCipherSuite>, 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ServerRegistrationStartProps {
-    server: String,
+    #[serde(rename = "serverSetup")]
+    server_setup: String,
     username: String,
     #[serde(rename = "registrationRequest")]
     registration_request: String,
@@ -82,7 +83,7 @@ pub struct ServerRegistrationStartProps {
 
 #[wasm_bindgen(js_name = serverRegistrationStart)]
 pub fn server_registration_start(props: ServerRegistrationStartProps) -> Result<String, JsError> {
-    let server_setup = decode_server_setup(props.server)?;
+    let server_setup = decode_server_setup(props.server_setup)?;
     let registration_request_bytes = BASE64.decode(props.registration_request)?;
     let server_registration_start_result = ServerRegistration::<DefaultCipherSuite>::start(
         &server_setup,
@@ -108,7 +109,8 @@ pub fn server_registration_finish(message: String) -> Result<String, JsError> {
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ServerLoginStartProps {
-    server: String,
+    #[serde(rename = "serverSetup")]
+    server_setup: String,
     username: String,
     #[serde(rename = "passwordFile")]
     password_file: String,
@@ -121,14 +123,15 @@ pub struct ServerLoginStartProps {
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ServerLoginStartResult {
-    state: String,
+    #[serde(rename = "serverLogin")]
+    server_login: String,
     #[serde(rename = "credentialResponse")]
     credential_response: String,
 }
 
 #[wasm_bindgen(js_name = serverLoginStart)]
 pub fn server_login_start(props: ServerLoginStartProps) -> Result<ServerLoginStartResult, JsError> {
-    let server_setup = decode_server_setup(props.server)?;
+    let server_setup = decode_server_setup(props.server_setup)?;
     let password_file_bytes = BASE64.decode(props.password_file)?;
     let credential_request_bytes = BASE64.decode(props.credential_request)?;
 
@@ -156,10 +159,10 @@ pub fn server_login_start(props: ServerLoginStartProps) -> Result<ServerLoginSta
     .map_err(|_| JsError::new("failed to start login"))?;
 
     let credential_response = BASE64.encode(server_login_start_result.message.serialize().to_vec());
-    let start_state = BASE64.encode(server_login_start_result.state.serialize().to_vec());
+    let server_login = BASE64.encode(server_login_start_result.state.serialize().to_vec());
 
     let result = ServerLoginStartResult {
-        state: start_state,
+        server_login,
         credential_response,
     };
     return Ok(result);
@@ -168,7 +171,8 @@ pub fn server_login_start(props: ServerLoginStartProps) -> Result<ServerLoginSta
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ServerLoginFinishProps {
-    state: String,
+    #[serde(rename = "serverLogin")]
+    server_login: String,
     #[serde(rename = "credentialFinalization")]
     credential_finalization: String,
 }
@@ -176,7 +180,7 @@ pub struct ServerLoginFinishProps {
 #[wasm_bindgen(js_name = serverLoginFinish)]
 pub fn server_login_finish(props: ServerLoginFinishProps) -> Result<String, JsError> {
     let credential_finalization_bytes = BASE64.decode(props.credential_finalization)?;
-    let state_bytes = BASE64.decode(props.state)?;
+    let state_bytes = BASE64.decode(props.server_login)?;
     let state = ServerLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(|_| JsError::new("failed to deserialize server login state"))?;
     let server_login_finish_result = state
@@ -191,7 +195,8 @@ pub fn server_login_finish(props: ServerLoginFinishProps) -> Result<String, JsEr
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ClientLoginStartResult {
-    state: String,
+    #[serde(rename = "clientLogin")]
+    client_login: String,
     #[serde(rename = "credentialRequest")]
     credential_request: String,
 }
@@ -204,7 +209,7 @@ pub fn client_login_start(password: String) -> Result<ClientLoginStartResult, Js
             .map_err(|_| JsError::new("failed to start client login"))?;
 
     let result = ClientLoginStartResult {
-        state: BASE64.encode(client_login_start_result.state.serialize()),
+        client_login: BASE64.encode(client_login_start_result.state.serialize()),
         credential_request: BASE64.encode(client_login_start_result.message.serialize().to_vec()),
     };
     return Ok(result);
@@ -213,7 +218,8 @@ pub fn client_login_start(password: String) -> Result<ClientLoginStartResult, Js
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ClientLoginFinishProps {
-    state: String,
+    #[serde(rename = "clientLogin")]
+    client_login: String,
     #[serde(rename = "credentialResponse")]
     credential_response: String,
     password: String,
@@ -235,7 +241,7 @@ pub fn client_login_finish(
     props: ClientLoginFinishProps,
 ) -> Result<Option<ClientLoginFinishResult>, JsError> {
     let credential_response_bytes = BASE64.decode(props.credential_response)?;
-    let state_bytes = BASE64.decode(props.state)?;
+    let state_bytes = BASE64.decode(props.client_login)?;
     let state = ClientLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(|_| JsError::new("failed to deserialize client login state"))?;
 
@@ -267,7 +273,8 @@ pub fn client_login_finish(
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ClientRegistrationStartResult {
-    state: String,
+    #[serde(rename = "clientRegistration")]
+    client_registration: String,
     #[serde(rename = "registrationRequest")]
     registration_request: String,
 }
@@ -283,7 +290,7 @@ pub fn client_registration_start(
             .map_err(|_| JsError::new("failed to start client registration"))?;
 
     let result = ClientRegistrationStartResult {
-        state: BASE64.encode(client_registration_start_result.state.serialize()),
+        client_registration: BASE64.encode(client_registration_start_result.state.serialize()),
         registration_request: BASE64.encode(
             client_registration_start_result
                 .message
@@ -300,7 +307,8 @@ pub struct ClientRegistrationFinishProps {
     password: String,
     #[serde(rename = "registrationResponse")]
     registration_response: String,
-    state: String,
+    #[serde(rename = "clientRegistration")]
+    client_registration: String,
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
 }
@@ -315,8 +323,10 @@ fn get_identifiers(idents: &CustomIdentifiers) -> Identifiers {
 pub fn client_registration_finish(props: ClientRegistrationFinishProps) -> Result<String, JsError> {
     let registration_response_bytes = BASE64.decode(props.registration_response)?;
     let mut rng: OsRng = OsRng;
-    let state = ClientRegistration::<DefaultCipherSuite>::deserialize(&BASE64.decode(props.state)?)
-        .map_err(|_| JsError::new("failed to deserialize client registration state"))?;
+    let state = ClientRegistration::<DefaultCipherSuite>::deserialize(
+        &BASE64.decode(props.client_registration)?,
+    )
+    .map_err(|_| JsError::new("failed to deserialize client registration state"))?;
 
     let params: ClientRegistrationFinishParameters<DefaultCipherSuite> =
         match props.identifiers.as_ref() {
