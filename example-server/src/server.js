@@ -99,7 +99,7 @@ app.post("/login/finish", (req, res) => {
   });
 
   activeSessions[sessionKey] = username;
-  db.removeLogin();
+  db.removeLogin(username);
   res.writeHead(200);
   res.end();
 });
