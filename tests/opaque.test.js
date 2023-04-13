@@ -1,109 +1,54 @@
 import * as opaque from "../build";
 
-function setupAndRegister(username, password, identifiers) {
+function setupAndRegister(
+  clientIdentifier,
+  password,
+  serverIdentifier = undefined
+) {
   const serverSetup = opaque.serverSetup();
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const registrationResponse = opaque.serverRegistrationStart({
     serverSetup,
-    username,
+    clientIdentifier,
     registrationRequest,
   });
   const registrationMessage = opaque.clientRegistrationFinish({
     clientRegistration,
     registrationResponse,
     password,
-    identifiers,
+    clientIdentifier,
+    serverIdentifier,
   });
   const passwordFile = opaque.serverRegistrationFinish(registrationMessage);
   return { serverSetup, passwordFile, registrationMessage };
 }
 
 test("full registration & login flow", () => {
+  const clientIdentifier = "user123";
+  const password = "hunter42";
+
   const { serverSetup, passwordFile, registrationMessage } = setupAndRegister(
-    "user123",
-    "hunter42"
+    clientIdentifier,
+    password
   );
 
   expect(registrationMessage).toEqual(passwordFile);
-
-  const { clientLogin, credentialRequest } =
-    opaque.clientLoginStart("hunter42");
-
-  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
-    serverSetup,
-    username: "user123",
-    passwordFile,
-    credentialRequest,
-  });
-
-  const loginResult = opaque.clientLoginFinish({
-    clientLogin,
-    credentialResponse,
-    password: "hunter42",
-  });
-
-  expect(loginResult).not.toBe(null);
-
-  const { sessionKey: clientSessionKey, credentialFinalization } = loginResult;
-
-  const serverSessionKey = opaque.serverLoginFinish({
-    serverSetup,
-    serverLogin,
-    credentialFinalization,
-  });
-
-  expect(serverSessionKey).toEqual(clientSessionKey);
-});
-
-test("full registration & login with bad password", () => {
-  const { serverSetup, passwordFile } = setupAndRegister("user123", "hunter42");
-  const { clientLogin, credentialRequest } =
-    opaque.clientLoginStart("hunter42");
-
-  const { credentialResponse } = opaque.serverLoginStart({
-    serverSetup,
-    username: "user123",
-    passwordFile,
-    credentialRequest,
-  });
-
-  const loginResult = opaque.clientLoginFinish({
-    clientLogin,
-    credentialResponse,
-    password: "hunter23",
-  });
-
-  expect(loginResult).toBeUndefined();
-});
-
-test("full registration & login flow with custom client identifier", () => {
-  const username = "user123";
-  const password = "hunter2";
-
-  const { serverSetup, passwordFile } = setupAndRegister(username, password, {
-    client: username,
-  });
 
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { serverLogin, credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    username,
+    clientIdentifier,
     passwordFile,
     credentialRequest,
-    identifiers: {
-      client: username,
-    },
   });
 
   const loginResult = opaque.clientLoginFinish({
     clientLogin,
     credentialResponse,
     password,
-    identifiers: {
-      client: username,
-    },
+    clientIdentifier,
   });
 
   expect(loginResult).not.toBeUndefined();
@@ -119,33 +64,87 @@ test("full registration & login flow with custom client identifier", () => {
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow mismatched custom client identifier on server login", () => {
-  const username = "user123";
+test("full registration & login with bad password", () => {
+  const clientIdentifier = "user123";
+
+  const { serverSetup, passwordFile } = setupAndRegister(
+    clientIdentifier,
+    "hunter42"
+  );
+  const { clientLogin, credentialRequest } =
+    opaque.clientLoginStart("hunter42");
+
+  const { credentialResponse } = opaque.serverLoginStart({
+    serverSetup,
+    clientIdentifier,
+    passwordFile,
+    credentialRequest,
+  });
+
+  const loginResult = opaque.clientLoginFinish({
+    clientLogin,
+    credentialResponse,
+    password: "hunter23",
+    clientIdentifier,
+  });
+
+  expect(loginResult).toBeUndefined();
+});
+
+test("full registration & login flow with mismatched custom client identifier on server login", () => {
+  const clientIdentifier = "user123";
   const password = "hunter2";
 
-  const { serverSetup, passwordFile } = setupAndRegister(username, password, {
-    client: username,
-  });
+  const { serverSetup, passwordFile } = setupAndRegister(
+    clientIdentifier,
+    password
+  );
 
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    username,
+    clientIdentifier,
     passwordFile,
     credentialRequest,
-    identifiers: {
-      client: username + "abc",
-    },
   });
 
   const loginResult = opaque.clientLoginFinish({
     clientLogin,
     credentialResponse,
     password,
-    identifiers: {
-      client: username,
-    },
+    clientIdentifier: clientIdentifier + "abc",
+  });
+
+  expect(loginResult).toBeUndefined();
+});
+
+test("full registration & login attempt with mismatched serverIdentifier", () => {
+  const clientIdentifier = "user123";
+  const password = "hunter2";
+
+  const { serverSetup, passwordFile } = setupAndRegister(
+    clientIdentifier,
+    password,
+    "server-ident"
+  );
+
+  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+
+  const { credentialResponse } = opaque.serverLoginStart({
+    serverSetup,
+    clientIdentifier,
+    passwordFile,
+    credentialRequest,
+    serverIdentifier: "server-ident-abc",
+  });
+
+  const loginResult = opaque.clientLoginFinish({
+    clientLogin,
+    credentialResponse,
+    password,
+    clientIdentifier,
+    serverIdentifier: "server-ident",
   });
 
   expect(loginResult).toBeUndefined();
