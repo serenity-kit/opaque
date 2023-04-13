@@ -43,17 +43,21 @@ export default class Database {
     return this.users[name] != null;
   }
   getLogin(name) {
-    return this.logins[name];
+    return this.hasLogin(name) ? this.logins[name].value : null;
   }
   hasLogin(name) {
-    return this.logins[name] != null;
+    const login = this.logins[name];
+    if (login == null) return null;
+    const now = new Date().getTime();
+    const elapsed = now - login.timestamp;
+    return elapsed < 2000;
   }
   setUser(name, value) {
     this.users[name] = value;
     this._notifyListeners();
   }
   setLogin(name, value) {
-    this.logins[name] = value;
+    this.logins[name] = { value, timestamp: new Date().getTime() };
     this._notifyListeners();
   }
   removeLogin(name) {
