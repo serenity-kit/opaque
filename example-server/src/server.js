@@ -78,7 +78,7 @@ app.post("/login/start", (req, res) => {
     credentialRequest,
   });
 
-  db.setLogin(username, state);
+  db.setLogin(username, serverLogin);
   res.send({ credentialResponse });
   res.end();
 });
