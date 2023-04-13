@@ -1,45 +1,44 @@
 import * as opaque from "../build";
 
 function setupAndRegister(username, password, identifiers) {
-  const server = opaque.serverSetup();
-  const { state: clientRegistrationStart, registrationRequest } =
+  const serverSetup = opaque.serverSetup();
+  const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const registrationResponse = opaque.serverRegistrationStart({
-    server,
+    serverSetup,
     username,
     registrationRequest,
   });
   const registrationMessage = opaque.clientRegistrationFinish({
-    state: clientRegistrationStart,
+    clientRegistration,
     registrationResponse,
     password,
     identifiers,
   });
   const passwordFile = opaque.serverRegistrationFinish(registrationMessage);
-  return { server, passwordFile, registrationMessage };
+  return { serverSetup, passwordFile, registrationMessage };
 }
 
 test("full registration & login flow", () => {
-  const { server, passwordFile, registrationMessage } = setupAndRegister(
+  const { serverSetup, passwordFile, registrationMessage } = setupAndRegister(
     "user123",
     "hunter42"
   );
 
   expect(registrationMessage).toEqual(passwordFile);
 
-  const { state: clientLoginStart, credentialRequest } =
+  const { clientLogin, credentialRequest } =
     opaque.clientLoginStart("hunter42");
 
-  const { state: serverLoginStart, credentialResponse } =
-    opaque.serverLoginStart({
-      server,
-      username: "user123",
-      passwordFile,
-      credentialRequest,
-    });
+  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+    serverSetup,
+    username: "user123",
+    passwordFile,
+    credentialRequest,
+  });
 
   const loginResult = opaque.clientLoginFinish({
-    state: clientLoginStart,
+    clientLogin,
     credentialResponse,
     password: "hunter42",
   });
@@ -49,8 +48,8 @@ test("full registration & login flow", () => {
   const { sessionKey: clientSessionKey, credentialFinalization } = loginResult;
 
   const serverSessionKey = opaque.serverLoginFinish({
-    server,
-    state: serverLoginStart,
+    serverSetup,
+    serverLogin,
     credentialFinalization,
   });
 
@@ -58,19 +57,19 @@ test("full registration & login flow", () => {
 });
 
 test("full registration & login with bad password", () => {
-  const { server, passwordFile } = setupAndRegister("user123", "hunter42");
-  const { state: clientLoginStart, credentialRequest } =
+  const { serverSetup, passwordFile } = setupAndRegister("user123", "hunter42");
+  const { clientLogin, credentialRequest } =
     opaque.clientLoginStart("hunter42");
 
   const { credentialResponse } = opaque.serverLoginStart({
-    server,
+    serverSetup,
     username: "user123",
     passwordFile,
     credentialRequest,
   });
 
   const loginResult = opaque.clientLoginFinish({
-    state: clientLoginStart,
+    clientLogin,
     credentialResponse,
     password: "hunter23",
   });
@@ -82,26 +81,24 @@ test("full registration & login flow with custom client identifier", () => {
   const username = "user123";
   const password = "hunter2";
 
-  const { server, passwordFile } = setupAndRegister(username, password, {
+  const { serverSetup, passwordFile } = setupAndRegister(username, password, {
     client: username,
   });
 
-  const { state: clientLoginStart, credentialRequest } =
-    opaque.clientLoginStart(password);
+  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
-  const { state: serverLoginStart, credentialResponse } =
-    opaque.serverLoginStart({
-      server,
-      username,
-      passwordFile,
-      credentialRequest,
-      identifiers: {
-        client: username,
-      },
-    });
+  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+    serverSetup,
+    username,
+    passwordFile,
+    credentialRequest,
+    identifiers: {
+      client: username,
+    },
+  });
 
   const loginResult = opaque.clientLoginFinish({
-    state: clientLoginStart,
+    clientLogin,
     credentialResponse,
     password,
     identifiers: {
@@ -114,8 +111,8 @@ test("full registration & login flow with custom client identifier", () => {
   const { sessionKey: clientSessionKey, credentialFinalization } = loginResult;
 
   const serverSessionKey = opaque.serverLoginFinish({
-    server,
-    state: serverLoginStart,
+    serverSetup,
+    serverLogin,
     credentialFinalization,
   });
 
@@ -126,15 +123,14 @@ test("full registration & login flow mismatched custom client identifier on serv
   const username = "user123";
   const password = "hunter2";
 
-  const { server, passwordFile } = setupAndRegister(username, password, {
+  const { serverSetup, passwordFile } = setupAndRegister(username, password, {
     client: username,
   });
 
-  const { state: clientLoginStart, credentialRequest } =
-    opaque.clientLoginStart(password);
+  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = opaque.serverLoginStart({
-    server,
+    serverSetup,
     username,
     passwordFile,
     credentialRequest,
@@ -144,7 +140,7 @@ test("full registration & login flow mismatched custom client identifier on serv
   });
 
   const loginResult = opaque.clientLoginFinish({
-    state: clientLoginStart,
+    clientLogin,
     credentialResponse,
     password,
     identifiers: {

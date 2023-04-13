@@ -18,7 +18,7 @@ async function request(method, path, body = undefined) {
 }
 
 async function register(username, password) {
-  const { state, registrationRequest } =
+  const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const { registrationResponse } = await request("POST", `/register/start`, {
     username,
@@ -27,7 +27,7 @@ async function register(username, password) {
 
   console.log("registrationResponse", registrationResponse);
   const registrationMessage = opaque.clientRegistrationFinish({
-    state,
+    clientRegistration,
     registrationResponse,
     password,
   });
@@ -41,7 +41,7 @@ async function register(username, password) {
 }
 
 async function login(username, password) {
-  const { state, credentialRequest } = opaque.clientLoginStart(password);
+  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = await request("POST", "/login/start", {
     username,
@@ -49,7 +49,7 @@ async function login(username, password) {
   }).then((res) => res.json());
 
   const loginResult = opaque.clientLoginFinish({
-    state,
+    clientLogin,
     credentialResponse,
     password,
   });
