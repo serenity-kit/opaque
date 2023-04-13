@@ -26,7 +26,7 @@ async function register(clientIdentifier, password) {
   }).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
-  const registrationMessage = opaque.clientRegistrationFinish({
+  const { registrationUpload } = opaque.clientRegistrationFinish({
     clientIdentifier,
     clientRegistration,
     registrationResponse,
@@ -35,7 +35,7 @@ async function register(clientIdentifier, password) {
 
   const res = await request("POST", `/register/finish`, {
     clientIdentifier,
-    registrationMessage,
+    registrationUpload,
   });
   console.log("finish successful", res.ok);
   return res.ok;

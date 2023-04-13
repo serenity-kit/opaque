@@ -50,11 +50,11 @@ app.post("/register/start", (req, res) => {
 });
 
 app.post("/register/finish", (req, res) => {
-  const { clientIdentifier, registrationMessage } = req.body || {};
+  const { clientIdentifier, registrationUpload } = req.body || {};
   if (!clientIdentifier) return sendError(res, 400, "missing clientIdentifier");
-  if (!registrationMessage)
-    return sendError(res, 400, "missing registrationMessage");
-  const passwordFile = opaque.serverRegistrationFinish(registrationMessage);
+  if (!registrationUpload)
+    return sendError(res, 400, "missing registrationUpload");
+  const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
   db.setUser(clientIdentifier, passwordFile);
   res.writeHead(200);
   res.end();
