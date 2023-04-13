@@ -44,7 +44,7 @@ export default class Database {
     return this.logins[name];
   }
   hasLogin(name) {
-    return this.logins[name];
+    return this.logins[name] != null;
   }
   setUser(name, value) {
     this.users[name] = value;
