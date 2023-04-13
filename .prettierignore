@@ -1,3 +1,5 @@
 target/
-example/dist/
+example-client/dist/
+example-server/data.json
 pnpm-lock.yaml
+build/
