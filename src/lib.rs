@@ -46,12 +46,6 @@ impl CipherSuite for DefaultCipherSuite {
 
 const BASE64: b64::GeneralPurpose = b64::URL_SAFE_NO_PAD;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CustomIdentifiers {
-    client: Option<String>,
-    server: Option<String>,
-}
-
 #[wasm_bindgen(js_name = serverSetup)]
 pub fn server_setup() -> String {
     let mut rng: OsRng = OsRng;
@@ -74,7 +68,8 @@ fn decode_server_setup(data: String) -> Result<ServerSetup<DefaultCipherSuite>, 
 pub struct ServerRegistrationStartParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
-    username: String,
+    #[serde(rename = "clientIdentifier")]
+    client_identifier: String,
     #[serde(rename = "registrationRequest")]
     registration_request: String,
 }
@@ -87,7 +82,7 @@ pub fn server_registration_start(params: ServerRegistrationStartParams) -> Resul
         &server_setup,
         RegistrationRequest::deserialize(&registration_request_bytes)
             .map_err(|_| JsError::new("failed to deserialize registrationRequest"))?,
-        params.username.as_bytes(),
+        params.client_identifier.as_bytes(),
     )
     .map_err(|_| JsError::new("failed to start server registration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
@@ -109,12 +104,15 @@ pub fn server_registration_finish(message: String) -> Result<String, JsError> {
 pub struct ServerLoginStartParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
-    username: String,
     #[serde(rename = "passwordFile")]
     password_file: String,
     #[serde(rename = "credentialRequest")]
     credential_request: String,
-    identifiers: Option<CustomIdentifiers>,
+    #[serde(rename = "clientIdentifier")]
+    client_identifier: String,
+    #[tsify(optional)]
+    #[serde(rename = "serverIdentifier")]
+    server_identifier: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -138,12 +136,12 @@ pub fn server_login_start(
     let password_file = ServerRegistration::<DefaultCipherSuite>::deserialize(&password_file_bytes)
         .map_err(|_| JsError::new("failed to deserialize passwordFile"))?;
 
-    let start_params = match params.identifiers.as_ref() {
-        Some(idents) => ServerLoginStartParameters {
-            identifiers: get_identifiers(idents),
-            context: None,
+    let start_params = ServerLoginStartParameters {
+        identifiers: Identifiers {
+            client: Some(params.client_identifier.as_bytes()),
+            server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
         },
-        None => ServerLoginStartParameters::default(),
+        context: None,
     };
 
     let server_login_start_result = ServerLogin::start(
@@ -152,7 +150,7 @@ pub fn server_login_start(
         Some(password_file),
         CredentialRequest::deserialize(&credential_request_bytes)
             .map_err(|_| JsError::new("failed to deserialize credentialRequest"))?,
-        params.username.as_bytes(),
+        params.client_identifier.as_bytes(),
         start_params,
     )
     .map_err(|_| JsError::new("failed to start login"))?;
@@ -222,7 +220,11 @@ pub struct ClientLoginFinishParams {
     #[serde(rename = "credentialResponse")]
     credential_response: String,
     password: String,
-    identifiers: Option<CustomIdentifiers>,
+    #[serde(rename = "clientIdentifier")]
+    client_identifier: String,
+    #[tsify(optional)]
+    #[serde(rename = "serverIdentifier")]
+    server_identifier: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -243,10 +245,14 @@ pub fn client_login_finish(
     let state = ClientLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(|_| JsError::new("failed to deserialize client login state"))?;
 
-    let finish_params = match params.identifiers.as_ref() {
-        Some(idents) => ClientLoginFinishParameters::new(None, get_identifiers(idents), None),
-        None => ClientLoginFinishParameters::default(),
-    };
+    let finish_params = ClientLoginFinishParameters::new(
+        None,
+        Identifiers {
+            client: Some(params.client_identifier.as_bytes()),
+            server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
+        },
+        None,
+    );
 
     let result = state.finish(
         params.password.as_bytes(),
@@ -307,14 +313,11 @@ pub struct ClientRegistrationFinishParams {
     registration_response: String,
     #[serde(rename = "clientRegistration")]
     client_registration: String,
+    #[serde(rename = "clientIdentifier")]
+    client_identifier: String,
     #[tsify(optional)]
-    identifiers: Option<CustomIdentifiers>,
-}
-
-fn get_identifiers(idents: &CustomIdentifiers) -> Identifiers {
-    let client = idents.client.as_ref().map(|val| val.as_bytes());
-    let server = idents.server.as_ref().map(|val| val.as_bytes());
-    Identifiers { client, server }
+    #[serde(rename = "serverIdentifier")]
+    server_identifier: Option<String>,
 }
 
 #[wasm_bindgen(js_name = clientRegistrationFinish)]
@@ -328,11 +331,13 @@ pub fn client_registration_finish(
     )
     .map_err(|_| JsError::new("failed to deserialize client registration state"))?;
 
-    let finish_params: ClientRegistrationFinishParameters<DefaultCipherSuite> =
-        match params.identifiers.as_ref() {
-            Some(idents) => ClientRegistrationFinishParameters::new(get_identifiers(idents), None),
-            None => ClientRegistrationFinishParameters::default(),
-        };
+    let finish_params = ClientRegistrationFinishParameters::new(
+        Identifiers {
+            client: Some(params.client_identifier.as_bytes()),
+            server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
+        },
+        None,
+    );
 
     let client_finish_registration_result = state
         .finish(
