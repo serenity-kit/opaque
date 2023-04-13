@@ -2,37 +2,39 @@ import { readFileSync } from "fs";
 import { writeFile } from "fs/promises";
 
 export default class Database {
-  constructor(filePath, serverSetup, users, logins) {
-    this.filePath = filePath;
+  constructor(serverSetup, users, logins) {
     this.serverSetup = serverSetup;
     this.users = users;
     this.logins = logins;
+    this.listeners = [];
   }
-  static open(filePath) {
-    const json = readFileSync("./data.json", "utf-8");
-    const data = JSON.parse(json);
-    const db = new Database(
-      filePath,
-      data.serverSetup,
-      data.users,
-      data.logins
-    );
-    return db;
+  addListener(listener) {
+    this.listeners.push(listener);
+    return () => {
+      const index = this.listeners.indexOf(listener);
+      if (index !== -1) {
+        this.listeners.splice(index, 1);
+      }
+    };
   }
-  static create(filePath, serverSetup) {
-    return new Database(filePath, serverSetup, {}, {});
+  _notifyListeners() {
+    for (let listener of this.listeners) {
+      listener();
+    }
   }
-  writeFile() {
-    const data = JSON.stringify(
+  static empty(serverSetup) {
+    return new Database(serverSetup, {}, {});
+  }
+  stringify() {
+    return JSON.stringify(
       {
-        serverSetup: this.serverSetup,
+        serverSetup: db.serverSetup,
         logins: this.logins,
         users: this.users,
       },
       null,
       2
     );
-    return writeFile(this.filePath, data);
   }
   getUser(name) {
     return this.users[name];
@@ -48,14 +50,26 @@ export default class Database {
   }
   setUser(name, value) {
     this.users[name] = value;
-    this.writeFile();
+    this._notifyListeners();
   }
   setLogin(name, value) {
     this.logins[name] = value;
-    this.writeFile();
+    this._notifyListeners();
   }
   removeLogin(name) {
     delete this.logins[name];
-    this.writeFile();
+    this._notifyListeners();
   }
+}
+
+export function readDatabaseFile(filePath) {
+  const json = readFileSync(filePath, "utf-8");
+  const data = JSON.parse(json);
+  const db = new Database(data.serverSetup, data.users, data.logins);
+  return db;
+}
+
+export function writeDatabaseFile(filePath, db) {
+  const data = db.stringify();
+  return writeFile(this.filePath, data);
 }

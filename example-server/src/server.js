@@ -1,25 +1,34 @@
 import cors from "cors";
 import express from "express";
 import * as opaque from "opaque";
-import Database from "./database.js";
+import Database, { readDatabaseFile, writeDatabaseFile } from "./database.js";
 
 const activeSessions = {};
-
 const dbFile = "./data.json";
+const enableJsonFilePersistence = !process.argv.includes("--no-fs");
 
 function initDatabase(filePath) {
+  if (!enableJsonFilePersistence) {
+    return Database.empty(opaque.serverSetup());
+  }
   try {
-    return Database.open(filePath);
+    return readDatabaseFile(filePath);
   } catch (err) {
     console.log("failed to open database, initializing empty", err);
-    const db = Database.create(filePath, opaque.serverSetup());
-    db.writeFile();
+    const db = Database.empty(opaque.serverSetup());
     return db;
   }
 }
 
 const db = initDatabase(dbFile);
 const serverSetup = db.serverSetup;
+
+if (enableJsonFilePersistence) {
+  writeDatabaseFile(dbFile, db);
+  db.addListener(() => {
+    writeDatabaseFile(dbFile, db);
+  });
+}
 
 const app = express();
 app.use(express.json());
