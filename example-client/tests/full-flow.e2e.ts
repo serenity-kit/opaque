@@ -7,6 +7,7 @@ test("full registration & login flow", async ({ page }) => {
   await page.getByPlaceholder("Username").press("Tab");
   await page.getByPlaceholder("Password").fill("hunter42");
 
+  // registration
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toBe('User "jane_doe" registered successfully');
     await dialog.dismiss().catch(() => {
@@ -16,6 +17,19 @@ test("full registration & login flow", async ({ page }) => {
   await page.getByRole("button", { name: "Register" }).click();
   await new Promise((r) => setTimeout(r, 2000));
 
+  // first login attempt
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      'User "jane_doe" logged in successfully'
+    );
+    await dialog.dismiss().catch(() => {
+      throw new Error("Dialog not dismissed");
+    });
+  });
+  await page.getByRole("button", { name: "Login" }).click();
+  await new Promise((r) => setTimeout(r, 2000));
+
+  // second login attempt
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
       'User "jane_doe" logged in successfully'
