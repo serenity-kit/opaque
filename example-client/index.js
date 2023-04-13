@@ -17,40 +17,42 @@ async function request(method, path, body = undefined) {
   return res;
 }
 
-async function register(username, password) {
+async function register(clientIdentifier, password) {
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const { registrationResponse } = await request("POST", `/register/start`, {
-    username,
+    clientIdentifier,
     registrationRequest,
   }).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
   const registrationMessage = opaque.clientRegistrationFinish({
+    clientIdentifier,
     clientRegistration,
     registrationResponse,
     password,
   });
 
   const res = await request("POST", `/register/finish`, {
-    username,
+    clientIdentifier,
     registrationMessage,
   });
   console.log("finish successful", res.ok);
   return res.ok;
 }
 
-async function login(username, password) {
+async function login(clientIdentifier, password) {
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = await request("POST", "/login/start", {
-    username,
+    clientIdentifier,
     credentialRequest,
   }).then((res) => res.json());
 
   const loginResult = opaque.clientLoginFinish({
     clientLogin,
     credentialResponse,
+    clientIdentifier,
     password,
   });
 
@@ -59,7 +61,7 @@ async function login(username, password) {
   }
   const { sessionKey, credentialFinalization } = loginResult;
   const res = await request("POST", "/login/finish", {
-    username,
+    clientIdentifier,
     credentialFinalization,
   });
   return res.ok ? sessionKey : null;

@@ -31,17 +31,17 @@ function sendError(res, status, error) {
 }
 
 app.post("/register/start", (req, res) => {
-  const { username, registrationRequest } = req.body || {};
+  const { clientIdentifier, registrationRequest } = req.body || {};
 
-  if (!username) return sendError(res, 400, "missing username");
+  if (!clientIdentifier) return sendError(res, 400, "missing clientIdentifier");
   if (!registrationRequest)
     return sendError(res, 400, "missing registrationRequest");
-  if (db.hasUser(username))
+  if (db.hasUser(clientIdentifier))
     return sendError(res, 400, "user already registered");
 
   const registrationResponse = opaque.serverRegistrationStart({
     serverSetup,
-    username,
+    clientIdentifier,
     registrationRequest,
   });
 
@@ -50,44 +50,44 @@ app.post("/register/start", (req, res) => {
 });
 
 app.post("/register/finish", (req, res) => {
-  const { username, registrationMessage } = req.body || {};
-  if (!username) return sendError(res, 400, "missing username");
+  const { clientIdentifier, registrationMessage } = req.body || {};
+  if (!clientIdentifier) return sendError(res, 400, "missing clientIdentifier");
   if (!registrationMessage)
     return sendError(res, 400, "missing registrationMessage");
   const passwordFile = opaque.serverRegistrationFinish(registrationMessage);
-  db.setUser(username, passwordFile);
+  db.setUser(clientIdentifier, passwordFile);
   res.writeHead(200);
   res.end();
 });
 
 app.post("/login/start", (req, res) => {
-  const { username, credentialRequest } = req.body || {};
-  const passwordFile = username && db.getUser(username);
+  const { clientIdentifier, credentialRequest } = req.body || {};
+  const passwordFile = clientIdentifier && db.getUser(clientIdentifier);
 
-  if (!username) return sendError(res, 400, "missing username");
+  if (!clientIdentifier) return sendError(res, 400, "missing clientIdentifier");
   if (!credentialRequest)
     return sendError(res, 400, "missing credentialRequest");
   if (!passwordFile) return sendError(res, 400, "user not registered");
-  if (db.hasLogin(username))
+  if (db.hasLogin(clientIdentifier))
     return sendError(res, 400, "login already started");
 
   const { serverLogin, credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    username,
+    clientIdentifier,
     passwordFile,
     credentialRequest,
   });
 
-  db.setLogin(username, serverLogin);
+  db.setLogin(clientIdentifier, serverLogin);
   res.send({ credentialResponse });
   res.end();
 });
 
 app.post("/login/finish", (req, res) => {
-  const { username, credentialFinalization } = req.body || {};
-  const serverLogin = username && db.getLogin(username);
+  const { clientIdentifier, credentialFinalization } = req.body || {};
+  const serverLogin = clientIdentifier && db.getLogin(clientIdentifier);
 
-  if (!username) return sendError(res, 400, "missing username");
+  if (!clientIdentifier) return sendError(res, 400, "missing clientIdentifier");
   if (!credentialFinalization)
     return sendError(res, 400, "missing credentialFinalization");
   if (!serverLogin) return sendError(res, 400, "login not started");
@@ -98,8 +98,8 @@ app.post("/login/finish", (req, res) => {
     serverLogin,
   });
 
-  activeSessions[sessionKey] = username;
-  db.removeLogin(username);
+  activeSessions[sessionKey] = clientIdentifier;
+  db.removeLogin(clientIdentifier);
   res.writeHead(200);
   res.end();
 });
@@ -110,7 +110,7 @@ app.post("/logout", (req, res) => {
   if (!auth) return sendError(res, 401, "missing authorization header");
   if (!user) return sendError(res, 401, "no active session");
 
-  delete activeSessions[username];
+  delete activeSessions[clientIdentifier];
   res.end();
 });
 
