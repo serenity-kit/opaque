@@ -75,7 +75,7 @@ test("full registration & login with bad password", () => {
     password: "hunter23",
   });
 
-  expect(loginResult).toBe(null);
+  expect(loginResult).toBeUndefined();
 });
 
 test("full registration & login flow with custom client identifier", () => {
@@ -109,7 +109,7 @@ test("full registration & login flow with custom client identifier", () => {
     },
   });
 
-  expect(loginResult).not.toBe(null);
+  expect(loginResult).not.toBeUndefined();
 
   const { sessionKey: clientSessionKey, credentialFinalization } = loginResult;
 
@@ -152,5 +152,5 @@ test("full registration & login flow mismatched custom client identifier on serv
     },
   });
 
-  expect(loginResult).toBe(null);
+  expect(loginResult).toBeUndefined();
 });
