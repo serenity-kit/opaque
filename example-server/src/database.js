@@ -28,7 +28,7 @@ export default class Database {
   stringify() {
     return JSON.stringify(
       {
-        serverSetup: db.serverSetup,
+        serverSetup: this.serverSetup,
         logins: this.logins,
         users: this.users,
       },
@@ -71,5 +71,5 @@ export function readDatabaseFile(filePath) {
 
 export function writeDatabaseFile(filePath, db) {
   const data = db.stringify();
-  return writeFile(this.filePath, data);
+  return writeFile(filePath, data);
 }
