@@ -10,12 +10,17 @@ shell.exec("wasm-pack build --target nodejs --out-dir build/cjs");
 shell.rm("build/esm/.gitignore");
 shell.rm("build/cjs/.gitignore");
 
+shell.rm("build/esm/package.json");
+shell.rm("build/cjs/package.json");
+
 const packageJson = `{
   "name": "opaque",
   "collaborators": [
-    "Stefan Oestreicher <oestef@gmail.com>"
+    "Stefan Oestreicher <oestef@gmail.com>",
+    "Nik Graf <nik@nikgraf.com>"
   ],
   "version": "${version}",
+  "license" : "MIT",
   "files": [
     "esm/opaque_bg.wasm",
     "esm/opaque_bg.d.ts",
@@ -35,3 +40,6 @@ const packageJson = `{
 `;
 
 new shell.ShellString(packageJson).to("./build/package.json");
+
+shell.cp("README.md", "build/README.md");
+shell.cp("LICENSE", "build/LICENSE");
