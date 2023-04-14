@@ -10,6 +10,9 @@ shell.exec("wasm-pack build --target nodejs --out-dir build/cjs");
 shell.rm("build/esm/.gitignore");
 shell.rm("build/cjs/.gitignore");
 
+shell.rm("build/esm/package.json");
+shell.rm("build/cjs/package.json");
+
 const packageJson = `{
   "name": "opaque",
   "collaborators": [
