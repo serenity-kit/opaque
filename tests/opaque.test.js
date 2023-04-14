@@ -13,27 +13,37 @@ function setupAndRegister(
     clientIdentifier,
     registrationRequest,
   });
-  const registrationMessage = opaque.clientRegistrationFinish({
-    clientRegistration,
-    registrationResponse,
-    password,
-    clientIdentifier,
-    serverIdentifier,
-  });
-  const passwordFile = opaque.serverRegistrationFinish(registrationMessage);
-  return { serverSetup, passwordFile, registrationMessage };
+  const { registrationUpload, exportKey, serverStaticPublicKey } =
+    opaque.clientRegistrationFinish({
+      clientRegistration,
+      registrationResponse,
+      password,
+      clientIdentifier,
+      serverIdentifier,
+    });
+  const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
+  return {
+    serverSetup,
+    passwordFile,
+    registrationUpload,
+    exportKey,
+    serverStaticPublicKey,
+  };
 }
 
 test("full registration & login flow", () => {
   const clientIdentifier = "user123";
   const password = "hunter42";
 
-  const { serverSetup, passwordFile, registrationMessage } = setupAndRegister(
-    clientIdentifier,
-    password
-  );
+  const {
+    serverSetup,
+    passwordFile,
+    registrationUpload,
+    exportKey: registrationExportKey,
+    serverStaticPublicKey: registrationServerStaticPublicKey,
+  } = setupAndRegister(clientIdentifier, password);
 
-  expect(registrationMessage).toEqual(passwordFile);
+  expect(registrationUpload).toEqual(passwordFile);
 
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
@@ -53,7 +63,15 @@ test("full registration & login flow", () => {
 
   expect(loginResult).not.toBeUndefined();
 
-  const { sessionKey: clientSessionKey, credentialFinalization } = loginResult;
+  const {
+    sessionKey: clientSessionKey,
+    credentialFinalization,
+    exportKey: loginExportKey,
+    serverStaticPublicKey: loginServerStaticPublicKey,
+  } = loginResult;
+
+  expect(registrationExportKey).toEqual(loginExportKey);
+  expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
 
   const serverSessionKey = opaque.serverLoginFinish({
     serverSetup,

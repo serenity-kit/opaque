@@ -234,6 +234,10 @@ pub struct ClientLoginFinishResult {
     credential_finalization: String,
     #[serde(rename = "sessionKey")]
     session_key: String,
+    #[serde(rename = "exportKey")]
+    export_key: String,
+    #[serde(rename = "serverStaticPublicKey")]
+    server_static_public_key: String,
 }
 
 #[wasm_bindgen(js_name = clientLoginFinish)]
@@ -266,11 +270,12 @@ pub fn client_login_finish(
         return Ok(None);
     }
     let client_login_finish_result = result.unwrap();
-    let session_key = client_login_finish_result.session_key;
+
     return Ok(Some(ClientLoginFinishResult {
-        credential_finalization: BASE64
-            .encode(client_login_finish_result.message.serialize().to_vec()),
-        session_key: BASE64.encode(session_key.to_vec()),
+        credential_finalization: BASE64.encode(client_login_finish_result.message.serialize()),
+        session_key: BASE64.encode(client_login_finish_result.session_key),
+        export_key: BASE64.encode(client_login_finish_result.export_key),
+        server_static_public_key: BASE64.encode(client_login_finish_result.server_s_pk.serialize()),
     }));
 }
 
@@ -320,10 +325,21 @@ pub struct ClientRegistrationFinishParams {
     server_identifier: Option<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct ClientRegistrationFinishResult {
+    #[serde(rename = "registrationUpload")]
+    registration_upload: String,
+    #[serde(rename = "exportKey")]
+    export_key: String,
+    #[serde(rename = "serverStaticPublicKey")]
+    server_static_public_key: String,
+}
+
 #[wasm_bindgen(js_name = clientRegistrationFinish)]
 pub fn client_registration_finish(
     params: ClientRegistrationFinishParams,
-) -> Result<String, JsError> {
+) -> Result<ClientRegistrationFinishResult, JsError> {
     let registration_response_bytes = BASE64.decode(params.registration_response)?;
     let mut rng: OsRng = OsRng;
     let state = ClientRegistration::<DefaultCipherSuite>::deserialize(
@@ -349,5 +365,11 @@ pub fn client_registration_finish(
         )
         .map_err(|_| JsError::new("failed to finish client registration"))?;
     let message_bytes = client_finish_registration_result.message.serialize();
-    return Ok(BASE64.encode(message_bytes.to_vec()).into());
+    let result = ClientRegistrationFinishResult {
+        registration_upload: BASE64.encode(message_bytes.to_vec()),
+        export_key: BASE64.encode(client_finish_registration_result.export_key),
+        server_static_public_key: BASE64
+            .encode(client_finish_registration_result.server_s_pk.serialize()),
+    };
+    return Ok(result);
 }
