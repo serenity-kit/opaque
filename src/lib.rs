@@ -54,12 +54,6 @@ fn from_protocol_error(context: &'static str) -> impl Fn(ProtocolError) -> Error
     move |error| Error::Protocol { context, error }
 }
 
-impl From<base64::DecodeError> for Error {
-    fn from(error: base64::DecodeError) -> Self {
-        Error::Base64 { context: "", error }
-    }
-}
-
 impl From<Error> for JsError {
     fn from(err: Error) -> Self {
         let msg = match err {
