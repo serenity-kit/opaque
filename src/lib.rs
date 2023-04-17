@@ -1,6 +1,7 @@
 mod utils;
 
 use argon2::Argon2;
+use js_sys::JsString;
 use opaque_ke::ciphersuite::CipherSuite;
 use opaque_ke::errors::ProtocolError;
 use opaque_ke::rand::rngs::OsRng;
@@ -128,8 +129,13 @@ pub fn server_registration_start(params: ServerRegistrationStartParams) -> Resul
 }
 
 #[wasm_bindgen(js_name = serverRegistrationFinish)]
-pub fn server_registration_finish(message: String) -> Result<String, JsError> {
-    let message_bytes = base64_decode("message", message)?;
+pub fn server_registration_finish(message: JsString) -> Result<String, JsError> {
+    let message_bytes = base64_decode(
+        "message",
+        message
+            .as_string()
+            .ok_or(JsError::new("message must be a string"))?,
+    )?;
     let password_file = ServerRegistration::finish(
         RegistrationUpload::<DefaultCipherSuite>::deserialize(&message_bytes)
             .map_err(from_protocol_error("deserialize message"))?,
@@ -238,11 +244,16 @@ pub struct ClientLoginStartResult {
 }
 
 #[wasm_bindgen(js_name = clientLoginStart)]
-pub fn client_login_start(password: String) -> Result<ClientLoginStartResult, JsError> {
+pub fn client_login_start(password: JsString) -> Result<ClientLoginStartResult, JsError> {
     let mut client_rng = OsRng;
-    let client_login_start_result =
-        ClientLogin::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes())
-            .map_err(from_protocol_error("start clientLogin"))?;
+    let client_login_start_result = ClientLogin::<DefaultCipherSuite>::start(
+        &mut client_rng,
+        password
+            .as_string()
+            .ok_or(JsError::new("password must be a string"))?
+            .as_bytes(),
+    )
+    .map_err(from_protocol_error("start clientLogin"))?;
 
     let result = ClientLoginStartResult {
         client_login: BASE64.encode(client_login_start_result.state.serialize()),
@@ -330,13 +341,18 @@ pub struct ClientRegistrationStartResult {
 
 #[wasm_bindgen(js_name = clientRegistrationStart)]
 pub fn client_registration_start(
-    password: String,
+    password: JsString,
 ) -> Result<ClientRegistrationStartResult, JsError> {
     let mut client_rng = OsRng;
 
-    let client_registration_start_result =
-        ClientRegistration::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes())
-            .map_err(from_protocol_error("start clientRegistration"))?;
+    let client_registration_start_result = ClientRegistration::<DefaultCipherSuite>::start(
+        &mut client_rng,
+        password
+            .as_string()
+            .ok_or(JsError::new("password must be a string"))?
+            .as_bytes(),
+    )
+    .map_err(from_protocol_error("start clientRegistration"))?;
 
     let result = ClientRegistrationStartResult {
         client_registration: BASE64.encode(client_registration_start_result.state.serialize()),
