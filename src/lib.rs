@@ -2,6 +2,7 @@ mod utils;
 
 use argon2::Argon2;
 use opaque_ke::ciphersuite::CipherSuite;
+use opaque_ke::errors::ProtocolError;
 use opaque_ke::rand::rngs::OsRng;
 use opaque_ke::{
     ClientLogin, ClientLoginFinishParameters, ClientRegistration,
@@ -34,6 +35,45 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 //     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 // }
 
+enum Error {
+    Protocol {
+        context: &'static str,
+        error: ProtocolError,
+    },
+    Base64 {
+        context: &'static str,
+        error: base64::DecodeError,
+    },
+}
+
+fn from_base64_error(context: &'static str) -> impl Fn(base64::DecodeError) -> Error {
+    move |error| Error::Base64 { context, error }
+}
+
+fn from_protocol_error(context: &'static str) -> impl Fn(ProtocolError) -> Error {
+    move |error| Error::Protocol { context, error }
+}
+
+impl From<base64::DecodeError> for Error {
+    fn from(error: base64::DecodeError) -> Self {
+        Error::Base64 { context: "", error }
+    }
+}
+
+impl From<Error> for JsError {
+    fn from(err: Error) -> Self {
+        let msg = match err {
+            Error::Protocol { context, error } => {
+                format!("opaque protocol error at \"{}\"; {}", context, error)
+            }
+            Error::Base64 { context, error } => {
+                format!("base64 decoding failed at \"{}\"; {}", context, error)
+            }
+        };
+        JsError::new(&msg)
+    }
+}
+
 struct DefaultCipherSuite;
 
 impl CipherSuite for DefaultCipherSuite {
@@ -46,21 +86,24 @@ impl CipherSuite for DefaultCipherSuite {
 
 const BASE64: b64::GeneralPurpose = b64::URL_SAFE_NO_PAD;
 
+type JsResult<T> = Result<T, Error>;
+
+fn base64_decode<T: AsRef<[u8]>>(context: &'static str, input: T) -> JsResult<Vec<u8>> {
+    BASE64.decode(input).map_err(from_base64_error(context))
+}
+
 #[wasm_bindgen(js_name = serverSetup)]
 pub fn server_setup() -> String {
     let mut rng: OsRng = OsRng;
     let setup = ServerSetup::<DefaultCipherSuite>::new(&mut rng);
-    return BASE64.encode(setup.serialize().to_vec());
+    return BASE64.encode(setup.serialize());
 }
 
-fn decode_server_setup(data: String) -> Result<ServerSetup<DefaultCipherSuite>, JsError> {
-    return BASE64
-        .decode(data)
-        .map_err(|_| JsError::new("failed to base64 decode server setup state"))
-        .and_then(|bytes| {
-            ServerSetup::<DefaultCipherSuite>::deserialize(&bytes)
-                .map_err(|_| JsError::new("failed to deserialize server setup state"))
-        });
+fn decode_server_setup(data: String) -> JsResult<ServerSetup<DefaultCipherSuite>> {
+    return base64_decode("serverSetup", data).and_then(|bytes| {
+        ServerSetup::<DefaultCipherSuite>::deserialize(&bytes)
+            .map_err(from_protocol_error("deserialize serverSetup"))
+    });
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -77,26 +120,27 @@ pub struct ServerRegistrationStartParams {
 #[wasm_bindgen(js_name = serverRegistrationStart)]
 pub fn server_registration_start(params: ServerRegistrationStartParams) -> Result<String, JsError> {
     let server_setup = decode_server_setup(params.server_setup)?;
-    let registration_request_bytes = BASE64.decode(params.registration_request)?;
+    let registration_request_bytes =
+        base64_decode("registrationRequest", params.registration_request)?;
     let server_registration_start_result = ServerRegistration::<DefaultCipherSuite>::start(
         &server_setup,
         RegistrationRequest::deserialize(&registration_request_bytes)
-            .map_err(|_| JsError::new("failed to deserialize registrationRequest"))?,
+            .map_err(from_protocol_error("deserialize registrationRequest"))?,
         params.client_identifier.as_bytes(),
     )
-    .map_err(|_| JsError::new("failed to start server registration"))?;
+    .map_err(from_protocol_error("start serverRegistration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
-    return Ok(BASE64.encode(registration_response_bytes.to_vec()));
+    return Ok(BASE64.encode(registration_response_bytes));
 }
 
 #[wasm_bindgen(js_name = serverRegistrationFinish)]
 pub fn server_registration_finish(message: String) -> Result<String, JsError> {
-    let message_bytes = BASE64.decode(message)?;
+    let message_bytes = base64_decode("message", message)?;
     let password_file = ServerRegistration::finish(
         RegistrationUpload::<DefaultCipherSuite>::deserialize(&message_bytes)
-            .map_err(|_| JsError::new("failed to deserialize message"))?,
+            .map_err(from_protocol_error("deserialize message"))?,
     );
-    Ok(BASE64.encode(password_file.serialize().to_vec()))
+    Ok(BASE64.encode(password_file.serialize()))
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -129,12 +173,12 @@ pub fn server_login_start(
     params: ServerLoginStartParams,
 ) -> Result<ServerLoginStartResult, JsError> {
     let server_setup = decode_server_setup(params.server_setup)?;
-    let password_file_bytes = BASE64.decode(params.password_file)?;
-    let credential_request_bytes = BASE64.decode(params.credential_request)?;
+    let password_file_bytes = base64_decode("passwordFile", params.password_file)?;
+    let credential_request_bytes = base64_decode("credentialRequest", params.credential_request)?;
 
     let mut rng: OsRng = OsRng;
     let password_file = ServerRegistration::<DefaultCipherSuite>::deserialize(&password_file_bytes)
-        .map_err(|_| JsError::new("failed to deserialize passwordFile"))?;
+        .map_err(from_protocol_error("deserialize passwordFile"))?;
 
     let start_params = ServerLoginStartParameters {
         identifiers: Identifiers {
@@ -149,14 +193,14 @@ pub fn server_login_start(
         &server_setup,
         Some(password_file),
         CredentialRequest::deserialize(&credential_request_bytes)
-            .map_err(|_| JsError::new("failed to deserialize credentialRequest"))?,
+            .map_err(from_protocol_error("deserialize credentialRequest"))?,
         params.client_identifier.as_bytes(),
         start_params,
     )
-    .map_err(|_| JsError::new("failed to start login"))?;
+    .map_err(from_protocol_error("start serverLogin"))?;
 
-    let credential_response = BASE64.encode(server_login_start_result.message.serialize().to_vec());
-    let server_login = BASE64.encode(server_login_start_result.state.serialize().to_vec());
+    let credential_response = BASE64.encode(server_login_start_result.message.serialize());
+    let server_login = BASE64.encode(server_login_start_result.state.serialize());
 
     let result = ServerLoginStartResult {
         server_login,
@@ -176,17 +220,18 @@ pub struct ServerLoginFinishParams {
 
 #[wasm_bindgen(js_name = serverLoginFinish)]
 pub fn server_login_finish(params: ServerLoginFinishParams) -> Result<String, JsError> {
-    let credential_finalization_bytes = BASE64.decode(params.credential_finalization)?;
-    let state_bytes = BASE64.decode(params.server_login)?;
+    let credential_finalization_bytes =
+        base64_decode("credentialFinalization", params.credential_finalization)?;
+    let state_bytes = base64_decode("serverLogin", params.server_login)?;
     let state = ServerLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
-        .map_err(|_| JsError::new("failed to deserialize server login state"))?;
+        .map_err(from_protocol_error("deserialize serverLogin"))?;
     let server_login_finish_result = state
         .finish(
             CredentialFinalization::deserialize(&credential_finalization_bytes)
-                .map_err(|_| JsError::new("failed to deserialize credentialFinalization"))?,
+                .map_err(from_protocol_error("deserialize credentialFinalization"))?,
         )
-        .map_err(|_| JsError::new("failed to finish server login"))?;
-    return Ok(BASE64.encode(server_login_finish_result.session_key.to_vec()));
+        .map_err(from_protocol_error("finish serverLogin"))?;
+    return Ok(BASE64.encode(server_login_finish_result.session_key));
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -203,7 +248,7 @@ pub fn client_login_start(password: String) -> Result<ClientLoginStartResult, Js
     let mut client_rng = OsRng;
     let client_login_start_result =
         ClientLogin::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes())
-            .map_err(|_| JsError::new("failed to start client login"))?;
+            .map_err(from_protocol_error("start clientLogin"))?;
 
     let result = ClientLoginStartResult {
         client_login: BASE64.encode(client_login_start_result.state.serialize()),
@@ -244,10 +289,11 @@ pub struct ClientLoginFinishResult {
 pub fn client_login_finish(
     params: ClientLoginFinishParams,
 ) -> Result<Option<ClientLoginFinishResult>, JsError> {
-    let credential_response_bytes = BASE64.decode(params.credential_response)?;
-    let state_bytes = BASE64.decode(params.client_login)?;
+    let credential_response_bytes =
+        base64_decode("credentialResponse", params.credential_response)?;
+    let state_bytes = base64_decode("clientLogin", params.client_login)?;
     let state = ClientLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
-        .map_err(|_| JsError::new("failed to deserialize client login state"))?;
+        .map_err(from_protocol_error("deserialize clientLogin"))?;
 
     let finish_params = ClientLoginFinishParameters::new(
         None,
@@ -261,7 +307,7 @@ pub fn client_login_finish(
     let result = state.finish(
         params.password.as_bytes(),
         CredentialResponse::deserialize(&credential_response_bytes)
-            .map_err(|_| JsError::new("failed to deserialize credentialResponse"))?,
+            .map_err(from_protocol_error("deserialize credentialResponse"))?,
         finish_params,
     );
 
@@ -296,7 +342,7 @@ pub fn client_registration_start(
 
     let client_registration_start_result =
         ClientRegistration::<DefaultCipherSuite>::start(&mut client_rng, password.as_bytes())
-            .map_err(|_| JsError::new("failed to start client registration"))?;
+            .map_err(from_protocol_error("start clientRegistration"))?;
 
     let result = ClientRegistrationStartResult {
         client_registration: BASE64.encode(client_registration_start_result.state.serialize()),
@@ -340,12 +386,12 @@ pub struct ClientRegistrationFinishResult {
 pub fn client_registration_finish(
     params: ClientRegistrationFinishParams,
 ) -> Result<ClientRegistrationFinishResult, JsError> {
-    let registration_response_bytes = BASE64.decode(params.registration_response)?;
+    let registration_response_bytes =
+        base64_decode("registrationResponse", params.registration_response)?;
     let mut rng: OsRng = OsRng;
-    let state = ClientRegistration::<DefaultCipherSuite>::deserialize(
-        &BASE64.decode(params.client_registration)?,
-    )
-    .map_err(|_| JsError::new("failed to deserialize client registration state"))?;
+    let client_registration = base64_decode("clientRegistration", params.client_registration)?;
+    let state = ClientRegistration::<DefaultCipherSuite>::deserialize(&client_registration)
+        .map_err(from_protocol_error("deserialize clientRegistration"))?;
 
     let finish_params = ClientRegistrationFinishParameters::new(
         Identifiers {
@@ -360,10 +406,11 @@ pub fn client_registration_finish(
             &mut rng,
             params.password.as_bytes(),
             RegistrationResponse::deserialize(&registration_response_bytes)
-                .map_err(|_| JsError::new("failed to deserialize registrationResponse"))?,
+                .map_err(from_protocol_error("deserialize registrationResponse"))?,
             finish_params,
         )
-        .map_err(|_| JsError::new("failed to finish client registration"))?;
+        .map_err(from_protocol_error("finish clientRegistration"))?;
+
     let message_bytes = client_finish_registration_result.message.serialize();
     let result = ClientRegistrationFinishResult {
         registration_upload: BASE64.encode(message_bytes.to_vec()),
