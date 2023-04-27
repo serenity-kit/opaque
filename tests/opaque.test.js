@@ -227,6 +227,30 @@ describe("serverRegistrationFinish", () => {
 });
 
 describe("serverRegistrationStart", () => {
+  test("invalid params type", () => {
+    expect(() => opaque.serverRegistrationStart()).toThrow(
+      "invalid type: unit value, expected struct ServerRegistrationStartParams"
+    );
+    expect(() => opaque.serverRegistrationStart(123)).toThrow(
+      "invalid type: floating point `123`, expected struct ServerRegistrationStartParams"
+    );
+    expect(() => opaque.serverRegistrationStart("test")).toThrow(
+      'invalid type: string "test", expected struct ServerRegistrationStartParams'
+    );
+  });
+
+  test("incomplete params object", () => {
+    expect(() => opaque.serverRegistrationStart({})).toThrow(
+      "missing field `serverSetup`"
+    );
+    expect(() => opaque.serverRegistrationStart({ serverSetup: "" })).toThrow(
+      "missing field `clientIdentifier`"
+    );
+    expect(() =>
+      opaque.serverRegistrationStart({ serverSetup: "", clientIdentifier: "" })
+    ).toThrow("missing field `registrationRequest`");
+  });
+
   test("serverSetup invalid", () => {
     expect(() => {
       const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
