@@ -20,7 +20,7 @@ jobs:
       - name: install opaque as dependency
         run: pnpm install
       - name: install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install
       - name: run Playwright tests
         run: cd example-client && pnpm exec playwright test
       - uses: actions/upload-artifact@v3
