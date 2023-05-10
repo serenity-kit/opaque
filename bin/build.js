@@ -1,17 +1,18 @@
-const shell = require("shelljs");
+const { execFileSync } = require("child_process");
+const { readFileSync, writeFileSync } = require("fs");
+const path = require("path");
 
-const version = "0.1.0";
+const pkg = JSON.parse(readFileSync(path.join(__dirname, "../package.json")));
 
-shell.rm("-rf", "build");
-
-shell.exec("wasm-pack build --target bundler --out-dir build/esm");
-shell.exec("wasm-pack build --target nodejs --out-dir build/cjs");
-
-shell.rm("build/esm/.gitignore");
-shell.rm("build/cjs/.gitignore");
-
-shell.rm("build/esm/package.json");
-shell.rm("build/cjs/package.json");
+if (process.platform === "win32") {
+  execFileSync(path.join(__dirname, "build.bat"), {
+    stdio: "inherit",
+  });
+} else {
+  execFileSync(path.join(__dirname, "build.sh"), {
+    stdio: "inherit",
+  });
+}
 
 const packageJson = `{
   "name": "opaque",
@@ -19,8 +20,8 @@ const packageJson = `{
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"
   ],
-  "version": "${version}",
-  "license" : "MIT",
+  "version": "${pkg.version}",
+  "license": "MIT",
   "files": [
     "esm/opaque_bg.wasm",
     "esm/opaque_bg.d.ts",
@@ -36,10 +37,6 @@ const packageJson = `{
   "types": "esm/opaque.d.ts",
   "main": "cjs/opaque.js",
   "browser": "esm/opaque.js"
-}
-`;
+}`;
 
-new shell.ShellString(packageJson).to("./build/package.json");
-
-shell.cp("README.md", "build/README.md");
-shell.cp("LICENSE", "build/LICENSE");
+writeFileSync(path.join(__dirname, "../build/package.json"), packageJson);
