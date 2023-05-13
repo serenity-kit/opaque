@@ -1,7 +1,6 @@
 {
   "name": "opaque-monorepo",
   "version": "0.1.0",
-  "author": "",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.21.4",
