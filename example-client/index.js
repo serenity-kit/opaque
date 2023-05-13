@@ -1,4 +1,4 @@
-import * as opaque from "opaque";
+import * as opaque from "@serenity-kit/opaque";
 
 const host = "http://localhost:8089";
 

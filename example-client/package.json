@@ -8,7 +8,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "opaque": "workspace:*"
+    "@serenity-kit/opaque": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.33.0",

@@ -15,7 +15,7 @@ if (process.platform === "win32") {
 }
 
 const packageJson = `{
-  "name": "opaque",
+  "name": "@serenity-kit/opaque",
   "collaborators": [
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"

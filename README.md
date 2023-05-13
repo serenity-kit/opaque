@@ -1,21 +1,74 @@
 # Opaque
 
-## Development
+## Install
 
-Prerequisites:
-
-- pnpm
-- rust toolchain
-- wasm-pack
-
-To run the wasm-pack build you can run
-
-```
-pnpm build
+```sh
+npm install @serenity-kit/opaque
 ```
 
-The project is set up as a workspace with the following packages below.
-These packages depend on the built `./build` directory so make sure to run `pnpm build` and `pnpm install` before trying to run them.
+## Usage
+
+```ts
+import * as opaque from "@serenity-kit/opaque";
+```
+
+### Registration Flow
+
+```ts
+// client
+const { clientRegistration, registrationRequest } =
+  opaque.clientRegistrationStart(password);
+
+// server
+const registrationResponse = opaque.serverRegistrationStart({
+  serverSetup,
+  clientIdentifier,
+  registrationRequest,
+});
+
+// client
+const { registrationUpload } = opaque.clientRegistrationFinish({
+  clientIdentifier,
+  clientRegistration,
+  registrationResponse,
+  password,
+});
+
+// server
+const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
+```
+
+### Login Flow
+
+```ts
+// client
+const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+
+// server
+const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+  serverSetup,
+  clientIdentifier,
+  passwordFile,
+  credentialRequest,
+});
+
+// client
+const loginResult = opaque.clientLoginFinish({
+  clientLogin,
+  credentialResponse,
+  clientIdentifier,
+  password,
+});
+
+// server
+const sessionKey = opaque.serverLoginFinish({
+  serverSetup,
+  credentialFinalization,
+  serverLogin,
+});
+```
+
+## Examples
 
 ### example-server
 

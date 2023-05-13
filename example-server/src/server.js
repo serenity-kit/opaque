@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import * as opaque from "opaque";
+import * as opaque from "@serenity-kit/opaque";
 import Database, { readDatabaseFile, writeDatabaseFile } from "./database.js";
 
 const activeSessions = {};
