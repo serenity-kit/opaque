@@ -14,6 +14,7 @@
     "build": "node ./bin/build.js",
     "example:client:dev": "cd example-client && pnpm dev",
     "example:server:dev": "cd example-server && pnpm dev",
-    "test": "jest"
+    "test": "jest",
+    "publish": "cd build && pnpm publish"
   }
 }
