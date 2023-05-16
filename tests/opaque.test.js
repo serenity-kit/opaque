@@ -1,15 +1,16 @@
 import * as opaque from "../build";
 
 function setupAndRegister(
-  clientIdentifier,
+  credentialIdentifier,
   password,
-  serverIdentifier = undefined
+  { serverIdentifier, clientIdentifier } = {}
 ) {
   const serverSetup = opaque.serverSetup();
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const registrationResponse = opaque.serverRegistrationStart({
     serverSetup,
+    credentialIdentifier,
     clientIdentifier,
     registrationRequest,
   });
@@ -18,6 +19,7 @@ function setupAndRegister(
       clientRegistration,
       registrationResponse,
       password,
+      credentialIdentifier,
       clientIdentifier,
       serverIdentifier,
     });
@@ -32,7 +34,7 @@ function setupAndRegister(
 }
 
 test("full registration & login flow", () => {
-  const clientIdentifier = "user123";
+  const credentialIdentifier = "user123";
   const password = "hunter42";
 
   const {
@@ -41,7 +43,7 @@ test("full registration & login flow", () => {
     registrationUpload,
     exportKey: registrationExportKey,
     serverStaticPublicKey: registrationServerStaticPublicKey,
-  } = setupAndRegister(clientIdentifier, password);
+  } = setupAndRegister(credentialIdentifier, password);
 
   expect(registrationUpload).toEqual(passwordFile);
 
@@ -49,7 +51,7 @@ test("full registration & login flow", () => {
 
   const { serverLogin, credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    clientIdentifier,
+    credentialIdentifier,
     passwordFile,
     credentialRequest,
   });
@@ -58,7 +60,6 @@ test("full registration & login flow", () => {
     clientLogin,
     credentialResponse,
     password,
-    clientIdentifier,
   });
 
   expect(loginResult).not.toBeUndefined();
@@ -83,10 +84,10 @@ test("full registration & login flow", () => {
 });
 
 test("full registration & login with bad password", () => {
-  const clientIdentifier = "user123";
+  const credentialIdentifier = "user123";
 
   const { serverSetup, passwordFile } = setupAndRegister(
-    clientIdentifier,
+    credentialIdentifier,
     "hunter42"
   );
   const { clientLogin, credentialRequest } =
@@ -94,7 +95,7 @@ test("full registration & login with bad password", () => {
 
   const { credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    clientIdentifier,
+    credentialIdentifier,
     passwordFile,
     credentialRequest,
   });
@@ -103,25 +104,27 @@ test("full registration & login with bad password", () => {
     clientLogin,
     credentialResponse,
     password: "hunter23",
-    clientIdentifier,
   });
 
   expect(loginResult).toBeUndefined();
 });
 
 test("full registration & login flow with mismatched custom client identifier on server login", () => {
-  const clientIdentifier = "user123";
+  const credentialIdentifier = "user123";
+  const clientIdentifier = "client123";
   const password = "hunter2";
 
   const { serverSetup, passwordFile } = setupAndRegister(
-    clientIdentifier,
-    password
+    credentialIdentifier,
+    password,
+    { clientIdentifier }
   );
 
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = opaque.serverLoginStart({
     serverSetup,
+    credentialIdentifier,
     clientIdentifier,
     passwordFile,
     credentialRequest,
@@ -138,22 +141,22 @@ test("full registration & login flow with mismatched custom client identifier on
 });
 
 test("full registration & login attempt with mismatched serverIdentifier", () => {
-  const clientIdentifier = "user123";
+  const credentialIdentifier = "client123";
   const password = "hunter2";
 
   const { serverSetup, passwordFile } = setupAndRegister(
-    clientIdentifier,
+    credentialIdentifier,
     password,
-    "server-ident"
+    { serverIdentifier: "server-ident" }
   );
 
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    clientIdentifier,
     passwordFile,
     credentialRequest,
+    credentialIdentifier,
     serverIdentifier: "server-ident-abc",
   });
 
@@ -161,7 +164,6 @@ test("full registration & login attempt with mismatched serverIdentifier", () =>
     clientLogin,
     credentialResponse,
     password,
-    clientIdentifier,
     serverIdentifier: "server-ident",
   });
 
@@ -244,10 +246,13 @@ describe("serverRegistrationStart", () => {
       "missing field `serverSetup`"
     );
     expect(() => opaque.serverRegistrationStart({ serverSetup: "" })).toThrow(
-      "missing field `clientIdentifier`"
+      "missing field `credentialIdentifier`"
     );
     expect(() =>
-      opaque.serverRegistrationStart({ serverSetup: "", clientIdentifier: "" })
+      opaque.serverRegistrationStart({
+        serverSetup: "",
+        credentialIdentifier: "",
+      })
     ).toThrow("missing field `registrationRequest`");
   });
 
@@ -256,7 +261,7 @@ describe("serverRegistrationStart", () => {
       const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
       opaque.serverRegistrationStart({
         serverSetup: "abcd",
-        clientIdentifier: "user1",
+        credentialIdentifier: "user1",
         registrationRequest,
       });
     }).toThrow(
@@ -269,7 +274,7 @@ describe("serverRegistrationStart", () => {
       const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
       opaque.serverRegistrationStart({
         serverSetup: "a",
-        clientIdentifier: "user1",
+        credentialIdentifier: "user1",
         registrationRequest,
       });
     }).toThrow(
@@ -282,7 +287,7 @@ describe("serverRegistrationStart", () => {
       const serverSetup = opaque.serverSetup();
       opaque.serverRegistrationStart({
         serverSetup,
-        clientIdentifier: "user1",
+        credentialIdentifier: "user1",
         registrationRequest: "",
       });
     }).toThrow(
@@ -295,7 +300,7 @@ describe("serverRegistrationStart", () => {
       const serverSetup = opaque.serverSetup();
       opaque.serverRegistrationStart({
         serverSetup,
-        clientIdentifier: "user1",
+        credentialIdentifier: "user1",
         registrationRequest: "a",
       });
     }).toThrow(

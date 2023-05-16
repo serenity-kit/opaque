@@ -106,8 +106,8 @@ fn decode_server_setup(data: String) -> JsResult<ServerSetup<DefaultCipherSuite>
 pub struct ServerRegistrationStartParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
-    #[serde(rename = "clientIdentifier")]
-    client_identifier: String,
+    #[serde(rename = "credentialIdentifier")]
+    credential_identifier: String,
     #[serde(rename = "registrationRequest")]
     registration_request: String,
 }
@@ -121,7 +121,7 @@ pub fn server_registration_start(params: ServerRegistrationStartParams) -> Resul
         &server_setup,
         RegistrationRequest::deserialize(&registration_request_bytes)
             .map_err(from_protocol_error("deserialize registrationRequest"))?,
-        params.client_identifier.as_bytes(),
+        params.credential_identifier.as_bytes(),
     )
     .map_err(from_protocol_error("start serverRegistration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
@@ -152,8 +152,11 @@ pub struct ServerLoginStartParams {
     password_file: String,
     #[serde(rename = "credentialRequest")]
     credential_request: String,
+    #[serde(rename = "credentialIdentifier")]
+    credential_identifier: String,
+    #[tsify(optional)]
     #[serde(rename = "clientIdentifier")]
-    client_identifier: String,
+    client_identifier: Option<String>,
     #[tsify(optional)]
     #[serde(rename = "serverIdentifier")]
     server_identifier: Option<String>,
@@ -182,7 +185,7 @@ pub fn server_login_start(
 
     let start_params = ServerLoginStartParameters {
         identifiers: Identifiers {
-            client: Some(params.client_identifier.as_bytes()),
+            client: params.client_identifier.as_ref().map(|val| val.as_bytes()),
             server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
         },
         context: None,
@@ -194,7 +197,7 @@ pub fn server_login_start(
         Some(password_file),
         CredentialRequest::deserialize(&credential_request_bytes)
             .map_err(from_protocol_error("deserialize credentialRequest"))?,
-        params.client_identifier.as_bytes(),
+        params.credential_identifier.as_bytes(),
         start_params,
     )
     .map_err(from_protocol_error("start serverLogin"))?;
@@ -270,8 +273,9 @@ pub struct ClientLoginFinishParams {
     #[serde(rename = "credentialResponse")]
     credential_response: String,
     password: String,
+    #[tsify(optional)]
     #[serde(rename = "clientIdentifier")]
-    client_identifier: String,
+    client_identifier: Option<String>,
     #[tsify(optional)]
     #[serde(rename = "serverIdentifier")]
     server_identifier: Option<String>,
@@ -303,7 +307,7 @@ pub fn client_login_finish(
     let finish_params = ClientLoginFinishParameters::new(
         None,
         Identifiers {
-            client: Some(params.client_identifier.as_bytes()),
+            client: params.client_identifier.as_ref().map(|val| val.as_bytes()),
             server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
         },
         None,
@@ -374,8 +378,9 @@ pub struct ClientRegistrationFinishParams {
     registration_response: String,
     #[serde(rename = "clientRegistration")]
     client_registration: String,
+    #[tsify(optional)]
     #[serde(rename = "clientIdentifier")]
-    client_identifier: String,
+    client_identifier: Option<String>,
     #[tsify(optional)]
     #[serde(rename = "serverIdentifier")]
     server_identifier: Option<String>,
@@ -405,7 +410,7 @@ pub fn client_registration_finish(
 
     let finish_params = ClientRegistrationFinishParameters::new(
         Identifiers {
-            client: Some(params.client_identifier.as_bytes()),
+            client: params.client_identifier.as_ref().map(|val| val.as_bytes()),
             server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
         },
         None,
