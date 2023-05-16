@@ -1,5 +1,3 @@
-mod utils;
-
 use argon2::Argon2;
 use js_sys::JsString;
 use opaque_ke::ciphersuite::CipherSuite;
