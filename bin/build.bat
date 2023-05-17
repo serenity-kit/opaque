@@ -2,8 +2,8 @@
 
 rmdir /s /q build
 
-wasm-pack build --target bundler --out-dir build\esm
-wasm-pack build --target nodejs --out-dir build\cjs
+wasm-pack build --target bundler --out-dir build\esm --features wee_alloc
+wasm-pack build --target nodejs --out-dir build\cjs --features wee_alloc
 
 del build\esm\.gitignore
 del build\cjs\.gitignore
