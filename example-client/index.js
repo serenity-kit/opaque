@@ -17,42 +17,42 @@ async function request(method, path, body = undefined) {
   return res;
 }
 
-async function register(clientIdentifier, password) {
+async function register(credentialIdentifier, password) {
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const { registrationResponse } = await request("POST", `/register/start`, {
-    clientIdentifier,
+    credentialIdentifier,
     registrationRequest,
   }).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
   const { registrationUpload } = opaque.clientRegistrationFinish({
-    clientIdentifier,
+    credentialIdentifier,
     clientRegistration,
     registrationResponse,
     password,
   });
 
   const res = await request("POST", `/register/finish`, {
-    clientIdentifier,
+    credentialIdentifier,
     registrationUpload,
   });
   console.log("finish successful", res.ok);
   return res.ok;
 }
 
-async function login(clientIdentifier, password) {
+async function login(credentialIdentifier, password) {
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = await request("POST", "/login/start", {
-    clientIdentifier,
+    credentialIdentifier,
     credentialRequest,
   }).then((res) => res.json());
 
   const loginResult = opaque.clientLoginFinish({
     clientLogin,
     credentialResponse,
-    clientIdentifier,
+    credentialIdentifier,
     password,
   });
 
@@ -61,7 +61,7 @@ async function login(clientIdentifier, password) {
   }
   const { sessionKey, credentialFinalization } = loginResult;
   const res = await request("POST", "/login/finish", {
-    clientIdentifier,
+    credentialIdentifier,
     credentialFinalization,
   });
   return res.ok ? sessionKey : null;
