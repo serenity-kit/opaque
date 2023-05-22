@@ -7,6 +7,7 @@
     "@babel/preset-env": "^7.21.4",
     "@babel/preset-typescript": "^7.21.4",
     "babel-jest": "^29.5.0",
+    "cross-env": "^7.0.3",
     "jest": "^29.5.0",
     "prettier": "^2.8.7"
   },
@@ -14,7 +15,9 @@
     "build": "node ./bin/build.js",
     "example:client:dev": "cd example-client && pnpm dev",
     "example:server:dev": "cd example-server && pnpm dev",
-    "test": "jest",
+    "test:p256": "cross-env OPAQUE_BUILD=p256 jest",
+    "test:ristretto": "jest",
+    "test": "pnpm test:p256 && pnpm test:ristretto",
     "publish:ristretto": "cd build/ristretto && pnpm publish",
     "publish:p256": "cd build/p256 && pnpm publish",
     "publish": "pnpm publish:ristretto && pnpm publish:p256"
