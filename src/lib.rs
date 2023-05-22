@@ -69,11 +69,19 @@ impl From<Error> for JsError {
 
 struct DefaultCipherSuite;
 
+#[cfg(not(feature = "p256"))]
 impl CipherSuite for DefaultCipherSuite {
     type OprfCs = opaque_ke::Ristretto255;
     type KeGroup = opaque_ke::Ristretto255;
     type KeyExchange = opaque_ke::key_exchange::tripledh::TripleDh;
+    type Ksf = Argon2<'static>;
+}
 
+#[cfg(feature = "p256")]
+impl CipherSuite for DefaultCipherSuite {
+    type OprfCs = p256::NistP256;
+    type KeGroup = p256::NistP256;
+    type KeyExchange = opaque_ke::key_exchange::tripledh::TripleDh;
     type Ksf = Argon2<'static>;
 }
 
