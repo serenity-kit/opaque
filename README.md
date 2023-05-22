@@ -6,6 +6,8 @@
 npm install @serenity-kit/opaque
 ```
 
+test
+
 ## Usage
 
 ```ts

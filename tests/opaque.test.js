@@ -312,3 +312,99 @@ describe("serverRegistrationStart", () => {
     );
   });
 });
+
+describe("serverLoginStart", () => {
+  test("invalid params type", () => {
+    expect(() => opaque.serverLoginStart()).toThrow(
+      "invalid type: unit value, expected struct ServerLoginStartParams"
+    );
+    expect(() => opaque.serverLoginStart(123)).toThrow(
+      "invalid type: floating point `123`, expected struct ServerLoginStartParams"
+    );
+    expect(() => opaque.serverLoginStart("test")).toThrow(
+      'invalid type: string "test", expected struct ServerLoginStartParams'
+    );
+  });
+
+  test("incomplete params object", () => {
+    expect(() => opaque.serverLoginStart({})).toThrow(
+      "missing field `serverSetup`"
+    );
+    expect(() => opaque.serverLoginStart({ serverSetup: "" })).toThrow(
+      "missing field `credentialRequest`"
+    );
+    expect(() =>
+      opaque.serverLoginStart({
+        serverSetup: "",
+        credentialRequest: "",
+      })
+    ).toThrow("missing field `credentialIdentifier`");
+  });
+
+  test("serverSetup invalid", () => {
+    expect(() =>
+      opaque.serverLoginStart({
+        serverSetup: "",
+        credentialRequest: "",
+        credentialIdentifier: "",
+      })
+    ).toThrow(
+      'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
+    );
+  });
+
+  test("serverSetup encoding invalid", () => {
+    expect(() =>
+      opaque.serverLoginStart({
+        serverSetup: "a",
+        credentialRequest: "",
+        credentialIdentifier: "",
+      })
+    ).toThrow(
+      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+
+  test("credentialRequest invalid", () => {
+    expect(() =>
+      opaque.serverLoginStart({
+        serverSetup: opaque.serverSetup(),
+        credentialRequest: "",
+        credentialIdentifier: "",
+      })
+    ).toThrow(
+      'opaque protocol error at "deserialize credentialRequest"; Internal error encountered'
+    );
+  });
+
+  test("credentialRequest encoding invalid", () => {
+    expect(() =>
+      opaque.serverLoginStart({
+        serverSetup: opaque.serverSetup(),
+        credentialRequest: "a",
+        credentialIdentifier: "",
+      })
+    ).toThrow(
+      'base64 decoding failed at "credentialRequest"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+
+  test("dummy server login credential response", () => {
+    const password = "hunter2";
+    const serverSetup = opaque.serverSetup();
+    const { credentialRequest, clientLogin } =
+      opaque.clientLoginStart(password);
+    const { credentialResponse } = opaque.serverLoginStart({
+      credentialIdentifier: "user1",
+      serverSetup,
+      credentialRequest,
+      passwordFile: undefined,
+    });
+    const result = opaque.clientLoginFinish({
+      clientLogin,
+      credentialResponse,
+      password,
+    });
+    expect(result).toBeUndefined();
+  });
+});
