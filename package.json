@@ -15,6 +15,8 @@
     "example:client:dev": "cd example-client && pnpm dev",
     "example:server:dev": "cd example-server && pnpm dev",
     "test": "jest",
-    "publish": "cd build && pnpm publish"
+    "publish:ristretto": "cd build/ristretto && pnpm publish",
+    "publish:p256": "cd build/p256 && pnpm publish",
+    "publish": "pnpm publish:ristretto && pnpm publish:p256"
   }
 }

@@ -1,4 +1,4 @@
-import * as opaque from "../build";
+import * as opaque from "../build/ristretto";
 
 function setupAndRegister(
   credentialIdentifier,
