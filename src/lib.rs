@@ -147,7 +147,7 @@ pub struct ServerLoginStartParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
     #[serde(rename = "passwordFile")]
-    password_file: String,
+    password_file: Option<String>,
     #[serde(rename = "credentialRequest")]
     credential_request: String,
     #[serde(rename = "credentialIdentifier")]
@@ -174,12 +174,21 @@ pub fn server_login_start(
     params: ServerLoginStartParams,
 ) -> Result<ServerLoginStartResult, JsError> {
     let server_setup = decode_server_setup(params.server_setup)?;
-    let password_file_bytes = base64_decode("passwordFile", params.password_file)?;
+    let password_file_bytes = match params.password_file {
+        Some(pw) => base64_decode("passwordFile", pw).map(|val| Some(val)),
+        None => Ok(None),
+    }?;
     let credential_request_bytes = base64_decode("credentialRequest", params.credential_request)?;
 
     let mut rng: OsRng = OsRng;
-    let password_file = ServerRegistration::<DefaultCipherSuite>::deserialize(&password_file_bytes)
-        .map_err(from_protocol_error("deserialize passwordFile"))?;
+
+    let password_file = match password_file_bytes.as_ref() {
+        Some(bytes) => Some(
+            ServerRegistration::<DefaultCipherSuite>::deserialize(bytes)
+                .map_err(from_protocol_error("deserialize passwordFile"))?,
+        ),
+        None => None,
+    };
 
     let start_params = ServerLoginStartParameters {
         identifiers: Identifiers {
@@ -192,7 +201,7 @@ pub fn server_login_start(
     let server_login_start_result = ServerLogin::start(
         &mut rng,
         &server_setup,
-        Some(password_file),
+        password_file,
         CredentialRequest::deserialize(&credential_request_bytes)
             .map_err(from_protocol_error("deserialize credentialRequest"))?,
         params.credential_identifier.as_bytes(),
