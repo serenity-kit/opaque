@@ -308,3 +308,24 @@ describe("serverRegistrationStart", () => {
     );
   });
 });
+
+describe("serverLoginStart", () => {
+  test("dummy server login credential response", () => {
+    const password = "hunter2";
+    const serverSetup = opaque.serverSetup();
+    const { credentialRequest, clientLogin } =
+      opaque.clientLoginStart(password);
+    const { credentialResponse } = opaque.serverLoginStart({
+      credentialIdentifier: "user1",
+      serverSetup,
+      credentialRequest,
+      passwordFile: undefined,
+    });
+    const result = opaque.clientLoginFinish({
+      clientLogin,
+      credentialResponse,
+      password,
+    });
+    expect(result).toBeUndefined();
+  });
+});
