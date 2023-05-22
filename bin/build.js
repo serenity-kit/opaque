@@ -14,8 +14,9 @@ if (process.platform === "win32") {
   });
 }
 
-const packageJson = `{
-  "name": "@serenity-kit/opaque",
+const packageJson = function (name) {
+  return `{
+  "name": "@serenity-kit/${name}",
   "collaborators": [
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"
@@ -38,5 +39,13 @@ const packageJson = `{
   "main": "cjs/opaque.js",
   "browser": "esm/opaque.js"
 }`;
+};
 
-writeFileSync(path.join(__dirname, "../build/package.json"), packageJson);
+writeFileSync(
+  path.join(__dirname, "../build/ristretto/package.json"),
+  packageJson("opaque")
+);
+writeFileSync(
+  path.join(__dirname, "../build/p256/package.json"),
+  packageJson("opaque-p256")
+);

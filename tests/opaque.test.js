@@ -1,4 +1,8 @@
-import * as opaque from "../build";
+import * as opaqueP256 from "../build/p256";
+import * as opaqueRistretto from "../build/ristretto";
+
+const opaque =
+  process.env.OPAQUE_BUILD === "p256" ? opaqueP256 : opaqueRistretto;
 
 function setupAndRegister(
   credentialIdentifier,
