@@ -7,7 +7,7 @@ const opaque =
 function setupAndRegister(
   credentialIdentifier,
   password,
-  { serverIdentifier, clientIdentifier } = {}
+  identifiers = undefined
 ) {
   const serverSetup = opaque.serverSetup();
   const { clientRegistration, registrationRequest } =
@@ -15,8 +15,8 @@ function setupAndRegister(
   const registrationResponse = opaque.serverRegistrationStart({
     serverSetup,
     credentialIdentifier,
-    clientIdentifier,
     registrationRequest,
+    identifiers,
   });
   const { registrationUpload, exportKey, serverStaticPublicKey } =
     opaque.clientRegistrationFinish({
@@ -24,8 +24,7 @@ function setupAndRegister(
       registrationResponse,
       password,
       credentialIdentifier,
-      clientIdentifier,
-      serverIdentifier,
+      identifiers,
     });
   const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
   return {
@@ -115,13 +114,13 @@ test("full registration & login with bad password", () => {
 
 test("full registration & login flow with mismatched custom client identifier on server login", () => {
   const credentialIdentifier = "user123";
-  const clientIdentifier = "client123";
+  const client = "client123";
   const password = "hunter2";
 
   const { serverSetup, passwordFile } = setupAndRegister(
     credentialIdentifier,
     password,
-    { clientIdentifier }
+    { client }
   );
 
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
@@ -129,29 +128,33 @@ test("full registration & login flow with mismatched custom client identifier on
   const { credentialResponse } = opaque.serverLoginStart({
     serverSetup,
     credentialIdentifier,
-    clientIdentifier,
     passwordFile,
     credentialRequest,
+    identifiers: {
+      client,
+    },
   });
 
   const loginResult = opaque.clientLoginFinish({
     clientLogin,
     credentialResponse,
     password,
-    clientIdentifier: clientIdentifier + "abc",
+    identifiers: {
+      client: client + "abc",
+    },
   });
 
   expect(loginResult).toBeUndefined();
 });
 
-test("full registration & login attempt with mismatched serverIdentifier", () => {
+test("full registration & login attempt with mismatched server identifier", () => {
   const credentialIdentifier = "client123";
   const password = "hunter2";
 
   const { serverSetup, passwordFile } = setupAndRegister(
     credentialIdentifier,
     password,
-    { serverIdentifier: "server-ident" }
+    { server: "server-ident" }
   );
 
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
@@ -161,14 +164,18 @@ test("full registration & login attempt with mismatched serverIdentifier", () =>
     passwordFile,
     credentialRequest,
     credentialIdentifier,
-    serverIdentifier: "server-ident-abc",
+    identifiers: {
+      server: "server-ident-abc",
+    },
   });
 
   const loginResult = opaque.clientLoginFinish({
     clientLogin,
     credentialResponse,
     password,
-    serverIdentifier: "server-ident",
+    identifiers: {
+      server: "server-ident",
+    },
   });
 
   expect(loginResult).toBeUndefined();

@@ -108,6 +108,25 @@ fn decode_server_setup(data: String) -> JsResult<ServerSetup<DefaultCipherSuite>
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
+pub struct CustomIdentifiers {
+    #[tsify(optional)]
+    client: Option<String>,
+    #[tsify(optional)]
+    server: Option<String>,
+}
+
+fn get_identifiers<'a>(idents: &'a Option<CustomIdentifiers>) -> Identifiers<'a> {
+    Identifiers {
+        client: idents
+            .as_ref()
+            .and_then(|idents| idents.client.as_ref().map(|val| val.as_bytes())),
+        server: idents
+            .as_ref()
+            .and_then(|idents| idents.server.as_ref().map(|val| val.as_bytes())),
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ServerRegistrationStartParams {
     #[serde(rename = "serverSetup")]
@@ -161,11 +180,7 @@ pub struct ServerLoginStartParams {
     #[serde(rename = "credentialIdentifier")]
     credential_identifier: String,
     #[tsify(optional)]
-    #[serde(rename = "clientIdentifier")]
-    client_identifier: Option<String>,
-    #[tsify(optional)]
-    #[serde(rename = "serverIdentifier")]
-    server_identifier: Option<String>,
+    identifiers: Option<CustomIdentifiers>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -199,10 +214,7 @@ pub fn server_login_start(
     };
 
     let start_params = ServerLoginStartParameters {
-        identifiers: Identifiers {
-            client: params.client_identifier.as_ref().map(|val| val.as_bytes()),
-            server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
-        },
+        identifiers: get_identifiers(&params.identifiers),
         context: None,
     };
 
@@ -289,11 +301,7 @@ pub struct ClientLoginFinishParams {
     credential_response: String,
     password: String,
     #[tsify(optional)]
-    #[serde(rename = "clientIdentifier")]
-    client_identifier: Option<String>,
-    #[tsify(optional)]
-    #[serde(rename = "serverIdentifier")]
-    server_identifier: Option<String>,
+    identifiers: Option<CustomIdentifiers>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -319,14 +327,8 @@ pub fn client_login_finish(
     let state = ClientLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(from_protocol_error("deserialize clientLogin"))?;
 
-    let finish_params = ClientLoginFinishParameters::new(
-        None,
-        Identifiers {
-            client: params.client_identifier.as_ref().map(|val| val.as_bytes()),
-            server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
-        },
-        None,
-    );
+    let finish_params =
+        ClientLoginFinishParameters::new(None, get_identifiers(&params.identifiers), None);
 
     let result = state.finish(
         params.password.as_bytes(),
@@ -394,11 +396,7 @@ pub struct ClientRegistrationFinishParams {
     #[serde(rename = "clientRegistration")]
     client_registration: String,
     #[tsify(optional)]
-    #[serde(rename = "clientIdentifier")]
-    client_identifier: Option<String>,
-    #[tsify(optional)]
-    #[serde(rename = "serverIdentifier")]
-    server_identifier: Option<String>,
+    identifiers: Option<CustomIdentifiers>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -423,13 +421,8 @@ pub fn client_registration_finish(
     let state = ClientRegistration::<DefaultCipherSuite>::deserialize(&client_registration)
         .map_err(from_protocol_error("deserialize clientRegistration"))?;
 
-    let finish_params = ClientRegistrationFinishParameters::new(
-        Identifiers {
-            client: params.client_identifier.as_ref().map(|val| val.as_bytes()),
-            server: params.server_identifier.as_ref().map(|val| val.as_bytes()),
-        },
-        None,
-    );
+    let finish_params =
+        ClientRegistrationFinishParameters::new(get_identifiers(&params.identifiers), None);
 
     let client_finish_registration_result = state
         .finish(
