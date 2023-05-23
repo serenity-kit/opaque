@@ -40,3 +40,11 @@ To run the end-to-end tests you can run
 cd example-client
 pnpm test:e2e
 ```
+
+## Publish
+
+To publish the packages (opaque and opaque-p256) you can run
+
+```sh
+pnpm publish
+```
