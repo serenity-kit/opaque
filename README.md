@@ -1,5 +1,7 @@
 # Opaque
 
+**WARNING**: This is a work in progress and not ready for production use.
+
 ## Install
 
 ```sh
@@ -90,6 +92,12 @@ You can start the client with
 ```
 pnpm example:client:dev
 ```
+
+## Advanced usage
+
+The default implementation uses [ristretto255](https://ristretto.group/) for the OPRF and the group mode.
+
+If you would like to use the [P-256](https://docs.rs/p256/latest/p256/) curve instead, you can use the [@serenity-kit/opaque-p256](https://www.npmjs.com/package/@serenity-kit/opaque) package. The API is identical.
 
 ## Acknowledgement
 
