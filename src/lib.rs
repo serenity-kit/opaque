@@ -174,6 +174,7 @@ pub struct ServerLoginStartParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
     #[serde(rename = "passwordFile")]
+    #[tsify(type = "string | null | undefined")]
     password_file: Option<String>,
     #[serde(rename = "credentialRequest")]
     credential_request: String,
