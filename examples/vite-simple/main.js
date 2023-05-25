@@ -67,37 +67,6 @@ async function login(credentialIdentifier, password) {
   return res.ok ? sessionKey : null;
 }
 
-window.handleSubmit = async function handleSubmit() {
-  event.preventDefault();
-
-  const username = event.target.username.value;
-  const password = event.target.password.value;
-  const action = event.submitter.name;
-
-  try {
-    if (action === "login") {
-      const sessionKey = await login(username, password);
-      if (sessionKey) {
-        alert(
-          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
-        );
-      } else {
-        alert(`User "${username}" login failed`);
-      }
-    } else if (action === "register") {
-      const ok = await register(username, password);
-      if (ok) {
-        alert(`User "${username}" registered successfully`);
-      } else {
-        alert(`Failed to register user "${username}"`);
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    alert(err);
-  }
-};
-
 window.runFullFlowDemo = function () {
   const serverSetup = opaque.serverSetup();
   const username = "user@example.com";
@@ -212,3 +181,34 @@ function runFullServerClientFlow(serverSetup, username, password) {
 
   console.log({ serverSessionKey });
 }
+
+window.handleSubmit = async function handleSubmit() {
+  event.preventDefault();
+
+  const username = event.target.username.value;
+  const password = event.target.password.value;
+  const action = event.submitter.name;
+
+  try {
+    if (action === "login") {
+      const sessionKey = await login(username, password);
+      if (sessionKey) {
+        alert(
+          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
+        );
+      } else {
+        alert(`User "${username}" login failed`);
+      }
+    } else if (action === "register") {
+      const ok = await register(username, password);
+      if (ok) {
+        alert(`User "${username}" registered successfully`);
+      } else {
+        alert(`Failed to register user "${username}"`);
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    alert(err);
+  }
+};
