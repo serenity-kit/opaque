@@ -1,5 +1,5 @@
 target/
-examples/client-simple/dist/
+examples/client-simple-webpack/dist/
 examples/server-simple/data.json
 pnpm-lock.yaml
 build/

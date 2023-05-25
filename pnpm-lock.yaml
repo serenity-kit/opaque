@@ -30,7 +30,20 @@ importers:
 
   build/ristretto: {}
 
-  examples/client-simple:
+  examples/client-simple-vite:
+    dependencies:
+      '@serenity-kit/opaque':
+        specifier: workspace:*
+        version: link:../../build/ristretto
+    devDependencies:
+      vite:
+        specifier: ^4.3.2
+        version: 4.3.8
+      vite-plugin-wasm:
+        specifier: ^3.2.2
+        version: 3.2.2(vite@4.3.8)
+
+  examples/client-simple-webpack:
     dependencies:
       '@serenity-kit/opaque':
         specifier: workspace:*
@@ -66,19 +79,6 @@ importers:
       node-fetch:
         specifier: ^3.3.1
         version: 3.3.1
-
-  examples/vite-simple:
-    dependencies:
-      '@serenity-kit/opaque':
-        specifier: workspace:*
-        version: link:../../build/ristretto
-    devDependencies:
-      vite:
-        specifier: ^4.3.2
-        version: 4.3.8
-      vite-plugin-wasm:
-        specifier: ^3.2.2
-        version: 3.2.2(vite@4.3.8)
 
 packages:
 

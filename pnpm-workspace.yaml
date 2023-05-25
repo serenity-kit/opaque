@@ -1,6 +1,6 @@
 packages:
-  - "examples/client-simple"
+  - "examples/client-simple-webpack"
+  - "examples/client-simple-vite"
   - "examples/server-simple"
-  - "examples/vite-simple"
   - "build/ristretto"
   - "build/p256"

@@ -121,23 +121,23 @@ You can start the server with
 pnpm example:server:dev
 ```
 
-### client-simple
+### client-simple-webpack
 
-A client-side JS example login/registration form is located in `./examples/client-simple`.
+A client-side JS example login/registration form is located in `./examples/client-simple-webpack`.
 Expects the examples/server-simple to be running at `localhost:8089` (currently hardcoded).
 You can start the client with
 
 ```
-pnpm example:client:dev
+pnpm example:client-simple-webpack:dev
 ```
 
-### vite-simple
+### client-simple-vite
 
-This is the same vanilla JS client example as in `client-simple` but uses vite instead of webpack.
+This is the same vanilla JS client example as in `client-simple-webpack` but uses vite instead of webpack.
 You can run it with
 
 ```
-pnpm example:vite:dev
+pnpm example:client-simple-vite:dev
 ```
 
 ## Advanced usage
