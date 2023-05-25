@@ -52,7 +52,7 @@ const { clientRegistration, registrationRequest } =
 // server
 const registrationResponse = opaque.serverRegistrationStart({
   serverSetup,
-  credentialIdentifier,
+  userIdentifier,
   registrationRequest,
 });
 ```
@@ -82,7 +82,7 @@ const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 // server
 const { serverLogin, credentialResponse } = opaque.serverLoginStart({
   serverSetup,
-  credentialIdentifier,
+  userIdentifier,
   passwordFile,
   credentialRequest,
 });

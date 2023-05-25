@@ -131,8 +131,8 @@ fn get_identifiers<'a>(idents: &'a Option<CustomIdentifiers>) -> Identifiers<'a>
 pub struct ServerRegistrationStartParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
-    #[serde(rename = "credentialIdentifier")]
-    credential_identifier: String,
+    #[serde(rename = "userIdentifier")]
+    user_identifier: String,
     #[serde(rename = "registrationRequest")]
     registration_request: String,
 }
@@ -146,7 +146,7 @@ pub fn server_registration_start(params: ServerRegistrationStartParams) -> Resul
         &server_setup,
         RegistrationRequest::deserialize(&registration_request_bytes)
             .map_err(from_protocol_error("deserialize registrationRequest"))?,
-        params.credential_identifier.as_bytes(),
+        params.user_identifier.as_bytes(),
     )
     .map_err(from_protocol_error("start serverRegistration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
@@ -178,8 +178,8 @@ pub struct ServerLoginStartParams {
     password_file: Option<String>,
     #[serde(rename = "credentialRequest")]
     credential_request: String,
-    #[serde(rename = "credentialIdentifier")]
-    credential_identifier: String,
+    #[serde(rename = "userIdentifier")]
+    user_identifier: String,
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
 }
@@ -225,7 +225,7 @@ pub fn server_login_start(
         password_file,
         CredentialRequest::deserialize(&credential_request_bytes)
             .map_err(from_protocol_error("deserialize credentialRequest"))?,
-        params.credential_identifier.as_bytes(),
+        params.user_identifier.as_bytes(),
         start_params,
     )
     .map_err(from_protocol_error("start serverLogin"))?;

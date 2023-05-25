@@ -4,17 +4,13 @@ import * as opaqueRistretto from "../build/ristretto";
 const opaque =
   process.env.OPAQUE_BUILD === "p256" ? opaqueP256 : opaqueRistretto;
 
-function setupAndRegister(
-  credentialIdentifier,
-  password,
-  identifiers = undefined
-) {
+function setupAndRegister(userIdentifier, password, identifiers = undefined) {
   const serverSetup = opaque.createServerSetup();
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const registrationResponse = opaque.serverRegistrationStart({
     serverSetup,
-    credentialIdentifier,
+    userIdentifier,
     registrationRequest,
     identifiers,
   });
@@ -36,7 +32,7 @@ function setupAndRegister(
 }
 
 test("full registration & login flow", () => {
-  const credentialIdentifier = "user123";
+  const userIdentifier = "user123";
   const password = "hunter42";
 
   const {
@@ -45,7 +41,7 @@ test("full registration & login flow", () => {
     registrationUpload,
     exportKey: registrationExportKey,
     serverStaticPublicKey: registrationServerStaticPublicKey,
-  } = setupAndRegister(credentialIdentifier, password);
+  } = setupAndRegister(userIdentifier, password);
 
   expect(registrationUpload).toEqual(passwordFile);
 
@@ -53,7 +49,7 @@ test("full registration & login flow", () => {
 
   const { serverLogin, credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    credentialIdentifier,
+    userIdentifier,
     passwordFile,
     credentialRequest,
   });
@@ -86,10 +82,10 @@ test("full registration & login flow", () => {
 });
 
 test("full registration & login with bad password", () => {
-  const credentialIdentifier = "user123";
+  const userIdentifier = "user123";
 
   const { serverSetup, passwordFile } = setupAndRegister(
-    credentialIdentifier,
+    userIdentifier,
     "hunter42"
   );
   const { clientLogin, credentialRequest } =
@@ -97,7 +93,7 @@ test("full registration & login with bad password", () => {
 
   const { credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    credentialIdentifier,
+    userIdentifier,
     passwordFile,
     credentialRequest,
   });
@@ -112,12 +108,12 @@ test("full registration & login with bad password", () => {
 });
 
 test("full registration & login flow with mismatched custom client identifier on server login", () => {
-  const credentialIdentifier = "user123";
+  const userIdentifier = "user123";
   const client = "client123";
   const password = "hunter2";
 
   const { serverSetup, passwordFile } = setupAndRegister(
-    credentialIdentifier,
+    userIdentifier,
     password,
     { client }
   );
@@ -126,7 +122,7 @@ test("full registration & login flow with mismatched custom client identifier on
 
   const { credentialResponse } = opaque.serverLoginStart({
     serverSetup,
-    credentialIdentifier,
+    userIdentifier,
     passwordFile,
     credentialRequest,
     identifiers: {
@@ -147,11 +143,11 @@ test("full registration & login flow with mismatched custom client identifier on
 });
 
 test("full registration & login attempt with mismatched server identifier", () => {
-  const credentialIdentifier = "client123";
+  const userIdentifier = "client123";
   const password = "hunter2";
 
   const { serverSetup, passwordFile } = setupAndRegister(
-    credentialIdentifier,
+    userIdentifier,
     password,
     { server: "server-ident" }
   );
@@ -162,7 +158,7 @@ test("full registration & login attempt with mismatched server identifier", () =
     serverSetup,
     passwordFile,
     credentialRequest,
-    credentialIdentifier,
+    userIdentifier,
     identifiers: {
       server: "server-ident-abc",
     },
@@ -256,12 +252,12 @@ describe("serverRegistrationStart", () => {
       "missing field `serverSetup`"
     );
     expect(() => opaque.serverRegistrationStart({ serverSetup: "" })).toThrow(
-      "missing field `credentialIdentifier`"
+      "missing field `userIdentifier`"
     );
     expect(() =>
       opaque.serverRegistrationStart({
         serverSetup: "",
-        credentialIdentifier: "",
+        userIdentifier: "",
       })
     ).toThrow("missing field `registrationRequest`");
   });
@@ -271,7 +267,7 @@ describe("serverRegistrationStart", () => {
       const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
       opaque.serverRegistrationStart({
         serverSetup: "abcd",
-        credentialIdentifier: "user1",
+        userIdentifier: "user1",
         registrationRequest,
       });
     }).toThrow(
@@ -284,7 +280,7 @@ describe("serverRegistrationStart", () => {
       const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
       opaque.serverRegistrationStart({
         serverSetup: "a",
-        credentialIdentifier: "user1",
+        userIdentifier: "user1",
         registrationRequest,
       });
     }).toThrow(
@@ -297,7 +293,7 @@ describe("serverRegistrationStart", () => {
       const serverSetup = opaque.createServerSetup();
       opaque.serverRegistrationStart({
         serverSetup,
-        credentialIdentifier: "user1",
+        userIdentifier: "user1",
         registrationRequest: "",
       });
     }).toThrow(
@@ -310,7 +306,7 @@ describe("serverRegistrationStart", () => {
       const serverSetup = opaque.createServerSetup();
       opaque.serverRegistrationStart({
         serverSetup,
-        credentialIdentifier: "user1",
+        userIdentifier: "user1",
         registrationRequest: "a",
       });
     }).toThrow(
@@ -344,7 +340,7 @@ describe("serverLoginStart", () => {
         serverSetup: "",
         credentialRequest: "",
       })
-    ).toThrow("missing field `credentialIdentifier`");
+    ).toThrow("missing field `userIdentifier`");
   });
 
   test("serverSetup invalid", () => {
@@ -352,7 +348,7 @@ describe("serverLoginStart", () => {
       opaque.serverLoginStart({
         serverSetup: "",
         credentialRequest: "",
-        credentialIdentifier: "",
+        userIdentifier: "",
       })
     ).toThrow(
       'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
@@ -364,7 +360,7 @@ describe("serverLoginStart", () => {
       opaque.serverLoginStart({
         serverSetup: "a",
         credentialRequest: "",
-        credentialIdentifier: "",
+        userIdentifier: "",
       })
     ).toThrow(
       'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.'
@@ -376,7 +372,7 @@ describe("serverLoginStart", () => {
       opaque.serverLoginStart({
         serverSetup: opaque.createServerSetup(),
         credentialRequest: "",
-        credentialIdentifier: "",
+        userIdentifier: "",
       })
     ).toThrow(
       'opaque protocol error at "deserialize credentialRequest"; Internal error encountered'
@@ -388,7 +384,7 @@ describe("serverLoginStart", () => {
       opaque.serverLoginStart({
         serverSetup: opaque.createServerSetup(),
         credentialRequest: "a",
-        credentialIdentifier: "",
+        userIdentifier: "",
       })
     ).toThrow(
       'base64 decoding failed at "credentialRequest"; Encoded text cannot have a 6-bit remainder.'
@@ -401,7 +397,7 @@ describe("serverLoginStart", () => {
     const { credentialRequest, clientLogin } =
       opaque.clientLoginStart(password);
     const { credentialResponse } = opaque.serverLoginStart({
-      credentialIdentifier: "user1",
+      userIdentifier: "user1",
       serverSetup,
       credentialRequest,
       passwordFile: undefined,
