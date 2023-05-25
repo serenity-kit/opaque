@@ -22,7 +22,7 @@ jobs:
       - name: install Playwright browsers
         run: npx playwright install
       - name: run Playwright tests
-        run: cd examples/client-simple && pnpm exec playwright test
+        run: cd examples/client-simple-webpack && pnpm exec playwright test
       - uses: actions/upload-artifact@v3
         if: always()
         with:
