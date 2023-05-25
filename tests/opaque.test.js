@@ -23,7 +23,6 @@ function setupAndRegister(
       clientRegistration,
       registrationResponse,
       password,
-      credentialIdentifier,
       identifiers,
     });
   const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
