@@ -16,28 +16,57 @@ test
 import * as opaque from "@serenity-kit/opaque";
 ```
 
+### Server Setup
+
+The server setup is a one-time operation. It is used to generate the server's long-term private key.
+
+Recommended:
+
+```bash
+npx opaque-create-server-setup
+```
+
+The result is a 171 long string. Only store it in a secure location and make sure you have it available in your application e.g. via an environment variable.
+
+```ts
+const serverSetup = process.env.OPAQUE_SERVER_SETUP;
+```
+
+For development purposes, you can also generate a server setup on the fly:
+
+```ts
+const serverSetup = opaque.createServerSetup();
+```
+
+Keep in mind that changing the serverSetup will invalidate all existing password files.
+
 ### Registration Flow
 
 ```ts
 // client
 const { clientRegistration, registrationRequest } =
   opaque.clientRegistrationStart(password);
+```
 
+```ts
 // server
 const registrationResponse = opaque.serverRegistrationStart({
   serverSetup,
-  clientIdentifier,
+  credentialIdentifier,
   registrationRequest,
 });
+```
 
+```ts
 // client
 const { registrationUpload } = opaque.clientRegistrationFinish({
-  clientIdentifier,
   clientRegistration,
   registrationResponse,
   password,
 });
+```
 
+```ts
 // server
 const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
 ```
@@ -47,23 +76,32 @@ const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
 ```ts
 // client
 const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+```
 
+```ts
 // server
 const { serverLogin, credentialResponse } = opaque.serverLoginStart({
   serverSetup,
-  clientIdentifier,
+  credentialIdentifier,
   passwordFile,
   credentialRequest,
 });
+```
 
+```ts
 // client
 const loginResult = opaque.clientLoginFinish({
   clientLogin,
   credentialResponse,
-  clientIdentifier,
   password,
 });
+if (!loginResult) {
+  throw new Error("Login failed");
+}
+const { credentialFinalization, sessionKey } = loginResult;
+```
 
+```ts
 // server
 const sessionKey = opaque.serverLoginFinish({
   serverSetup,

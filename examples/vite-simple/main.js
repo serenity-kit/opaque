@@ -27,7 +27,6 @@ async function register(credentialIdentifier, password) {
 
   console.log("registrationResponse", registrationResponse);
   const { registrationUpload } = opaque.clientRegistrationFinish({
-    credentialIdentifier,
     clientRegistration,
     registrationResponse,
     password,
@@ -52,7 +51,6 @@ async function login(credentialIdentifier, password) {
   const loginResult = opaque.clientLoginFinish({
     clientLogin,
     credentialResponse,
-    credentialIdentifier,
     password,
   });
 
