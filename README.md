@@ -93,6 +93,15 @@ You can start the client with
 pnpm example:client:dev
 ```
 
+### vite-simple
+
+This is the same vanilla JS client example as in `client-simple` but uses vite instead of webpack.
+You can run it with
+
+```
+pnpm example:vite:dev
+```
+
 ## Advanced usage
 
 The default implementation uses [ristretto255](https://ristretto.group/) for the OPRF and the group mode.
