@@ -74,19 +74,19 @@ const sessionKey = opaque.serverLoginFinish({
 
 ## Examples
 
-### example-server
+### server-simple
 
-A server-side nodejs example located in `./example-server`.
+A server-side nodejs example with expressjs located in `./examples/server-simple`.
 You can start the server with
 
 ```
 pnpm example:server:dev
 ```
 
-### example-client
+### client-simple
 
-A client-side example login/registration form is located in `./example-client`.
-Expects the example-server to be running at `localhost:8089` (currently hardcoded).
+A client-side JS example login/registration form is located in `./examples/client-simple`.
+Expects the examples/server-simple to be running at `localhost:8089` (currently hardcoded).
 You can start the client with
 
 ```

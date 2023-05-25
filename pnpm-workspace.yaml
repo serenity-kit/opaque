@@ -1,5 +1,5 @@
 packages:
-  - "example-client"
-  - "example-server"
+  - "examples/client-simple"
+  - "examples/server-simple"
   - "build/ristretto"
   - "build/p256"

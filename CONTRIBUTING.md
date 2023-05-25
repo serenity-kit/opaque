@@ -37,7 +37,7 @@ pnpm test
 To run the end-to-end tests you can run
 
 ```sh
-cd example-client
+cd examples/client-simple
 pnpm test:e2e
 ```
 
