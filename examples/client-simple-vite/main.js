@@ -17,11 +17,11 @@ async function request(method, path, body = undefined) {
   return res;
 }
 
-async function register(credentialIdentifier, password) {
+async function register(userIdentifier, password) {
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const { registrationResponse } = await request("POST", `/register/start`, {
-    credentialIdentifier,
+    userIdentifier,
     registrationRequest,
   }).then((res) => res.json());
 
@@ -33,18 +33,18 @@ async function register(credentialIdentifier, password) {
   });
 
   const res = await request("POST", `/register/finish`, {
-    credentialIdentifier,
+    userIdentifier,
     registrationUpload,
   });
   console.log("finish successful", res.ok);
   return res.ok;
 }
 
-async function login(credentialIdentifier, password) {
+async function login(userIdentifier, password) {
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
   const { credentialResponse } = await request("POST", "/login/start", {
-    credentialIdentifier,
+    userIdentifier,
     credentialRequest,
   }).then((res) => res.json());
 
@@ -59,45 +59,14 @@ async function login(credentialIdentifier, password) {
   }
   const { sessionKey, credentialFinalization } = loginResult;
   const res = await request("POST", "/login/finish", {
-    credentialIdentifier,
+    userIdentifier,
     credentialFinalization,
   });
   return res.ok ? sessionKey : null;
 }
 
-window.handleSubmit = async function handleSubmit() {
-  event.preventDefault();
-
-  const username = event.target.username.value;
-  const password = event.target.password.value;
-  const action = event.submitter.name;
-
-  try {
-    if (action === "login") {
-      const sessionKey = await login(username, password);
-      if (sessionKey) {
-        alert(
-          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
-        );
-      } else {
-        alert(`User "${username}" login failed`);
-      }
-    } else if (action === "register") {
-      const ok = await register(username, password);
-      if (ok) {
-        alert(`User "${username}" registered successfully`);
-      } else {
-        alert(`Failed to register user "${username}"`);
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    alert(err);
-  }
-};
-
 window.runFullFlowDemo = function () {
-  const serverSetup = opaque.serverSetup();
+  const serverSetup = opaque.createServerSetup();
   const username = "user@example.com";
   const password = "hunter2";
   runFullServerClientFlow(serverSetup, username, password);
@@ -126,7 +95,7 @@ function runFullServerClientFlow(serverSetup, username, password) {
   const registrationResponse = opaque.serverRegistrationStart({
     serverSetup,
     registrationRequest,
-    credentialIdentifier: username,
+    userIdentifier: username,
   });
 
   console.log({ registrationResponse });
@@ -164,7 +133,7 @@ function runFullServerClientFlow(serverSetup, username, password) {
   console.log("serverLoginStart");
   console.log("----------------");
   const { credentialResponse, serverLogin } = opaque.serverLoginStart({
-    credentialIdentifier: username,
+    userIdentifier: username,
     passwordFile,
     serverSetup,
     credentialRequest,
@@ -210,3 +179,34 @@ function runFullServerClientFlow(serverSetup, username, password) {
 
   console.log({ serverSessionKey });
 }
+
+window.handleSubmit = async function handleSubmit() {
+  event.preventDefault();
+
+  const username = event.target.username.value;
+  const password = event.target.password.value;
+  const action = event.submitter.name;
+
+  try {
+    if (action === "login") {
+      const sessionKey = await login(username, password);
+      if (sessionKey) {
+        alert(
+          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
+        );
+      } else {
+        alert(`User "${username}" login failed`);
+      }
+    } else if (action === "register") {
+      const ok = await register(username, password);
+      if (ok) {
+        alert(`User "${username}" registered successfully`);
+      } else {
+        alert(`Failed to register user "${username}"`);
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    alert(err);
+  }
+};

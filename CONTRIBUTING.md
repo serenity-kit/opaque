@@ -37,7 +37,7 @@ pnpm test
 To run the end-to-end tests you can run
 
 ```sh
-cd examples/client-simple
+cd examples/client-simple-webpack
 pnpm test:e2e
 ```
 
