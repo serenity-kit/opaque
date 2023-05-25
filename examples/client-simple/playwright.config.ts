@@ -31,13 +31,13 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: [
     {
-      command: "cd ../example-server && pnpm dev --no-fs",
+      command: "cd ../../examples/server-simple && pnpm dev --no-fs",
       url: "http://127.0.0.1:8089/private",
       // reuseExistingServer: !process.env.CI,
       reuseExistingServer: false,
     },
     {
-      command: "cd ../example-client && pnpm dev",
+      command: "cd ../../examples/client-simple && pnpm dev",
       url: "http://127.0.0.1:8080",
       // reuseExistingServer: !process.env.CI,
       reuseExistingServer: false,

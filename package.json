@@ -13,8 +13,8 @@
   },
   "scripts": {
     "build": "node ./bin/build.js",
-    "example:client:dev": "cd example-client && pnpm dev",
-    "example:server:dev": "cd example-server && pnpm dev",
+    "example:client:dev": "cd example/client-simple && pnpm dev",
+    "example:server:dev": "cd example/server-simple && pnpm dev",
     "test:p256": "cross-env OPAQUE_BUILD=p256 jest",
     "test:ristretto": "jest",
     "test": "pnpm test:p256 && pnpm test:ristretto",
