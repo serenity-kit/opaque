@@ -9,13 +9,13 @@ const enableJsonFilePersistence = !process.argv.includes("--no-fs");
 
 function initDatabase(filePath) {
   if (!enableJsonFilePersistence) {
-    return Database.empty(opaque.serverSetup());
+    return Database.empty(opaque.createServerSetup());
   }
   try {
     return readDatabaseFile(filePath);
   } catch (err) {
     console.log("failed to open database, initializing empty", err);
-    const db = Database.empty(opaque.serverSetup());
+    const db = Database.empty(opaque.createServerSetup());
     return db;
   }
 }

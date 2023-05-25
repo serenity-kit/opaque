@@ -66,7 +66,7 @@ async function login(credentialIdentifier, password) {
 }
 
 window.runFullFlowDemo = function () {
-  const serverSetup = opaque.serverSetup();
+  const serverSetup = opaque.createServerSetup();
   const username = "user@example.com";
   const password = "hunter2";
   runFullServerClientFlow(serverSetup, username, password);

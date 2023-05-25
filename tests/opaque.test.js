@@ -9,7 +9,7 @@ function setupAndRegister(
   password,
   identifiers = undefined
 ) {
-  const serverSetup = opaque.serverSetup();
+  const serverSetup = opaque.createServerSetup();
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
   const registrationResponse = opaque.serverRegistrationStart({
@@ -294,7 +294,7 @@ describe("serverRegistrationStart", () => {
 
   test("registrationRequest invalid", () => {
     expect(() => {
-      const serverSetup = opaque.serverSetup();
+      const serverSetup = opaque.createServerSetup();
       opaque.serverRegistrationStart({
         serverSetup,
         credentialIdentifier: "user1",
@@ -307,7 +307,7 @@ describe("serverRegistrationStart", () => {
 
   test("registrationRequest decoding", () => {
     expect(() => {
-      const serverSetup = opaque.serverSetup();
+      const serverSetup = opaque.createServerSetup();
       opaque.serverRegistrationStart({
         serverSetup,
         credentialIdentifier: "user1",
@@ -374,7 +374,7 @@ describe("serverLoginStart", () => {
   test("credentialRequest invalid", () => {
     expect(() =>
       opaque.serverLoginStart({
-        serverSetup: opaque.serverSetup(),
+        serverSetup: opaque.createServerSetup(),
         credentialRequest: "",
         credentialIdentifier: "",
       })
@@ -386,7 +386,7 @@ describe("serverLoginStart", () => {
   test("credentialRequest encoding invalid", () => {
     expect(() =>
       opaque.serverLoginStart({
-        serverSetup: opaque.serverSetup(),
+        serverSetup: opaque.createServerSetup(),
         credentialRequest: "a",
         credentialIdentifier: "",
       })
@@ -397,7 +397,7 @@ describe("serverLoginStart", () => {
 
   test("dummy server login credential response", () => {
     const password = "hunter2";
-    const serverSetup = opaque.serverSetup();
+    const serverSetup = opaque.createServerSetup();
     const { credentialRequest, clientLogin } =
       opaque.clientLoginStart(password);
     const { credentialResponse } = opaque.serverLoginStart({
