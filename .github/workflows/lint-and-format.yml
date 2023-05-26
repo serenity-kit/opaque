@@ -26,3 +26,15 @@ jobs:
         run: rustup component add rustfmt
       - name: rustfmt
         run: cargo fmt --all -- --check
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install rustup
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
+          sh rustup-init.sh -y --default-toolchain none
+      - name: install clippy
+        run: rustup component add clippy
+      - name: clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
