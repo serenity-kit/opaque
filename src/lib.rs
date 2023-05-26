@@ -97,14 +97,14 @@ fn base64_decode<T: AsRef<[u8]>>(context: &'static str, input: T) -> JsResult<Ve
 pub fn create_server_setup() -> String {
     let mut rng: OsRng = OsRng;
     let setup = ServerSetup::<DefaultCipherSuite>::new(&mut rng);
-    return BASE64.encode(setup.serialize());
+    BASE64.encode(setup.serialize())
 }
 
 fn decode_server_setup(data: String) -> JsResult<ServerSetup<DefaultCipherSuite>> {
-    return base64_decode("serverSetup", data).and_then(|bytes| {
+    base64_decode("serverSetup", data).and_then(|bytes| {
         ServerSetup::<DefaultCipherSuite>::deserialize(&bytes)
             .map_err(from_protocol_error("deserialize serverSetup"))
-    });
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -115,7 +115,7 @@ pub struct CustomIdentifiers {
     server: Option<String>,
 }
 
-fn get_identifiers<'a>(idents: &'a Option<CustomIdentifiers>) -> Identifiers<'a> {
+fn get_identifiers(idents: &Option<CustomIdentifiers>) -> Identifiers {
     Identifiers {
         client: idents
             .as_ref()
@@ -150,7 +150,7 @@ pub fn server_registration_start(params: ServerRegistrationStartParams) -> Resul
     )
     .map_err(from_protocol_error("start serverRegistration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
-    return Ok(BASE64.encode(registration_response_bytes));
+    Ok(BASE64.encode(registration_response_bytes))
 }
 
 #[wasm_bindgen(js_name = serverRegistrationFinish)]
@@ -199,7 +199,7 @@ pub fn server_login_start(
 ) -> Result<ServerLoginStartResult, JsError> {
     let server_setup = decode_server_setup(params.server_setup)?;
     let password_file_bytes = match params.password_file {
-        Some(pw) => base64_decode("passwordFile", pw).map(|val| Some(val)),
+        Some(pw) => base64_decode("passwordFile", pw).map(Some),
         None => Ok(None),
     }?;
     let credential_request_bytes = base64_decode("credentialRequest", params.credential_request)?;
@@ -237,7 +237,7 @@ pub fn server_login_start(
         server_login,
         credential_response,
     };
-    return Ok(result);
+    Ok(result)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -262,7 +262,7 @@ pub fn server_login_finish(params: ServerLoginFinishParams) -> Result<String, Js
                 .map_err(from_protocol_error("deserialize credentialFinalization"))?,
         )
         .map_err(from_protocol_error("finish serverLogin"))?;
-    return Ok(BASE64.encode(server_login_finish_result.session_key));
+    Ok(BASE64.encode(server_login_finish_result.session_key))
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -288,9 +288,9 @@ pub fn client_login_start(password: JsString) -> Result<ClientLoginStartResult, 
 
     let result = ClientLoginStartResult {
         client_login: BASE64.encode(client_login_start_result.state.serialize()),
-        credential_request: BASE64.encode(client_login_start_result.message.serialize().to_vec()),
+        credential_request: BASE64.encode(client_login_start_result.message.serialize()),
     };
-    return Ok(result);
+    Ok(result)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -344,12 +344,12 @@ pub fn client_login_finish(
     }
     let client_login_finish_result = result.unwrap();
 
-    return Ok(Some(ClientLoginFinishResult {
+    Ok(Some(ClientLoginFinishResult {
         credential_finalization: BASE64.encode(client_login_finish_result.message.serialize()),
         session_key: BASE64.encode(client_login_finish_result.session_key),
         export_key: BASE64.encode(client_login_finish_result.export_key),
         server_static_public_key: BASE64.encode(client_login_finish_result.server_s_pk.serialize()),
-    }));
+    }))
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -378,14 +378,9 @@ pub fn client_registration_start(
 
     let result = ClientRegistrationStartResult {
         client_registration: BASE64.encode(client_registration_start_result.state.serialize()),
-        registration_request: BASE64.encode(
-            client_registration_start_result
-                .message
-                .serialize()
-                .to_vec(),
-        ),
+        registration_request: BASE64.encode(client_registration_start_result.message.serialize()),
     };
-    return Ok(result);
+    Ok(result)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -437,10 +432,10 @@ pub fn client_registration_finish(
 
     let message_bytes = client_finish_registration_result.message.serialize();
     let result = ClientRegistrationFinishResult {
-        registration_upload: BASE64.encode(message_bytes.to_vec()),
+        registration_upload: BASE64.encode(message_bytes),
         export_key: BASE64.encode(client_finish_registration_result.export_key),
         server_static_public_key: BASE64
             .encode(client_finish_registration_result.server_s_pk.serialize()),
     };
-    return Ok(result);
+    Ok(result)
 }
