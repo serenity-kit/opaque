@@ -10,18 +10,26 @@ Prerequisites:
 
 - pnpm
 - rust toolchain
-- wasm-pack
+- rust target `wasm32-unknown-unknown`
+- wasm-bindgen
 
-To run the wasm-pack build you can run
+You can install wasm-bindgen with:
 
 ```sh
-pnpm build
+cargo install wasm-bindgen-cli
 ```
 
-In case you want to run the examples you need to run to setup the workspaces and use the `build` directory for "@serenity-kit/opaque"
+The `wasm32-unknown-unknown` target can be installed with:
+
+```sh
+rustup target add wasm32-unknown-unknown
+```
+
+To run the build you can run
 
 ```sh
 pnpm install
+pnpm build
 ```
 
 ## Tests
