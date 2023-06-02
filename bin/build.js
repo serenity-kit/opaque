@@ -1,8 +1,6 @@
 const { execFileSync } = require("child_process");
-const { readFileSync, writeFileSync } = require("fs");
+const { writeFileSync } = require("fs");
 const path = require("path");
-
-const pkg = JSON.parse(readFileSync(path.join(__dirname, "../package.json")));
 
 if (process.platform === "win32") {
   execFileSync(path.join(__dirname, "build.bat"), {
@@ -14,38 +12,16 @@ if (process.platform === "win32") {
   });
 }
 
-const packageJson = function (name) {
-  return `{
-  "name": "@serenity-kit/${name}",
-  "collaborators": [
-    "Stefan Oestreicher <oestef@gmail.com>",
-    "Nik Graf <nik@nikgraf.com>"
-  ],
-  "version": "${pkg.version}",
-  "license": "MIT",
-  "files": [
-    "esm/opaque_bg.wasm",
-    "esm/opaque_bg.d.ts",
-    "esm/opaque.js",
-    "esm/opaque.d.ts",
-    "esm/opaque_bg.js",
-    "cjs/opaque_bg.wasm",
-    "cjs/opaque_bg.d.ts",
-    "cjs/opaque.js",
-    "cjs/opaque.d.ts"
-  ],
-  "module": "esm/opaque.js",
-  "types": "esm/opaque.d.ts",
-  "main": "cjs/opaque.js",
-  "browser": "esm/opaque.js"
-}`;
-};
+const entryModule = `
+import wasmData from './opaque_bg.wasm'
+import init from './opaque'
+export const ready = init(wasmData())
+export * from './opaque'
+export {default} from './opaque'
+`;
 
 writeFileSync(
-  path.join(__dirname, "../build/ristretto/package.json"),
-  packageJson("opaque")
+  path.join(__dirname, "../build/wbg_ristretto/index.js"),
+  entryModule
 );
-writeFileSync(
-  path.join(__dirname, "../build/p256/package.json"),
-  packageJson("opaque-p256")
-);
+writeFileSync(path.join(__dirname, "../build/wbg_p256/index.js"), entryModule);

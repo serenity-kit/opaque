@@ -7,7 +7,8 @@ const activeSessions = {};
 const dbFile = "./data.json";
 const enableJsonFilePersistence = !process.argv.includes("--no-fs");
 
-function initDatabase(filePath) {
+async function initDatabase(filePath) {
+  await opaque.ready;
   if (!enableJsonFilePersistence) {
     return Database.empty(opaque.createServerSetup());
   }
@@ -20,14 +21,19 @@ function initDatabase(filePath) {
   }
 }
 
-const db = initDatabase(dbFile);
-const serverSetup = db.serverSetup;
+let db;
+let serverSetup;
 
-if (enableJsonFilePersistence) {
-  writeDatabaseFile(dbFile, db);
-  db.addListener(() => {
+async function setupDb() {
+  db = await initDatabase(dbFile);
+  serverSetup = db.serverSetup;
+
+  if (enableJsonFilePersistence) {
     writeDatabaseFile(dbFile, db);
-  });
+    db.addListener(() => {
+      writeDatabaseFile(dbFile, db);
+    });
+  }
 }
 
 const app = express();
@@ -133,8 +139,12 @@ app.get("/private", (req, res) => {
   res.end();
 });
 
-const port = 8089;
+async function main() {
+  await setupDb();
+  const port = 8089;
+  app.listen(port, () => {
+    console.log(`listening on port ${port}`);
+  });
+}
 
-app.listen(port, () => {
-  console.log(`listening on port ${port}`);
-});
+main();
