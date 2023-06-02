@@ -1,5 +1,4 @@
 const { wasm } = require("@rollup/plugin-wasm");
-const terser = require("@rollup/plugin-terser");
 
 const entryName = process.env["BUILD_ENTRY"];
 if (!entryName) {
@@ -22,8 +21,5 @@ module.exports = {
     },
   ],
 
-  plugins: [
-    wasm({ maxFileSize: 10000000, targetEnv: "auto-inline" }),
-    terser(),
-  ],
+  plugins: [wasm({ maxFileSize: 10000000, targetEnv: "auto-inline" })],
 };
