@@ -8,8 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
+      - name: install wasm-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
       - uses: pnpm/action-setup@v2
         with:
           version: 7
@@ -17,8 +19,6 @@ jobs:
         run: pnpm install
       - name: Build opaque
         run: pnpm build
-      - name: install opaque as dependency
-        run: pnpm install
       - name: install Playwright browsers
         run: npx playwright install
       - name: run Playwright tests
