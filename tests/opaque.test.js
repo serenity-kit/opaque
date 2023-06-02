@@ -4,12 +4,7 @@ import * as opaqueRistretto from "../build/ristretto";
 const opaque =
   process.env.OPAQUE_BUILD === "p256" ? opaqueP256 : opaqueRistretto;
 
-async function setupAndRegister(
-  userIdentifier,
-  password,
-  identifiers = undefined
-) {
-  await opaque.ready;
+function setupAndRegister(userIdentifier, password, identifiers = undefined) {
   const serverSetup = opaque.createServerSetup();
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
@@ -36,7 +31,11 @@ async function setupAndRegister(
   };
 }
 
-test("full registration & login flow", async () => {
+beforeAll(async () => {
+  await opaque.ready;
+});
+
+test("full registration & login flow", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -46,7 +45,7 @@ test("full registration & login flow", async () => {
     registrationUpload,
     exportKey: registrationExportKey,
     serverStaticPublicKey: registrationServerStaticPublicKey,
-  } = await setupAndRegister(userIdentifier, password);
+  } = setupAndRegister(userIdentifier, password);
 
   expect(registrationUpload).toEqual(passwordFile);
 
@@ -86,10 +85,10 @@ test("full registration & login flow", async () => {
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login with bad password", async () => {
+test("full registration & login with bad password", () => {
   const userIdentifier = "user123";
 
-  const { serverSetup, passwordFile } = await setupAndRegister(
+  const { serverSetup, passwordFile } = setupAndRegister(
     userIdentifier,
     "hunter42"
   );
@@ -112,12 +111,12 @@ test("full registration & login with bad password", async () => {
   expect(loginResult).toBeUndefined();
 });
 
-test("full registration & login flow with mismatched custom client identifier on server login", async () => {
+test("full registration & login flow with mismatched custom client identifier on server login", () => {
   const userIdentifier = "user123";
   const client = "client123";
   const password = "hunter2";
 
-  const { serverSetup, passwordFile } = await setupAndRegister(
+  const { serverSetup, passwordFile } = setupAndRegister(
     userIdentifier,
     password,
     { client }
@@ -147,11 +146,11 @@ test("full registration & login flow with mismatched custom client identifier on
   expect(loginResult).toBeUndefined();
 });
 
-test("full registration & login attempt with mismatched server identifier", async () => {
+test("full registration & login attempt with mismatched server identifier", () => {
   const userIdentifier = "client123";
   const password = "hunter2";
 
-  const { serverSetup, passwordFile } = await setupAndRegister(
+  const { serverSetup, passwordFile } = setupAndRegister(
     userIdentifier,
     password,
     { server: "server-ident" }
@@ -182,8 +181,7 @@ test("full registration & login attempt with mismatched server identifier", asyn
 });
 
 describe("clientRegistrationStart", () => {
-  test("invalid argument type", async () => {
-    await opaque.ready;
+  test("invalid argument type", () => {
     expect(() => {
       opaque.clientRegistrationStart();
     }).toThrow("password must be a string");
@@ -197,8 +195,7 @@ describe("clientRegistrationStart", () => {
 });
 
 describe("clientLoginStart", () => {
-  test("invalid argument type", async () => {
-    await opaque.ready;
+  test("invalid argument type", () => {
     expect(() => {
       opaque.clientLoginStart();
     }).toThrow("password must be a string");
@@ -212,8 +209,7 @@ describe("clientLoginStart", () => {
 });
 
 describe("serverRegistrationFinish", () => {
-  test("invalid argument type", async () => {
-    await opaque.ready;
+  test("invalid argument type", () => {
     expect(() => {
       opaque.serverRegistrationFinish();
     }).toThrow("message must be a string");
@@ -225,8 +221,7 @@ describe("serverRegistrationFinish", () => {
     }).toThrow("message must be a string");
   });
 
-  test("invalid message", async () => {
-    await opaque.ready;
+  test("invalid message", () => {
     expect(() => {
       opaque.serverRegistrationFinish("");
     }).toThrow(
@@ -234,8 +229,7 @@ describe("serverRegistrationFinish", () => {
     );
   });
 
-  test("invalid encoding", async () => {
-    await opaque.ready;
+  test("invalid encoding", () => {
     expect(() => {
       opaque.serverRegistrationFinish("a");
     }).toThrow(
@@ -245,8 +239,7 @@ describe("serverRegistrationFinish", () => {
 });
 
 describe("serverRegistrationStart", () => {
-  test("invalid params type", async () => {
-    await opaque.ready;
+  test("invalid params type", () => {
     expect(() => opaque.serverRegistrationStart()).toThrow(
       "invalid type: unit value, expected struct ServerRegistrationStartParams"
     );
@@ -258,8 +251,7 @@ describe("serverRegistrationStart", () => {
     );
   });
 
-  test("incomplete params object", async () => {
-    await opaque.ready;
+  test("incomplete params object", () => {
     expect(() => opaque.serverRegistrationStart({})).toThrow(
       "missing field `serverSetup`"
     );
@@ -274,8 +266,7 @@ describe("serverRegistrationStart", () => {
     ).toThrow("missing field `registrationRequest`");
   });
 
-  test("serverSetup invalid", async () => {
-    await opaque.ready;
+  test("serverSetup invalid", () => {
     expect(() => {
       const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
       opaque.serverRegistrationStart({
@@ -288,8 +279,7 @@ describe("serverRegistrationStart", () => {
     );
   });
 
-  test("serverSetup decoding", async () => {
-    await opaque.ready;
+  test("serverSetup decoding", () => {
     expect(() => {
       const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
       opaque.serverRegistrationStart({
@@ -302,8 +292,7 @@ describe("serverRegistrationStart", () => {
     );
   });
 
-  test("registrationRequest invalid", async () => {
-    await opaque.ready;
+  test("registrationRequest invalid", () => {
     expect(() => {
       const serverSetup = opaque.createServerSetup();
       opaque.serverRegistrationStart({
@@ -316,8 +305,7 @@ describe("serverRegistrationStart", () => {
     );
   });
 
-  test("registrationRequest decoding", async () => {
-    await opaque.ready;
+  test("registrationRequest decoding", () => {
     expect(() => {
       const serverSetup = opaque.createServerSetup();
       opaque.serverRegistrationStart({
@@ -332,8 +320,7 @@ describe("serverRegistrationStart", () => {
 });
 
 describe("serverLoginStart", () => {
-  test("invalid params type", async () => {
-    await opaque.ready;
+  test("invalid params type", () => {
     expect(() => opaque.serverLoginStart()).toThrow(
       "invalid type: unit value, expected struct ServerLoginStartParams"
     );
@@ -345,8 +332,7 @@ describe("serverLoginStart", () => {
     );
   });
 
-  test("incomplete params object", async () => {
-    await opaque.ready;
+  test("incomplete params object", () => {
     expect(() => opaque.serverLoginStart({})).toThrow(
       "missing field `serverSetup`"
     );
@@ -361,8 +347,7 @@ describe("serverLoginStart", () => {
     ).toThrow("missing field `userIdentifier`");
   });
 
-  test("serverSetup invalid", async () => {
-    await opaque.ready;
+  test("serverSetup invalid", () => {
     expect(() =>
       opaque.serverLoginStart({
         serverSetup: "",
@@ -374,8 +359,7 @@ describe("serverLoginStart", () => {
     );
   });
 
-  test("serverSetup encoding invalid", async () => {
-    await opaque.ready;
+  test("serverSetup encoding invalid", () => {
     expect(() =>
       opaque.serverLoginStart({
         serverSetup: "a",
@@ -387,8 +371,7 @@ describe("serverLoginStart", () => {
     );
   });
 
-  test("credentialRequest invalid", async () => {
-    await opaque.ready;
+  test("credentialRequest invalid", () => {
     expect(() =>
       opaque.serverLoginStart({
         serverSetup: opaque.createServerSetup(),
@@ -400,8 +383,7 @@ describe("serverLoginStart", () => {
     );
   });
 
-  test("credentialRequest encoding invalid", async () => {
-    await opaque.ready;
+  test("credentialRequest encoding invalid", () => {
     expect(() =>
       opaque.serverLoginStart({
         serverSetup: opaque.createServerSetup(),
@@ -413,8 +395,7 @@ describe("serverLoginStart", () => {
     );
   });
 
-  test("dummy server login credential response", async () => {
-    await opaque.ready;
+  test("dummy server login credential response", () => {
     const password = "hunter2";
     const serverSetup = opaque.createServerSetup();
     const { credentialRequest, clientLogin } =
