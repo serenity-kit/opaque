@@ -9,8 +9,4 @@ module.exports = {
   },
   mode: "development",
   plugins: [new CopyWebpackPlugin({ patterns: ["index.html"] })],
-  // Since webpack 5 WebAssembly is not enabled by default and flagged as experimental feature.
-  experiments: {
-    asyncWebAssembly: true,
-  },
 };
