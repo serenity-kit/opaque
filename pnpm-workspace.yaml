@@ -1,6 +1,7 @@
 packages:
-  - "examples/client-simple-webpack"
-  - "examples/client-simple-vite"
-  - "examples/server-simple"
-  - "build/ristretto"
   - "build/p256"
+  - "build/ristretto"
+  - "examples/client-simple-nextjs"
+  - "examples/client-simple-vite"
+  - "examples/client-simple-webpack"
+  - "examples/server-simple"
