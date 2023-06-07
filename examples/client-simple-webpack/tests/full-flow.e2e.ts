@@ -2,10 +2,16 @@ import { expect, test } from "@playwright/test";
 
 test("full registration & login flow", async ({ page }) => {
   await page.goto("http://localhost:8080/");
-  await page.getByPlaceholder("Username").click();
-  await page.getByPlaceholder("Username").fill("jane_doe");
-  await page.getByPlaceholder("Username").press("Tab");
-  await page.getByPlaceholder("Password").fill("hunter42");
+  const username = await page
+    .getByPlaceholder("Username")
+    .locator("visible=true");
+  await username.click();
+  await username.fill("jane_doe");
+  await username.press("Tab");
+  await page
+    .getByPlaceholder("Password")
+    .locator("visible=true")
+    .fill("hunter42");
 
   // registration
   page.once("dialog", async (dialog) => {
