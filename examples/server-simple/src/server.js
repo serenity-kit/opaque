@@ -146,7 +146,7 @@ app.post("/password/reset", (req, res) => {
 
   if (!db.hasUser(userIdentifier)) return sendError(res, 400, "user not found");
 
-  const code = randomInt(1e10);
+  const code = randomInt(1e10).toString();
 
   console.log("==============================");
   console.log();
@@ -155,28 +155,29 @@ app.post("/password/reset", (req, res) => {
   console.log();
   console.log("==============================");
 
-  db.setResetCode(code, userIdentifier);
+  db.setResetCode(userIdentifier, code);
   res.end();
 });
 
 app.post("/password/reset/confirm", (req, res) => {
-  const { resetCode, registrationRequest } = req.body || {};
+  const { userIdentifier, resetCode, registrationRequest } = req.body || {};
+
+  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
 
   if (!resetCode) return sendError(res, 400, "missing resetCode");
   if (!registrationRequest)
     return sendError(res, 400, "missing registrationRequest");
 
-  const resetEntry = db.getResetCode(resetCode);
+  const resetEntry = db.getResetCode(userIdentifier);
   if (resetEntry == null) {
     return sendError(res, 404, "reset code is invalid or expired");
   }
-  if (!db.hasUser(resetEntry.user)) {
-    return sendError(res, 500, "reset code has unknown user identifier");
+
+  db.removeResetCode(userIdentifier);
+
+  if (resetEntry.code !== resetCode) {
+    return sendError(res, 400, "reset code is invalid or expired");
   }
-
-  db.removeResetCode(resetCode);
-
-  const userIdentifier = resetEntry.user;
 
   const registrationResponse = opaque.serverRegistrationStart({
     serverSetup,

@@ -125,6 +125,7 @@ window.handleSubmitPasswordResetConfirm =
         "POST",
         `/password/reset/confirm`,
         {
+          userIdentifier,
           resetCode,
           registrationRequest,
         }
@@ -146,6 +147,7 @@ window.handleSubmitPasswordResetConfirm =
       cancelPasswordReset();
       alert(`Password reset for "${userIdentifier}" successful`);
     } catch (err) {
+      showPasswordResetConfirm(false);
       console.error(err);
       alert(err);
     }

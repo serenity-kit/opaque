@@ -11,9 +11,9 @@ function isResetCodeValid(timestamp) {
 
 function pruneResetCodes(codes) {
   const result = {};
-  for (let [code, entry] in codes) {
+  for (let [key, entry] of Object.entries(codes)) {
     if (isResetCodeValid(entry.timestamp)) {
-      result[code] = entry;
+      result[key] = entry;
     }
   }
   return result;
@@ -91,26 +91,29 @@ export default class Database {
     delete this.logins[name];
     this._notifyListeners();
   }
-  hasResetCode(code) {
-    const entry = this.resetCodes[code];
-    return entry != null && isResetCodeValid(entry.timestamp);
+  hasResetCode(user) {
+    const entry = this.getResetCode(user);
+    return entry != null;
   }
-  setResetCode(code, user) {
-    if (this.hasResetCode(code)) {
-      throw new Error(`duplicate reset code "${code}"`);
-    }
-    this.resetCodes[code] = { user, timestamp: new Date().getTime() };
+  setResetCode(user, code) {
+    this.resetCodes[user] = { code, timestamp: new Date().getTime() };
     this._notifyListeners();
   }
-  removeResetCode(code) {
-    if (this.resetCodes[code] != null) {
-      delete this.resetCodes[code];
+  removeResetCode(user) {
+    if (this.resetCodes[user] != null) {
+      delete this.resetCodes[user];
       this._notifyListeners();
     }
   }
-  getResetCode(code) {
-    const entry = this.resetCodes[code];
-    return entry != null && isResetCodeValid(entry.timestamp) ? entry : null;
+  getResetCode(user) {
+    const entry = this.resetCodes[user];
+    if (entry != null) {
+      if (isResetCodeValid(entry.timestamp)) {
+        return entry;
+      }
+      this.removeResetCode(user);
+    }
+    return null;
   }
 }
 
