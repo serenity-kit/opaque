@@ -46,6 +46,14 @@
           </button>
         </div>
       </div>
+      <div>
+        <button
+          class="underline text-gray-500 text-sm"
+          onclick="showPasswordResetForm(true)"
+        >
+          Forgot password?
+        </button>
+      </div>
     </form>
 
     <div class="p-12 space-y-4 max-w-xl">
@@ -59,6 +67,37 @@
       >
         Demo
       </button>
+    </div>
+
+    <div
+      id="password_reset"
+      class="bg-gray-300/90 flex items-start justify-center absolute inset-0 p-12"
+      onclick="handleBackdropClick()"
+    >
+      <form
+        id="password_reset_form"
+        class="bg-white p-12 shadow-lg rounded-lg space-y-8 w-full max-w-xl"
+        onsubmit="handleSubmitPasswordReset()"
+      >
+        <div class="text-xl">Forgot password</div>
+        <div>
+          <input
+            required
+            class="border border-slate-300 p-2 rounded w-full"
+            name="username"
+            placeholder="Username"
+            type="text"
+            autocomplete="off"
+          />
+        </div>
+        <div class="flex justify-end">
+          <button
+            class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+          >
+            Request Password Reset
+          </button>
+        </div>
+      </form>
     </div>
 
     <noscript

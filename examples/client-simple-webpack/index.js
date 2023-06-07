@@ -96,6 +96,26 @@ window.handleSubmit = async function handleSubmit() {
   }
 };
 
+window.handleSubmitPasswordReset = async function handleSubmitPasswordReset() {
+  event.preventDefault();
+  console.log("TODO: pw reset", event.target.username.value);
+};
+
+window.showPasswordResetForm = function showPasswordResetForm(show) {
+  window.password_reset.style.display = show ? "flex" : "none";
+  if (show) {
+    window.password_reset_form.querySelector("input").focus();
+  }
+};
+
+showPasswordResetForm(false);
+
+window.handleBackdropClick = function handleBackdropClick() {
+  if (!window.password_reset_form.contains(event.target)) {
+    showPasswordResetForm(false);
+  }
+};
+
 window.runFullFlowDemo = function () {
   const serverSetup = opaque.createServerSetup();
   const username = "user@example.com";
