@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import * as opaque from "@serenity-kit/opaque";
 import Database, { readDatabaseFile, writeDatabaseFile } from "./database.js";
+import { randomInt } from "crypto";
 
 const activeSessions = {};
 const dbFile = "./data.json";
@@ -136,6 +137,52 @@ app.get("/private", (req, res) => {
   if (!user) return sendError(res, 401, "no active session");
 
   res.send({ message: `hello ${user} from opaque-authenticated world` });
+  res.end();
+});
+
+app.post("/password/reset", (req, res) => {
+  const { userIdentifier } = req.body || {};
+  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
+
+  const code = randomInt(1e10);
+
+  console.log("==============================");
+  console.log();
+  console.log(" PASSWORD RESET CODE");
+  console.log(` ${code}`);
+  console.log();
+  console.log("==============================");
+
+  db.setResetCode(code, userIdentifier);
+  res.end();
+});
+
+app.post("/password/reset/confirm", (req, res) => {
+  const { resetCode, registrationRequest } = req.body || {};
+
+  if (!resetCode) return sendError(res, 400, "missing resetCode");
+  if (!registrationRequest)
+    return sendError(res, 400, "missing registrationRequest");
+
+  const resetEntry = db.getResetCode(resetCode);
+  if (resetEntry == null) {
+    return sendError(res, 404, "reset code is invalid or expired");
+  }
+  if (!db.hasUser(resetEntry.user)) {
+    return sendError(res, 500, "reset code has unknown user identifier");
+  }
+
+  db.removeResetCode(resetCode);
+
+  const userIdentifier = resetEntry.user;
+
+  const registrationResponse = opaque.serverRegistrationStart({
+    serverSetup,
+    userIdentifier,
+    registrationRequest,
+  });
+
+  res.send({ registrationResponse });
   res.end();
 });
 
