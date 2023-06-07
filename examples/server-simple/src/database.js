@@ -9,6 +9,16 @@ function isResetCodeValid(timestamp) {
   return now < expiry;
 }
 
+function pruneResetCodes(codes) {
+  const result = {};
+  for (let [code, entry] in codes) {
+    if (isResetCodeValid(entry.timestamp)) {
+      result[code] = entry;
+    }
+  }
+  return result;
+}
+
 export default class Database {
   constructor(serverSetup) {
     this.serverSetup = serverSetup;
@@ -47,7 +57,7 @@ export default class Database {
         serverSetup: this.serverSetup,
         logins: this.logins,
         users: this.users,
-        resetCodes: this.resetCodes,
+        resetCodes: pruneResetCodes(this.resetCodes),
       },
       null,
       2
@@ -100,7 +110,7 @@ export default class Database {
   }
   getResetCode(code) {
     const entry = this.resetCodes[code];
-    return isResetCodeValid(entry.timestamp) ? entry : null;
+    return entry != null && isResetCodeValid(entry.timestamp) ? entry : null;
   }
 }
 
