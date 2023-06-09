@@ -1,0 +1,11 @@
+{
+  "name": "@serenity-kit/opaque-express",
+  "private": true,
+  "version": "0.1.0",
+  "dependencies": {
+    "@serenity-kit/opaque": "workspace:*"
+  },
+  "peerDependencies": {
+    "express": "^4.18.2"
+  }
+}
