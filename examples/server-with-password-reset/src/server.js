@@ -145,7 +145,7 @@ function generateResetCode() {
     return process.env.TEST_RESET_CODE;
   }
 
-  return randomInt(1e10).toString();
+  return randomInt(1e9, 1e10).toString();
 }
 
 app.post("/password/reset", (req, res) => {
