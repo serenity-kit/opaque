@@ -140,13 +140,21 @@ app.get("/private", (req, res) => {
   res.end();
 });
 
+function generateResetCode() {
+  if (process.env.TEST_RESET_CODE) {
+    return process.env.TEST_RESET_CODE;
+  }
+
+  return randomInt(1e10).toString();
+}
+
 app.post("/password/reset", (req, res) => {
   const { userIdentifier } = req.body || {};
   if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
 
   if (!db.hasUser(userIdentifier)) return sendError(res, 400, "user not found");
 
-  const code = randomInt(1e10).toString();
+  const code = generateResetCode();
 
   console.log("==============================");
   console.log();

@@ -75,6 +75,7 @@
       onclick="handleBackdropClick()"
     >
       <form
+        data-testid="password_reset_request"
         id="password_reset_form"
         class="bg-white p-12 shadow-lg rounded-lg space-y-8 w-full max-w-xl"
         onsubmit="handleSubmitPasswordReset()"
@@ -107,6 +108,7 @@
       </form>
 
       <form
+        data-testid="password_reset_confirm"
         id="password_reset_confirm"
         class="bg-white p-12 shadow-lg rounded-lg space-y-8 w-full max-w-xl hidden"
         onsubmit="handleSubmitPasswordResetConfirm()"
