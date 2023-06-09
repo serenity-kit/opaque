@@ -35,6 +35,9 @@ export default defineConfig({
       url: "http://127.0.0.1:8089/private",
       // reuseExistingServer: !process.env.CI,
       reuseExistingServer: false,
+      env: {
+        TEST_RESET_CODE: "1234567890",
+      },
     },
     {
       command: "cd ../../examples/client-simple-webpack && pnpm dev",

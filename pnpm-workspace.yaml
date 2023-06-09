@@ -4,4 +4,6 @@ packages:
   - "examples/client-simple-nextjs"
   - "examples/client-simple-vite"
   - "examples/client-simple-webpack"
+  - "examples/client-with-password-reset"
   - "examples/server-simple"
+  - "examples/server-with-password-reset"

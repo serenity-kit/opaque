@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import * as opaque from "@serenity-kit/opaque";
 import Database, { readDatabaseFile, writeDatabaseFile } from "./database.js";
+import { randomInt } from "crypto";
 
 const activeSessions = {};
 const dbFile = "./data.json";
@@ -136,6 +137,63 @@ app.get("/private", (req, res) => {
   if (!user) return sendError(res, 401, "no active session");
 
   res.send({ message: `hello ${user} from opaque-authenticated world` });
+  res.end();
+});
+
+function generateResetCode() {
+  if (process.env.TEST_RESET_CODE) {
+    return process.env.TEST_RESET_CODE;
+  }
+
+  return randomInt(1e10).toString();
+}
+
+app.post("/password/reset", (req, res) => {
+  const { userIdentifier } = req.body || {};
+  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
+
+  if (!db.hasUser(userIdentifier)) return sendError(res, 400, "user not found");
+
+  const code = generateResetCode();
+
+  console.log("==============================");
+  console.log();
+  console.log(" PASSWORD RESET CODE");
+  console.log(` ${code}`);
+  console.log();
+  console.log("==============================");
+
+  db.setResetCode(userIdentifier, code);
+  res.end();
+});
+
+app.post("/password/reset/confirm", (req, res) => {
+  const { userIdentifier, resetCode, registrationRequest } = req.body || {};
+
+  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
+
+  if (!resetCode) return sendError(res, 400, "missing resetCode");
+  if (!registrationRequest)
+    return sendError(res, 400, "missing registrationRequest");
+
+  const resetEntry = db.getResetCode(userIdentifier);
+  if (resetEntry == null) {
+    return sendError(res, 404, "reset code is invalid or expired");
+  }
+
+  db.removeResetCode(userIdentifier);
+
+  if (resetEntry.code !== resetCode) {
+    return sendError(res, 400, "reset code is invalid or expired");
+  }
+
+  const registrationResponse = opaque.serverRegistrationStart({
+    serverSetup,
+    userIdentifier,
+    registrationRequest,
+  });
+
+  res.send({ registrationResponse });
   res.end();
 });
 

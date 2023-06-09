@@ -1,12 +1,38 @@
 import { readFileSync } from "fs";
 import { writeFile } from "fs/promises";
 
+const RESET_CODE_VALIDITY = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+function isResetCodeValid(timestamp) {
+  const now = new Date().getTime();
+  const expiry = timestamp + RESET_CODE_VALIDITY;
+  return now < expiry;
+}
+
+function pruneResetCodes(codes) {
+  const result = {};
+  for (let [key, entry] of Object.entries(codes)) {
+    if (isResetCodeValid(entry.timestamp)) {
+      result[key] = entry;
+    }
+  }
+  return result;
+}
+
 export default class Database {
-  constructor(serverSetup, users, logins) {
+  constructor(serverSetup) {
     this.serverSetup = serverSetup;
-    this.users = users;
-    this.logins = logins;
+    this.users = {};
+    this.logins = {};
+    this.resetCodes = {};
     this.listeners = [];
+  }
+  static init({ serverSetup, ...data }) {
+    const db = new Database(serverSetup);
+    db.users = data.users || {};
+    db.logins = data.logins || {};
+    db.resetCodes = data.resetCodes || {};
+    return db;
   }
   addListener(listener) {
     this.listeners.push(listener);
@@ -23,7 +49,7 @@ export default class Database {
     }
   }
   static empty(serverSetup) {
-    return new Database(serverSetup, {}, {});
+    return new Database(serverSetup);
   }
   stringify() {
     return JSON.stringify(
@@ -31,6 +57,7 @@ export default class Database {
         serverSetup: this.serverSetup,
         logins: this.logins,
         users: this.users,
+        resetCodes: pruneResetCodes(this.resetCodes),
       },
       null,
       2
@@ -64,12 +91,36 @@ export default class Database {
     delete this.logins[name];
     this._notifyListeners();
   }
+  hasResetCode(user) {
+    const entry = this.getResetCode(user);
+    return entry != null;
+  }
+  setResetCode(user, code) {
+    this.resetCodes[user] = { code, timestamp: new Date().getTime() };
+    this._notifyListeners();
+  }
+  removeResetCode(user) {
+    if (this.resetCodes[user] != null) {
+      delete this.resetCodes[user];
+      this._notifyListeners();
+    }
+  }
+  getResetCode(user) {
+    const entry = this.resetCodes[user];
+    if (entry != null) {
+      if (isResetCodeValid(entry.timestamp)) {
+        return entry;
+      }
+      this.removeResetCode(user);
+    }
+    return null;
+  }
 }
 
 export function readDatabaseFile(filePath) {
   const json = readFileSync(filePath, "utf-8");
   const data = JSON.parse(json);
-  const db = new Database(data.serverSetup, data.users, data.logins);
+  const db = Database.init(data);
   return db;
 }
 

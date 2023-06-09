@@ -96,6 +96,100 @@ window.handleSubmit = async function handleSubmit() {
   }
 };
 
+window.handleSubmitPasswordReset = async function handleSubmitPasswordReset() {
+  event.preventDefault();
+  const userIdentifier = event.target.username.value;
+
+  try {
+    await request("POST", "/password/reset", {
+      userIdentifier,
+    });
+    showPasswordResetConfirm(true);
+  } catch (err) {
+    console.error(err);
+    alert(err);
+  }
+};
+
+window.handleSubmitPasswordResetConfirm =
+  async function handleSubmitPasswordResetConfirm() {
+    try {
+      event.preventDefault();
+      const password = event.target.password.value;
+      const resetCode = event.target.code.value;
+      const userIdentifier = window.password_reset_form.username.value;
+
+      const { clientRegistration, registrationRequest } =
+        opaque.clientRegistrationStart(password);
+      const { registrationResponse } = await request(
+        "POST",
+        `/password/reset/confirm`,
+        {
+          userIdentifier,
+          resetCode,
+          registrationRequest,
+        }
+      ).then((res) => res.json());
+
+      console.log("registrationResponse", registrationResponse);
+      const { registrationUpload } = opaque.clientRegistrationFinish({
+        clientRegistration,
+        registrationResponse,
+        password,
+      });
+
+      const res = await request("POST", `/register/finish`, {
+        userIdentifier,
+        registrationUpload,
+      });
+      console.log("finish successful", res.ok);
+
+      cancelPasswordReset();
+      alert(`Password reset for "${userIdentifier}" successful`);
+    } catch (err) {
+      showPasswordResetConfirm(false);
+      console.error(err);
+      alert(err);
+    }
+  };
+
+window.showPasswordResetConfirm = function showPasswordResetConfirm(show) {
+  if (show) {
+    window.password_reset_confirm.reset();
+    window.password_reset_confirm.classList.remove("hidden");
+    window.password_reset_form.classList.add("hidden");
+    window.password_reset_confirm.querySelector("input").focus();
+  } else {
+    window.password_reset_confirm.classList.add("hidden");
+    window.password_reset_form.classList.remove("hidden");
+  }
+};
+
+window.cancelPasswordReset = function cancelPasswordReset() {
+  showPasswordResetConfirm(false);
+  showPasswordResetForm(false);
+};
+
+window.showPasswordResetForm = function showPasswordResetForm(show) {
+  window.password_reset.style.display = show ? "flex" : "none";
+  if (show) {
+    window.password_reset_form.reset();
+    window.password_reset_form.querySelector("input").focus();
+  }
+};
+
+showPasswordResetForm(false);
+
+window.handleBackdropClick = function handleBackdropClick() {
+  if (
+    !window.password_reset_form.contains(event.target) &&
+    !window.password_reset_confirm.contains(event.target)
+  ) {
+    showPasswordResetConfirm(false);
+    showPasswordResetForm(false);
+  }
+};
+
 window.runFullFlowDemo = function () {
   const serverSetup = opaque.createServerSetup();
   const username = "user@example.com";
