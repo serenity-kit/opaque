@@ -191,6 +191,12 @@ importers:
         specifier: workspace:*
         version: link:../build/ristretto
 
+  opaque-express:
+    dependencies:
+      '@serenity-kit/opaque':
+        specifier: workspace:*
+        version: link:../build/ristretto
+
 packages:
 
   /@alloc/quick-lru@5.2.0:
