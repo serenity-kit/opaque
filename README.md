@@ -121,6 +121,15 @@ You can start the server with
 pnpm example:server:dev
 ```
 
+### server-with-password-reset
+
+This is the same as the server-simple example but with added password reset endpoints.
+Run with:
+
+```
+pnpm example:server-with-password-reset:dev
+```
+
 ### client-simple-webpack
 
 A client-side JS example login/registration form is located in `./examples/client-simple-webpack`.
@@ -138,6 +147,24 @@ You can run it with
 
 ```
 pnpm example:client-simple-vite:dev
+```
+
+### client-simple-nextjs
+
+This is the example app built with nextjs. Run with:
+
+```
+pnpm example:client-simple-nextjs:dev
+```
+
+### client-with-password-reset
+
+This is the same as the client-simple-webpack example but with added password reset functionality.
+It expects the server-with-password-reset example to be running.
+Run with:
+
+```
+pnpm example:client-with-password-reset:dev
 ```
 
 ## Advanced usage

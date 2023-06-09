@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Opaque Example - Client with Password Reset</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <form id="form" class="p-12 space-y-4 max-w-xl" onsubmit="handleSubmit()">
+      <h1 class="text-xl font-semibold">Login/Register</h1>
+      <p class="text-gray-500 text-sm">
+        Requires running example server. <br />
+        <span class="text-xs font-mono bg-gray-200 p-0.5 text-gray-800"
+          >pnpm example:server-with-password-reset:dev</span
+        >
+      </p>
+      <div class="space-y-2 flex flex-col">
+        <input
+          class="border border-slate-300 p-1"
+          name="username"
+          placeholder="Username"
+          type="text"
+          autocomplete="off"
+        />
+
+        <input
+          class="border border-slate-300 p-1"
+          name="password"
+          placeholder="Password"
+          type="password"
+          autocomplete="off"
+        />
+
+        <div>
+          <button
+            name="login"
+            class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+          >
+            Login
+          </button>
+          <button
+            name="register"
+            class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+          >
+            Register
+          </button>
+        </div>
+      </div>
+      <div>
+        <button
+          class="underline text-gray-500 text-sm"
+          onclick="showPasswordResetForm(true)"
+        >
+          Forgot password?
+        </button>
+      </div>
+    </form>
+
+    <div class="p-12 space-y-4 max-w-xl">
+      <p class="text-gray-500 text-sm">
+        Run full flow in-memory demo (check console.log output).
+      </p>
+      <button
+        name="login"
+        class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
+        onclick="runFullFlowDemo()"
+      >
+        Demo
+      </button>
+    </div>
+
+    <div
+      id="password_reset"
+      class="bg-gray-300/90 flex items-start justify-center absolute inset-0 p-12"
+      onclick="handleBackdropClick()"
+    >
+      <form
+        data-testid="password_reset_request"
+        id="password_reset_form"
+        class="bg-white p-12 shadow-lg rounded-lg space-y-8 w-full max-w-xl"
+        onsubmit="handleSubmitPasswordReset()"
+      >
+        <div class="text-xl">Forgot password</div>
+        <div>
+          <input
+            required
+            class="border border-slate-300 p-2 rounded w-full"
+            name="username"
+            placeholder="Username"
+            type="text"
+            autocomplete="off"
+          />
+        </div>
+        <div class="flex justify-end">
+          <button
+            type="button"
+            class="font-semibold text-gray-400 hover:bg-gray-100 px-3 py-2 rounded hover:text-rose-500"
+            onclick="cancelPasswordReset()"
+          >
+            Cancel
+          </button>
+          <button
+            class="ml-auto bg-blue-500 py-1 px-3 text-white font-semibold rounded hover:bg-blue-600 shadow"
+          >
+            Request Password Reset
+          </button>
+        </div>
+      </form>
+
+      <form
+        data-testid="password_reset_confirm"
+        id="password_reset_confirm"
+        class="bg-white p-12 shadow-lg rounded-lg space-y-8 w-full max-w-xl hidden"
+        onsubmit="handleSubmitPasswordResetConfirm()"
+      >
+        <div class="text-xl">Reset password</div>
+        <div class="space-y-4">
+          <div>
+            <input
+              required
+              class="border border-slate-300 p-2 rounded w-full"
+              name="code"
+              placeholder="Reset Code"
+              type="text"
+              autocomplete="off"
+            />
+          </div>
+          <div>
+            <input
+              required
+              type="password"
+              class="border border-slate-300 p-2 rounded w-full"
+              name="password"
+              placeholder="New Password"
+            />
+          </div>
+        </div>
+        <div class="flex">
+          <button
+            type="button"
+            class="font-semibold text-gray-400 hover:bg-gray-100 px-3 py-2 rounded hover:text-rose-500"
+            onclick="cancelPasswordReset()"
+          >
+            Cancel
+          </button>
+          <button
+            class="ml-auto bg-blue-500 py-1 px-3 text-white font-semibold rounded hover:bg-blue-600 shadow"
+          >
+            Reset Password
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <noscript
+      >This page contains webassembly and javascript content, please enable
+      javascript in your browser.</noscript
+    >
+    <script src="./index.js"></script>
+  </body>
+</html>
