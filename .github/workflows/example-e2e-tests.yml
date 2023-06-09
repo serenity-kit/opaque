@@ -20,9 +20,11 @@ jobs:
       - name: Build opaque
         run: pnpm build
       - name: install Playwright browsers
-        run: npx playwright install
+        working-directory: examples/client-simple-webpack
+        run: npx playwright install --with-deps
       - name: run Playwright tests
-        run: cd examples/client-simple-webpack && pnpm exec playwright test
+        working-directory: examples/client-simple-webpack
+        run: npx playwright test
       - uses: actions/upload-artifact@v3
         if: always()
         with:
