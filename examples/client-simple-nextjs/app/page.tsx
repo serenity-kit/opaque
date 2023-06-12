@@ -3,11 +3,9 @@
 import * as opaque from "@serenity-kit/opaque";
 import { useState } from "react";
 
-const host = "http://localhost:8089";
-
 async function request(method: string, path: string, body: any = undefined) {
-  console.log(`${method} ${host}${path}`, body);
-  const res = await fetch(`${host}${path}`, {
+  console.log(`${method} ${path}`, body);
+  const res = await fetch(`${path}`, {
     method,
     body: body && JSON.stringify(body),
     headers: { "Content-Type": "application/json" },
@@ -23,10 +21,14 @@ async function request(method: string, path: string, body: any = undefined) {
 async function register(userIdentifier: string, password: string) {
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
-  const { registrationResponse } = await request("POST", `/register/start`, {
-    userIdentifier,
-    registrationRequest,
-  }).then((res) => res.json());
+  const { registrationResponse } = await request(
+    "POST",
+    `/api/register/start`,
+    {
+      userIdentifier,
+      registrationRequest,
+    }
+  ).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
   const { registrationUpload } = opaque.clientRegistrationFinish({
@@ -35,7 +37,7 @@ async function register(userIdentifier: string, password: string) {
     password,
   });
 
-  const res = await request("POST", `/register/finish`, {
+  const res = await request("POST", `/api/register/finish`, {
     userIdentifier,
     registrationUpload,
   });
