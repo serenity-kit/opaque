@@ -14,5 +14,8 @@
   "module": "esm/index.js",
   "types": "index.d.ts",
   "main": "cjs/index.js",
-  "browser": "esm/index.js"
+  "browser": "esm/index.js",
+  "bin": {
+    "create-server-setup": "./create-server-setup.js"
+  }
 }

@@ -30,9 +30,19 @@ const packageJson = function (name) {
   "module": "esm/index.js",
   "types": "index.d.ts",
   "main": "cjs/index.js",
-  "browser": "esm/index.js"
+  "browser": "esm/index.js",
+  "bin": {
+    "create-server-setup": "./create-server-setup.js"
+  }
 }`);
 };
+
+const createServerSetupBin = new sh.ShellString(`#!/usr/bin/env node
+const opaque = require('.')
+opaque.ready.then(() => {
+    console.log(opaque.createServerSetup())
+})
+`);
 
 function build_wbg() {
   sh.exec(
@@ -75,6 +85,9 @@ function main() {
   // write package json
   packageJson("opaque").to("build/ristretto/package.json");
   packageJson("opaque-p256").to("build/p256/package.json");
+
+  createServerSetupBin.to("build/ristretto/create-server-setup.js");
+  createServerSetupBin.to("build/p256/create-server-setup.js");
 
   // copy docs
   sh.cp("README.md", "build/ristretto/README.md");
