@@ -1,6 +1,5 @@
-import { readFileSync } from "fs";
-import { writeFile } from "fs/promises";
 import * as opaque from "@serenity-kit/opaque";
+import { readFile, writeFile } from "fs/promises";
 
 type LoginState = { value: string; timestamp: number };
 
@@ -72,8 +71,8 @@ class Database {
   }
 }
 
-function readDatabaseFile(filePath: string) {
-  const json = readFileSync(filePath, "utf-8");
+async function readDatabaseFile(filePath: string) {
+  const json = await readFile(filePath, "utf-8");
   const data = JSON.parse(json);
   const db = new Database(data.serverSetup, data.users, data.logins);
   return db;
@@ -84,6 +83,24 @@ function writeDatabaseFile(filePath: string, db: Database) {
   return writeFile(filePath, data);
 }
 
-const db = opaque.ready.then(() => Database.empty(opaque.createServerSetup()));
+const db = opaque.ready.then(async () => {
+  console.log("initializing db");
+  const file = "data.json";
+  const db = await readDatabaseFile(file).catch((err) => {
+    if ("code" in err && err.code == "ENOENT") {
+      console.log("No database file found, initializing empty database.");
+    } else {
+      console.error(
+        "ERROR: failed to read database file, initializing empty database."
+      );
+      console.error(err);
+    }
+    return Database.empty(opaque.createServerSetup());
+  });
+  db.addListener(() => {
+    writeDatabaseFile(file, db);
+  });
+  return db;
+});
 
 export default db;
