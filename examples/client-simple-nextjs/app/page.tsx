@@ -119,16 +119,11 @@ export default function Home() {
         }}
       >
         <h1 className="text-xl font-semibold">Login/Register</h1>
-        <p className="text-gray-500 text-sm">
-          Requires running example server. (
-          <span className="text-xs font-mono bg-gray-200 p-0.5 text-gray-800">
-            pnpm example:server:dev
-          </span>
-          ).
-        </p>
+
         <div className="space-y-2 flex flex-col">
           <input
-            className="border border-slate-300 p-1"
+            required
+            className="border border-slate-300 p-2 rounded"
             name="username"
             placeholder="Username"
             type="text"
@@ -140,7 +135,8 @@ export default function Home() {
           />
 
           <input
-            className="border border-slate-300 p-1"
+            required
+            className="border border-slate-300 p-2 rounded"
             name="password"
             placeholder="Password"
             type="password"
@@ -152,20 +148,12 @@ export default function Home() {
           />
 
           <div className="space-x-2">
-            <button
-              name="action"
-              value="login"
-              className="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
-            >
+            <Button name="action" value="login">
               Login
-            </button>
-            <button
-              name="action"
-              value="register"
-              className="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
-            >
+            </Button>
+            <Button name="action" value="register">
               Register
-            </button>
+            </Button>
           </div>
         </div>
       </form>
@@ -174,17 +162,30 @@ export default function Home() {
         <p className="text-gray-500 text-sm">
           Run full flow in-memory demo (check console.log output).
         </p>
-        <button
+        <Button
           name="login"
-          className="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
           onClick={() => {
             runFullFlowDemo();
           }}
         >
           Demo
-        </button>
+        </Button>
       </div>
     </>
+  );
+}
+
+type ButtonProps = Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "className"
+>;
+
+function Button(props: ButtonProps) {
+  return (
+    <button
+      className="bg-blue-500 py-1 px-3 text-white font-semibold rounded hover:bg-blue-600 shadow"
+      {...props}
+    />
   );
 }
 
