@@ -4,7 +4,7 @@
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"
   ],
-  "version": "0.5.0",
+  "version": "0.6.0",
   "license": "MIT",
   "files": [
     "index.d.ts",
