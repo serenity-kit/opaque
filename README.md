@@ -149,12 +149,12 @@ You can run it with
 pnpm example:client-simple-vite:dev
 ```
 
-### client-simple-nextjs
+### fullstack-simple-nextjs
 
-This is the example app built with nextjs. Run with:
+This is the same example app built with nextjs but includes server-side implementation using route handlers. Run with:
 
 ```
-pnpm example:client-simple-nextjs:dev
+pnpm example:fullstack-simple-nextjs:dev
 ```
 
 ### client-with-password-reset

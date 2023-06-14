@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "node ./bin/build.js",
-    "example:client-simple-nextjs:dev": "cd examples/client-simple-nextjs && pnpm dev",
+    "example:fullstack-simple-nextjs:dev": "cd examples/fullstack-simple-nextjs && pnpm dev",
     "example:client-simple-webpack:dev": "cd examples/client-simple-webpack && pnpm dev",
     "example:client-with-password-reset:dev": "cd examples/client-with-password-reset && pnpm dev",
     "example:client-simple-vite:dev": "cd examples/client-simple-vite && pnpm dev",

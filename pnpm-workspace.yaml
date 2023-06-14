@@ -1,9 +1,9 @@
 packages:
   - "build/p256"
   - "build/ristretto"
-  - "examples/client-simple-nextjs"
   - "examples/client-simple-vite"
   - "examples/client-simple-webpack"
   - "examples/client-with-password-reset"
+  - "examples/fullstack-simple-nextjs"
   - "examples/server-simple"
   - "examples/server-with-password-reset"
