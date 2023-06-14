@@ -48,7 +48,7 @@ async function register(userIdentifier: string, password: string) {
 async function login(userIdentifier: string, password: string) {
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
-  const { credentialResponse } = await request("POST", "/login/start", {
+  const { credentialResponse } = await request("POST", "/api/login/start", {
     userIdentifier,
     credentialRequest,
   }).then((res) => res.json());
@@ -63,7 +63,7 @@ async function login(userIdentifier: string, password: string) {
     return null;
   }
   const { sessionKey, credentialFinalization } = loginResult;
-  const res = await request("POST", "/login/finish", {
+  const res = await request("POST", "/api/login/finish", {
     userIdentifier,
     credentialFinalization,
   });

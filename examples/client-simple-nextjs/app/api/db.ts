@@ -8,9 +8,9 @@ class Database {
     private serverSetup: string,
     private users: Record<string, string> = {},
     private logins: Record<string, LoginState> = {},
-    private listeners: (() => void)[] = []
+    private listeners: (() => Promise<void>)[] = []
   ) {}
-  addListener(listener: () => void) {
+  addListener(listener: () => Promise<void>) {
     this.listeners.push(listener);
     return () => {
       const index = this.listeners.indexOf(listener);
@@ -20,9 +20,7 @@ class Database {
     };
   }
   _notifyListeners() {
-    for (let listener of this.listeners) {
-      listener();
-    }
+    return Promise.all(this.listeners.map((f) => f()));
   }
   static empty(serverSetup: string) {
     return new Database(serverSetup, {}, {});
@@ -54,17 +52,17 @@ class Database {
     const elapsed = now - login.timestamp;
     return elapsed < 2000;
   }
-  setUser(name: string, value: string) {
+  async setUser(name: string, value: string) {
     this.users[name] = value;
-    this._notifyListeners();
+    await this._notifyListeners();
   }
-  setLogin(name: string, value: string) {
+  async setLogin(name: string, value: string) {
     this.logins[name] = { value, timestamp: new Date().getTime() };
-    this._notifyListeners();
+    await this._notifyListeners();
   }
-  removeLogin(name: string) {
+  async removeLogin(name: string) {
     delete this.logins[name];
-    this._notifyListeners();
+    await this._notifyListeners();
   }
   getServerSetup() {
     return this.serverSetup;
@@ -97,9 +95,7 @@ const db = opaque.ready.then(async () => {
     }
     return Database.empty(opaque.createServerSetup());
   });
-  db.addListener(() => {
-    writeDatabaseFile(file, db);
-  });
+  db.addListener(() => writeDatabaseFile(file, db));
   return db;
 });
 

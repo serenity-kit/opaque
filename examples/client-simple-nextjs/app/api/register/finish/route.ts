@@ -16,6 +16,6 @@ export async function POST(request: Request) {
     );
   const db = await database;
   const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
-  db.setUser(userIdentifier, passwordFile);
+  await db.setUser(userIdentifier, passwordFile);
   return NextResponse.json({ success: true });
 }
