@@ -3,11 +3,9 @@
 import * as opaque from "@serenity-kit/opaque";
 import { useState } from "react";
 
-const host = "http://localhost:8089";
-
 async function request(method: string, path: string, body: any = undefined) {
-  console.log(`${method} ${host}${path}`, body);
-  const res = await fetch(`${host}${path}`, {
+  console.log(`${method} ${path}`, body);
+  const res = await fetch(`${path}`, {
     method,
     body: body && JSON.stringify(body),
     headers: { "Content-Type": "application/json" },
@@ -23,10 +21,14 @@ async function request(method: string, path: string, body: any = undefined) {
 async function register(userIdentifier: string, password: string) {
   const { clientRegistration, registrationRequest } =
     opaque.clientRegistrationStart(password);
-  const { registrationResponse } = await request("POST", `/register/start`, {
-    userIdentifier,
-    registrationRequest,
-  }).then((res) => res.json());
+  const { registrationResponse } = await request(
+    "POST",
+    `/api/register/start`,
+    {
+      userIdentifier,
+      registrationRequest,
+    }
+  ).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
   const { registrationUpload } = opaque.clientRegistrationFinish({
@@ -35,7 +37,7 @@ async function register(userIdentifier: string, password: string) {
     password,
   });
 
-  const res = await request("POST", `/register/finish`, {
+  const res = await request("POST", `/api/register/finish`, {
     userIdentifier,
     registrationUpload,
   });
@@ -46,7 +48,7 @@ async function register(userIdentifier: string, password: string) {
 async function login(userIdentifier: string, password: string) {
   const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
 
-  const { credentialResponse } = await request("POST", "/login/start", {
+  const { credentialResponse } = await request("POST", "/api/login/start", {
     userIdentifier,
     credentialRequest,
   }).then((res) => res.json());
@@ -61,7 +63,7 @@ async function login(userIdentifier: string, password: string) {
     return null;
   }
   const { sessionKey, credentialFinalization } = loginResult;
-  const res = await request("POST", "/login/finish", {
+  const res = await request("POST", "/api/login/finish", {
     userIdentifier,
     credentialFinalization,
   });
@@ -117,16 +119,11 @@ export default function Home() {
         }}
       >
         <h1 className="text-xl font-semibold">Login/Register</h1>
-        <p className="text-gray-500 text-sm">
-          Requires running example server. (
-          <span className="text-xs font-mono bg-gray-200 p-0.5 text-gray-800">
-            pnpm example:server:dev
-          </span>
-          ).
-        </p>
+
         <div className="space-y-2 flex flex-col">
           <input
-            className="border border-slate-300 p-1"
+            required
+            className="border border-slate-300 p-2 rounded"
             name="username"
             placeholder="Username"
             type="text"
@@ -138,7 +135,8 @@ export default function Home() {
           />
 
           <input
-            className="border border-slate-300 p-1"
+            required
+            className="border border-slate-300 p-2 rounded"
             name="password"
             placeholder="Password"
             type="password"
@@ -150,20 +148,12 @@ export default function Home() {
           />
 
           <div className="space-x-2">
-            <button
-              name="action"
-              value="login"
-              className="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
-            >
+            <Button name="action" value="login">
               Login
-            </button>
-            <button
-              name="action"
-              value="register"
-              className="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
-            >
+            </Button>
+            <Button name="action" value="register">
               Register
-            </button>
+            </Button>
           </div>
         </div>
       </form>
@@ -172,17 +162,30 @@ export default function Home() {
         <p className="text-gray-500 text-sm">
           Run full flow in-memory demo (check console.log output).
         </p>
-        <button
+        <Button
           name="login"
-          className="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
           onClick={() => {
             runFullFlowDemo();
           }}
         >
           Demo
-        </button>
+        </Button>
       </div>
     </>
+  );
+}
+
+type ButtonProps = Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  "className"
+>;
+
+function Button(props: ButtonProps) {
+  return (
+    <button
+      className="bg-blue-500 py-1 px-3 text-white font-semibold rounded hover:bg-blue-600 shadow"
+      {...props}
+    />
   );
 }
 

@@ -108,7 +108,6 @@ app.post("/login/finish", (req, res) => {
   if (!serverLogin) return sendError(res, 400, "login not started");
 
   const sessionKey = opaque.serverLoginFinish({
-    serverSetup,
     credentialFinalization,
     serverLogin,
   });
