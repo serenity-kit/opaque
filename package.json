@@ -2,6 +2,7 @@
   "name": "opaque-monorepo",
   "version": "0.5.0",
   "license": "MIT",
+  "private": true,
   "devDependencies": {
     "@babel/core": "^7.21.4",
     "@babel/preset-env": "^7.21.4",
@@ -27,6 +28,6 @@
     "test": "pnpm test:p256 && pnpm test:ristretto",
     "publish:ristretto": "cd build/ristretto && pnpm publish",
     "publish:p256": "cd build/p256 && pnpm publish",
-    "publish": "pnpm publish:ristretto && pnpm publish:p256"
+    "publish:all": "pnpm publish:ristretto && pnpm publish:p256"
   }
 }
