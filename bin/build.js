@@ -10,6 +10,12 @@ import wasmData from './opaque_bg.wasm'
 import init from './opaque'
 export const ready = init(wasmData())
 export * from './opaque'
+// This default export is not strictly necessary and is the reason why
+// rollup complains about mixing named and default exports.
+// We have it here because it is declared in the generated d.ts file
+// and strictly speaking our types would be wrong if we remove this export.
+// We could modify the d.ts file to remove the type declaration as part of the build
+// but that introduces more fragility to the build process with no real benefit.
 export {default} from './opaque'
 `);
 
