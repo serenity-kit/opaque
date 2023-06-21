@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "types": "src/index.d.ts",
+  "main": "src/index.js",
   "peerDependencies": {
     "@serenity-kit/opaque": "workspace:*",
     "react": "18"

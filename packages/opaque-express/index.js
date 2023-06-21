@@ -69,6 +69,8 @@ async function attempt(f) {
 export default function ({ serverSetup, opaque, ...config }) {
   const router = express.Router();
 
+  router.use(express.json());
+
   router.post("/register/start", (req, res) => {
     const { userIdentifier, registrationRequest } = req.body || {};
 
@@ -168,9 +170,10 @@ export default function ({ serverSetup, opaque, ...config }) {
         return sendError(res, 400, getError(finish.error, ERR_LOGIN_FINISH));
       }
 
-      res.writeHead(200);
+      res.send({ ok: true });
       res.end();
     } catch (err) {
+      console.error(err);
       return sendError(res, 500, ERR_UNKNOWN);
     }
   });

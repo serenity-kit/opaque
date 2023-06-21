@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 /**
- * @typedef {Object} Config
+ * @typedef {Object} OpaqueConfig
  * @prop {string} basePath
  * @prop {typeof import('@serenity-kit/opaque')} opaque
  * @prop {typeof fetch} [fetch]
@@ -9,7 +9,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
  */
 
 /**
- * @param {Config} config
+ * @param {OpaqueConfig} config
  */
 export function useOpaqueRegister(config) {
   const ref = useRef(config);
@@ -58,7 +58,13 @@ export function useOpaqueRegister(config) {
         }),
       });
 
-      return res.ok;
+      if (!res.ok) {
+        const info = await res.json();
+        throw new Error(
+          "error" in info ? info.error : "ERR_UNKNOWN_SERVER_RESPONSE"
+        );
+      }
+      return true;
     },
     []
   );
@@ -67,7 +73,7 @@ export function useOpaqueRegister(config) {
 }
 
 /**
- * @param {Config} config
+ * @param {OpaqueConfig} config
  */
 export function useOpaqueLogin(config) {
   const ref = useRef(config);
@@ -85,7 +91,7 @@ export function useOpaqueLogin(config) {
       const { clientLogin, credentialRequest } =
         opaque.clientLoginStart(password);
 
-      const { credentialResponse } = await fetch(`${basePath}/login/start`, {
+      let res = await fetch(`${basePath}/login/start`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +101,16 @@ export function useOpaqueLogin(config) {
           userIdentifier,
           credentialRequest,
         }),
-      }).then((res) => res.json());
+      });
+
+      if (!res.ok) {
+        const info = await res.json();
+        throw new Error(
+          "error" in info ? info.error : "ERR_UNKNOWN_SERVER_RESPONSE"
+        );
+      }
+
+      const { credentialResponse } = await res.json();
 
       const loginResult = opaque.clientLoginFinish({
         clientLogin,
@@ -104,11 +119,11 @@ export function useOpaqueLogin(config) {
       });
 
       if (!loginResult) {
-        return null;
+        throw new Error("ERR_CREDENTIALS_INVALID");
       }
       const { sessionKey, credentialFinalization } = loginResult;
 
-      const res = await fetch(`${basePath}/login/finish`, {
+      res = await fetch(`${basePath}/login/finish`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,32 +143,36 @@ export function useOpaqueLogin(config) {
 }
 
 /**
- * @param {Config} config
+ * @param {OpaqueConfig} config
  */
 export function useOpaqueRegisterRequest(config) {
-  const register = useOpaqueRegister(config);
+  const doRegister = useOpaqueRegister(config);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(/** @returns {unknown|null} */ () => null);
-  const request = useCallback(
+  const register = useCallback(
     async (
       /** @type {string} */ userIdentifier,
       /** @type {string} */ password
     ) => {
       try {
         setLoading(true);
-        const success = await register(userIdentifier, password);
+        const success = await doRegister(userIdentifier, password);
         setLoading(false);
+        setError(null);
+        return success;
       } catch (err) {
         setError(err);
+        setLoading(false);
+        return false;
       }
     },
-    [register]
+    [doRegister]
   );
-  return { request, isLoading, error };
+  return { register, isLoading, error };
 }
 
 /**
- * @param {Config} config
+ * @param {OpaqueConfig} config
  */
 export function useOpaqueLoginRequest(config) {
   const doLogin = useOpaqueLogin(config);
@@ -169,11 +188,17 @@ export function useOpaqueLoginRequest(config) {
     ) => {
       try {
         setLoading(true);
+        setSessionKey(null);
         const sessionKey = await doLogin(userIdentifier, password);
         setLoading(false);
         setSessionKey(sessionKey);
+        setError(null);
+        return sessionKey;
       } catch (err) {
         setError(err);
+        console.error(err);
+        setLoading(false);
+        return null;
       }
     },
     [doLogin]
