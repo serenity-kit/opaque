@@ -14,6 +14,17 @@ jobs:
         run: pnpm install
       - name: prettier-check
         run: npx prettier --check .
+  typechecks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run typechecks
+        run: pnpm typecheck
   rustfmt:
     runs-on: ubuntu-latest
     steps:
