@@ -2,6 +2,7 @@ import * as opaque from "@serenity-kit/opaque";
 import opaqueExpress from "@serenity-kit/opaque-express";
 import express from "express";
 import Database from "./database.js";
+import cors from "cors";
 
 const serverSetup =
   "kEid0LqczTVVYdd_zwe81D3XEyieFA1Jn4T0HROoGMIjOP0lKCa7CGOngXzud9CvDGIKvfsLJDiUyGr3dyOtrdKExDku5hiy8rWwgWboHkcpYztsyDs_029rguJ9sjsPUd2AnVsb7WG6DIid_ilBtezHgstnPtn04jIDF4Ab2wU";
@@ -42,6 +43,7 @@ const opaqueRouter = opaqueExpress({
 
 const app = express();
 
+app.use(cors());
 app.use("/auth/opaque", opaqueRouter);
 
 /**

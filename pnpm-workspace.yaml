@@ -1,6 +1,7 @@
 packages:
   - "build/p256"
   - "build/ristretto"
+  - "examples/client-simple-opaque-react"
   - "examples/client-simple-vite"
   - "examples/client-simple-webpack"
   - "examples/client-with-password-reset"
