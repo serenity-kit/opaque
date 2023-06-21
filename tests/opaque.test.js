@@ -4,6 +4,16 @@ import * as opaqueRistretto from "../build/ristretto";
 const opaque =
   process.env.OPAQUE_BUILD === "p256" ? opaqueP256 : opaqueRistretto;
 
+/**
+ * @typedef {{client?:string;server?:string}} Identifiers
+ */
+
+/**
+ * @param {string} userIdentifier
+ * @param {string} password
+ * @param {Identifiers|undefined} identifiers
+ * @returns
+ */
 function setupAndRegister(userIdentifier, password, identifiers = undefined) {
   const serverSetup = opaque.createServerSetup();
   const { clientRegistration, registrationRequest } =
@@ -12,7 +22,6 @@ function setupAndRegister(userIdentifier, password, identifiers = undefined) {
     serverSetup,
     userIdentifier,
     registrationRequest,
-    identifiers,
   });
   const { registrationUpload, exportKey, serverStaticPublicKey } =
     opaque.clientRegistrationFinish({
@@ -66,6 +75,8 @@ test("full registration & login flow", () => {
 
   expect(loginResult).not.toBeUndefined();
 
+  if (!loginResult) throw new TypeError(); // for typescript
+
   const {
     sessionKey: clientSessionKey,
     credentialFinalization,
@@ -77,7 +88,6 @@ test("full registration & login flow", () => {
   expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
 
   const serverSessionKey = opaque.serverLoginFinish({
-    serverSetup,
     serverLogin,
     credentialFinalization,
   });
@@ -183,12 +193,15 @@ test("full registration & login attempt with mismatched server identifier", () =
 describe("clientRegistrationStart", () => {
   test("invalid argument type", () => {
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.clientRegistrationStart();
     }).toThrow("password must be a string");
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.clientRegistrationStart(123);
     }).toThrow("password must be a string");
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.clientRegistrationStart({});
     }).toThrow("password must be a string");
   });
@@ -197,12 +210,15 @@ describe("clientRegistrationStart", () => {
 describe("clientLoginStart", () => {
   test("invalid argument type", () => {
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.clientLoginStart();
     }).toThrow("password must be a string");
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.clientLoginStart(123);
     }).toThrow("password must be a string");
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.clientLoginStart({});
     }).toThrow("password must be a string");
   });
@@ -211,12 +227,15 @@ describe("clientLoginStart", () => {
 describe("serverRegistrationFinish", () => {
   test("invalid argument type", () => {
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.serverRegistrationFinish();
     }).toThrow("message must be a string");
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.serverRegistrationFinish(123);
     }).toThrow("message must be a string");
     expect(() => {
+      // @ts-expect-error intentional test of invalid input
       opaque.serverRegistrationFinish({});
     }).toThrow("message must be a string");
   });
@@ -240,25 +259,37 @@ describe("serverRegistrationFinish", () => {
 
 describe("serverRegistrationStart", () => {
   test("invalid params type", () => {
-    expect(() => opaque.serverRegistrationStart()).toThrow(
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverRegistrationStart()
+    ).toThrow(
       "invalid type: unit value, expected struct ServerRegistrationStartParams"
     );
-    expect(() => opaque.serverRegistrationStart(123)).toThrow(
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverRegistrationStart(123)
+    ).toThrow(
       "invalid type: floating point `123`, expected struct ServerRegistrationStartParams"
     );
-    expect(() => opaque.serverRegistrationStart("test")).toThrow(
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverRegistrationStart("test")
+    ).toThrow(
       'invalid type: string "test", expected struct ServerRegistrationStartParams'
     );
   });
 
   test("incomplete params object", () => {
-    expect(() => opaque.serverRegistrationStart({})).toThrow(
-      "missing field `serverSetup`"
-    );
-    expect(() => opaque.serverRegistrationStart({ serverSetup: "" })).toThrow(
-      "missing field `userIdentifier`"
-    );
     expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverRegistrationStart({})
+    ).toThrow("missing field `serverSetup`");
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverRegistrationStart({ serverSetup: "" })
+    ).toThrow("missing field `userIdentifier`");
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
       opaque.serverRegistrationStart({
         serverSetup: "",
         userIdentifier: "",
@@ -321,25 +352,38 @@ describe("serverRegistrationStart", () => {
 
 describe("serverLoginStart", () => {
   test("invalid params type", () => {
-    expect(() => opaque.serverLoginStart()).toThrow(
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverLoginStart()
+    ).toThrow(
       "invalid type: unit value, expected struct ServerLoginStartParams"
     );
-    expect(() => opaque.serverLoginStart(123)).toThrow(
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverLoginStart(123)
+    ).toThrow(
       "invalid type: floating point `123`, expected struct ServerLoginStartParams"
     );
-    expect(() => opaque.serverLoginStart("test")).toThrow(
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverLoginStart("test")
+    ).toThrow(
       'invalid type: string "test", expected struct ServerLoginStartParams'
     );
   });
 
   test("incomplete params object", () => {
-    expect(() => opaque.serverLoginStart({})).toThrow(
-      "missing field `serverSetup`"
-    );
-    expect(() => opaque.serverLoginStart({ serverSetup: "" })).toThrow(
-      "missing field `credentialRequest`"
-    );
     expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverLoginStart({})
+    ).toThrow("missing field `serverSetup`");
+
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.serverLoginStart({ serverSetup: "" })
+    ).toThrow("missing field `credentialRequest`");
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
       opaque.serverLoginStart({
         serverSetup: "",
         credentialRequest: "",
@@ -349,6 +393,7 @@ describe("serverLoginStart", () => {
 
   test("serverSetup invalid", () => {
     expect(() =>
+      // @ts-expect-error intentional test of invalid input
       opaque.serverLoginStart({
         serverSetup: "",
         credentialRequest: "",
@@ -361,6 +406,7 @@ describe("serverLoginStart", () => {
 
   test("serverSetup encoding invalid", () => {
     expect(() =>
+      // @ts-expect-error intentional test of invalid input
       opaque.serverLoginStart({
         serverSetup: "a",
         credentialRequest: "",
@@ -373,6 +419,7 @@ describe("serverLoginStart", () => {
 
   test("credentialRequest invalid", () => {
     expect(() =>
+      // @ts-expect-error intentional test of invalid input
       opaque.serverLoginStart({
         serverSetup: opaque.createServerSetup(),
         credentialRequest: "",
@@ -385,6 +432,7 @@ describe("serverLoginStart", () => {
 
   test("credentialRequest encoding invalid", () => {
     expect(() =>
+      // @ts-expect-error intentional test of invalid input
       opaque.serverLoginStart({
         serverSetup: opaque.createServerSetup(),
         credentialRequest: "a",
