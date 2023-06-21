@@ -9,3 +9,4 @@ packages:
   - "examples/server-simple-opaque-express"
   - "examples/server-with-password-reset"
   - "packages/opaque-express"
+  - "packages/opaque-react"

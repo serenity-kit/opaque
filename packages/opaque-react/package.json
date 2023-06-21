@@ -1,0 +1,16 @@
+{
+  "name": "@serenity-kit/opaque-react",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "types": "src/index.d.ts",
+  "peerDependencies": {
+    "@serenity-kit/opaque": "workspace:*",
+    "react": "18"
+  },
+  "devDependencies": {
+    "@serenity-kit/opaque": "workspace:*",
+    "@types/react": "18.2.8",
+    "react": "^18.2.0"
+  }
+}
