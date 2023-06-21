@@ -12,7 +12,6 @@ const opaque =
  * @param {string} userIdentifier
  * @param {string} password
  * @param {Identifiers|undefined} identifiers
- * @returns
  */
 function setupAndRegister(userIdentifier, password, identifiers = undefined) {
   const serverSetup = opaque.createServerSetup();
