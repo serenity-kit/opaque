@@ -51,14 +51,12 @@ opaque.ready.then(() => {
 `);
 
 function build_wbg() {
-  sh.exec(
-    "cargo build --target=wasm32-unknown-unknown --release --features wee_alloc"
-  );
+  sh.exec("cargo build --target=wasm32-unknown-unknown --release");
   sh.exec(
     "wasm-bindgen --out-dir=build/wbg_ristretto --target=web --omit-default-module-path target/wasm32-unknown-unknown/release/opaque.wasm"
   );
   sh.exec(
-    "cargo build --target=wasm32-unknown-unknown --release --features wee_alloc,p256"
+    "cargo build --target=wasm32-unknown-unknown --release --features p256"
   );
   sh.exec(
     "wasm-bindgen --out-dir=build/wbg_p256 --target=web --omit-default-module-path target/wasm32-unknown-unknown/release/opaque.wasm"
