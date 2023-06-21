@@ -1,5 +1,9 @@
 {
-  "include": ["tests/**/*"],
+  "include": [
+    "tests/**/*",
+    "examples/server-simple",
+    "examples/server-with-password-reset"
+  ],
   "compilerOptions": {
     "target": "es2016",
     "jsx": "preserve",

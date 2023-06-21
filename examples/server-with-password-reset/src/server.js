@@ -4,10 +4,16 @@ import * as opaque from "@serenity-kit/opaque";
 import Database, { readDatabaseFile, writeDatabaseFile } from "./database.js";
 import { randomInt } from "crypto";
 
+/**
+ * @type {Record<string, string>}
+ */
 const activeSessions = {};
 const dbFile = "./data.json";
 const enableJsonFilePersistence = !process.argv.includes("--no-fs");
 
+/**
+ * @param {string} filePath
+ */
 async function initDatabase(filePath) {
   await opaque.ready;
   if (!enableJsonFilePersistence) {
@@ -22,7 +28,14 @@ async function initDatabase(filePath) {
   }
 }
 
+/**
+ * @type {Database}
+ */
 let db;
+
+/**
+ * @type {string}
+ */
 let serverSetup;
 
 async function setupDb() {
@@ -41,6 +54,11 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+/**
+ * @param {import("express").Response} res
+ * @param {number} status
+ * @param {string} error
+ */
 function sendError(res, status, error) {
   res.writeHead(status);
   res.end(JSON.stringify({ error }));
@@ -109,7 +127,6 @@ app.post("/login/finish", (req, res) => {
   if (!serverLogin) return sendError(res, 400, "login not started");
 
   const sessionKey = opaque.serverLoginFinish({
-    serverSetup,
     credentialFinalization,
     serverLogin,
   });
@@ -122,9 +139,9 @@ app.post("/login/finish", (req, res) => {
 
 app.post("/logout", (req, res) => {
   const auth = req.get("authorization");
-  const user = auth && activeSessions[auth];
+  const userIdentifier = auth && activeSessions[auth];
   if (!auth) return sendError(res, 401, "missing authorization header");
-  if (!user) return sendError(res, 401, "no active session");
+  if (!userIdentifier) return sendError(res, 401, "no active session");
 
   delete activeSessions[userIdentifier];
   res.end();
