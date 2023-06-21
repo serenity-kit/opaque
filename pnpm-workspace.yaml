@@ -6,5 +6,6 @@ packages:
   - "examples/client-with-password-reset"
   - "examples/fullstack-simple-nextjs"
   - "examples/server-simple"
+  - "examples/server-simple-opaque-express"
   - "examples/server-with-password-reset"
-  - "opaque-express"
+  - "packages/opaque-express"
