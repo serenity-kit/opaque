@@ -54,7 +54,6 @@ app.use(express.json());
 app.use(cors());
 
 /**
- *
  * @param {import("express").Response} res
  * @param {number} status
  * @param {string} error

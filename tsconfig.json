@@ -1,12 +1,14 @@
 {
   "include": [
-    "tests/**/*",
+    "tests",
     "examples/server-simple",
     "examples/server-with-password-reset",
     "examples/client-simple-webpack",
     "examples/client-with-password-reset",
     "examples/client-simple-vite",
-    "opaque-express/**/*"
+    "examples/server-simple-opaque-express",
+    "packages/opaque-express",
+    "packages/opaque-react"
   ],
   "compilerOptions": {
     "target": "es2016",

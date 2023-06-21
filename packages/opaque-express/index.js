@@ -1,5 +1,4 @@
-import express from "express";
-import * as opaque from "@serenity-kit/opaque";
+import express, { Router } from "express";
 
 /**
  * @typedef {(userIdent: string, passwordFile: string) => Promise<unknown>} CreateUser
@@ -14,6 +13,7 @@ import * as opaque from "@serenity-kit/opaque";
  * @prop {(userIdent: string) => Promise<string>} removeLogin
  * @prop {(userIdent: string) => Promise<string>} getPasswordFile
  * @prop {(userIdent: string, sessionKey: string) => Promise<void>} finishLogin
+ * @prop {typeof import("@serenity-kit/opaque")} opaque
  */
 
 /**
@@ -64,8 +64,9 @@ async function attempt(f) {
 
 /**
  * @param {Config} config
+ * @returns {Router}
  */
-export default function ({ serverSetup, ...config }) {
+export default function ({ serverSetup, opaque, ...config }) {
   const router = express.Router();
 
   router.post("/register/start", (req, res) => {

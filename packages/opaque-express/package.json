@@ -2,6 +2,9 @@
   "name": "@serenity-kit/opaque-express",
   "private": true,
   "version": "0.1.0",
+  "main": "index.js",
+  "type": "module",
+  "types": "index.d.ts",
   "peerDependencies": {
     "@serenity-kit/opaque": "workspace:*",
     "express": "^4.18.2"

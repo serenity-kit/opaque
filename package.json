@@ -26,6 +26,7 @@
     "example:client-with-password-reset:dev": "cd examples/client-with-password-reset && pnpm dev",
     "example:client-simple-vite:dev": "cd examples/client-simple-vite && pnpm dev",
     "example:server:dev": "cd examples/server-simple && pnpm dev",
+    "example:server-opaque-express:dev": "cd examples/server-simple-opaque-express && pnpm dev",
     "example:server-with-password-reset:dev": "cd examples/server-with-password-reset && pnpm dev",
     "test:p256": "cross-env OPAQUE_BUILD=p256 jest",
     "test:ristretto": "jest",
