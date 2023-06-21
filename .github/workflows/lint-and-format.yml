@@ -14,6 +14,23 @@ jobs:
         run: pnpm install
       - name: prettier-check
         run: npx prettier --check .
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
+      - name: install wasm-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build opaque
+        run: pnpm build
+      - name: Run typechecks
+        run: pnpm typecheck
   rustfmt:
     runs-on: ubuntu-latest
     steps:
