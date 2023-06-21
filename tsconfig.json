@@ -5,7 +5,8 @@
     "examples/server-with-password-reset",
     "examples/client-simple-webpack",
     "examples/client-with-password-reset",
-    "examples/client-simple-vite"
+    "examples/client-simple-vite",
+    "opaque-express/**/*"
   ],
   "compilerOptions": {
     "target": "es2016",
