@@ -192,10 +192,16 @@ importers:
         version: link:../build/ristretto
 
   opaque-express:
-    dependencies:
+    devDependencies:
       '@serenity-kit/opaque':
         specifier: workspace:*
         version: link:../build/ristretto
+      '@types/express':
+        specifier: ^4.17.17
+        version: 4.17.17
+      express:
+        specifier: ^4.18.2
+        version: 4.18.2
 
 packages:
 
