@@ -1,44 +1,77 @@
 import * as opaque from "@serenity-kit/opaque";
 import opaqueExpress from "@serenity-kit/opaque-express";
 import express from "express";
-import Database from "./database.js";
 import cors from "cors";
 
 const serverSetup =
   "kEid0LqczTVVYdd_zwe81D3XEyieFA1Jn4T0HROoGMIjOP0lKCa7CGOngXzud9CvDGIKvfsLJDiUyGr3dyOtrdKExDku5hiy8rWwgWboHkcpYztsyDs_029rguJ9sjsPUd2AnVsb7WG6DIid_ilBtezHgstnPtn04jIDF4Ab2wU";
 
-const db = Database.empty(serverSetup);
+/**
+ * @typedef {Object} User
+ * @prop {string} email
+ * @prop {string} name
+ */
+
+/**
+ * @typedef {User & {passwordFile: string; id: number, insertedAt: number}} DbUser
+ */
+
+/** @type {Record<string,DbUser>} */
+const db = {};
 
 /** @type {Record<string, string>} */
 const sessions = {};
 
+let nextUserId = 1;
+
+/**
+ * @param {User} user
+ * @param {string} passwordFile
+ * @returns {Omit<DbUser, 'passwordFile'>}
+ */
+function createUser(user, passwordFile) {
+  console.log("CREATE USER", user);
+  if (db[user.name] != null) {
+    throw new Error("USER_EXISTS");
+  }
+  const dbUser = {
+    ...user,
+    passwordFile,
+    id: nextUserId++,
+    insertedAt: new Date().getTime(),
+  };
+  db[user.name] = dbUser;
+  const { passwordFile: _, ...result } = dbUser;
+  return result;
+}
+
+/**
+ * @param {string} userIdent
+ * @param {string} sessionKey
+ * @param {{rememberMe: boolean}} props
+ */
+function finishLogin(userIdent, sessionKey, props) {
+  console.log("FINISH LOGIN", props);
+  sessions[userIdent] = sessionKey;
+}
+
+/**
+ * @param {string} userIdent
+ * @returns string
+ */
+function getPasswordFile(userIdent) {
+  if (db[userIdent] == null) {
+    throw new Error("USER_NOT_FOUND");
+  }
+  return db[userIdent].passwordFile;
+}
+
 const opaqueRouter = opaqueExpress({
   opaque,
   serverSetup,
-  createLogin: async (userIdent, login) => {
-    db.setLogin(userIdent, login);
-  },
-  removeLogin: async (userIdent) => {
-    const login = db.getLogin(userIdent);
-    if (!login) {
-      throw new Error("LOGIN_NOT_FOUND");
-    }
-    db.removeLogin(userIdent);
-    return login;
-  },
-  createUser: async (userIdent, passwordFile) => {
-    if (db.hasUser(userIdent)) {
-      throw new Error("USER_EXISTS");
-    }
-    db.setUser(userIdent, passwordFile);
-  },
-  finishLogin: async (userIdent, sessionKey) => {
-    sessions[userIdent] = sessionKey;
-  },
-  getPasswordFile: async (userIdent) => {
-    if (!db.hasUser(userIdent)) throw new Error("USER_NOT_FOUND");
-    return db.getUser(userIdent);
-  },
+  createUser,
+  finishLogin,
+  getPasswordFile,
 });
 
 const app = express();

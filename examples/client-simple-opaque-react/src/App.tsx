@@ -1,8 +1,8 @@
 import * as opaque from "@serenity-kit/opaque";
 import {
   OpaqueConfig,
-  useOpaqueLoginRequest,
-  useOpaqueRegisterRequest,
+  useOpaqueLoginState,
+  useOpaqueRegisterState,
 } from "@serenity-kit/opaque-react";
 import { useState } from "react";
 
@@ -12,16 +12,20 @@ const opaqueConfig: OpaqueConfig = {
 };
 
 function App() {
-  const { register, ...regState } = useOpaqueRegisterRequest(opaqueConfig);
-  const { login, ...loginState } = useOpaqueLoginRequest(opaqueConfig);
+  const { register, ...regState } = useOpaqueRegisterState(opaqueConfig);
+  const { login, ...loginState } = useOpaqueLoginState(opaqueConfig);
 
   return (
     <div>
       <Form
         label="Register"
         disabled={regState.isLoading}
-        onSubmit={({ username, password }) => {
-          register(username, password);
+        onSubmit={async ({ username, password }) => {
+          const userResult = await register(username, password, {
+            name: username,
+            email: username + "@example.com",
+          });
+          console.log(userResult);
         }}
       />
 
@@ -33,7 +37,7 @@ function App() {
         label="Login"
         disabled={loginState.isLoading}
         onSubmit={({ username, password }) => {
-          login(username, password);
+          login(username, password, { rememberMe: true });
         }}
       />
 

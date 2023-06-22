@@ -22,6 +22,7 @@
   "scripts": {
     "build": "node ./bin/build.js",
     "example:fullstack-simple-nextjs:dev": "cd examples/fullstack-simple-nextjs && pnpm dev",
+    "example:client-simple-opaque-react:dev": "cd examples/client-simple-opaque-react && pnpm dev",
     "example:client-simple-webpack:dev": "cd examples/client-simple-webpack && pnpm dev",
     "example:client-with-password-reset:dev": "cd examples/client-with-password-reset && pnpm dev",
     "example:client-simple-vite:dev": "cd examples/client-simple-vite && pnpm dev",
@@ -34,6 +35,9 @@
     "publish:ristretto": "cd build/ristretto && pnpm publish",
     "publish:p256": "cd build/p256 && pnpm publish",
     "publish:all": "pnpm publish:ristretto && pnpm publish:p256",
-    "typecheck": "tsc --noEmit && cd examples/fullstack-simple-nextjs && tsc --noEmit"
+    "typecheck": "tsc --noEmit && cd examples/fullstack-simple-nextjs && tsc --noEmit",
+    "build:opaque-react": "cd packages/opaque-react && pnpm tsc",
+    "build:opaque-express": "cd packages/opaque-express && pnpm tsc",
+    "build:packages": "pnpm build:opaque-react && pnpm build:opaque-express"
   }
 }
