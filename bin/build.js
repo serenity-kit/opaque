@@ -22,6 +22,7 @@ export {default} from './opaque'
 const packageJson = function (name) {
   return new sh.ShellString(`{
   "name": "@serenity-kit/${name}",
+  "description": "Secure password based client-server authentication without the server ever obtaining knowledge of the password. Implementation of the OPAQUE protocol.",
   "collaborators": [
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"

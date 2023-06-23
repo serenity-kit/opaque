@@ -1,5 +1,6 @@
 {
   "name": "@serenity-kit/opaque",
+  "description": "Secure password based client-server authentication without the server ever obtaining knowledge of the password. Implementation of the OPAQUE protocol.",
   "collaborators": [
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"

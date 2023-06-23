@@ -1,5 +1,15 @@
 # Opaque
 
+Secure password based client-server authentication without the server ever obtaining knowledge of the password.
+
+A JavaScript implementation of the [OPAQUE protocol](https://datatracker.ietf.org/doc/draft-irtf-cfrg-opaque/) based on [opaque-ke](https://github.com/facebook/opaque-ke).
+
+## Benefits
+
+- Never accidentally log passwords
+- Security against pre-computation attacks upon server compromise
+- Foundation for encrypted backups and end-to-end encryption apps
+
 **WARNING**: This is a work in progress and not ready for production use.
 
 ## Install
@@ -7,8 +17,6 @@
 ```sh
 npm install @serenity-kit/opaque
 ```
-
-test
 
 ## Usage
 
