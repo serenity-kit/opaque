@@ -17,11 +17,6 @@ import express, { Router } from "express";
  */
 
 /**
- * @template T
- * @typedef {(input: unknown) => Result<string, T>} Reader
- */
-
-/**
  * @typedef {Object} LoginStore
  * @prop {(userIdent: string, login: string) => MaybeAsync<void>} createLogin
  * @prop {(userIdent: string) => MaybeAsync<string>} removeLogin
