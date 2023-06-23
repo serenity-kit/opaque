@@ -12,6 +12,8 @@ Looking forward to here what you think!
   * I kind of like it. It makes the results very explicit and the feels good in such a subtle API
 - rename `credentialRequest` to `loginRequest` and `credentialResponse` to `loginResponse`
   * Feel very natural to me.
+- rename `passwordFile` to `registrationRecord`
+  * Matches the Spec and password file sounds scary
 - leave out serverRegistrationFinish
   * Not sure about this one. In the end it does nothing and then we could even rename it to 
   `serverRegistrationCreateResponse` or `server.createRegistrationResponse`. This is inspired by the actual names in the Protocol `CreateRegistrationRequest`, `CreateRegistrationResponse`, `FinalizeRegistrationRequest`.
@@ -59,13 +61,13 @@ const { clientRegistrationState, registrationRequest } =
 
 // send the registrationRequest to the server and get back the registrationResponse
 
-const { exportKey, passwordRecord } = opaque.client.finishRegistration({
+const { exportKey, registrationRecord } = opaque.client.finishRegistration({
   clientRegistrationState,
   registrationResponse,
   password,
 });
 
-// send the passwordRecord to the server and store it
+// send the registrationRecord to the server and store it
 
 // ----------------------------
 // registration server
@@ -96,7 +98,7 @@ const { exportKey, sessionKey, finishLoginRequest } = opaque.client.finishLogin(
 const { serverLoginState, loginResponse } = opaque.server.startLogin({
   serverSetup,
   userIdentifier,
-  passwordRecord,
+  registrationRecord,
   startLoginRequest,
 });
 
