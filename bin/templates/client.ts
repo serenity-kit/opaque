@@ -1,15 +1,17 @@
 export {
-  clientRegistrationStart as startRegistration,
-  clientRegistrationFinish as finishRegistration,
-  clientLoginStart as startLogin,
-  clientLoginFinish as finishLogin,
+  startClientRegistration as startRegistration,
+  finishClientRegistration as finishRegistration,
+  startClientLogin as startLogin,
+  finishClientLogin as finishLogin,
 } from "./opaque";
 
 export type {
-  ClientRegistrationStartResult as RegistrationStartResult,
-  ClientRegistrationFinishParams as RegistrationFinishParams,
-  ClientRegistrationFinishResult as RegistrationFinishResult,
-  ClientLoginStartResult as LoginStartResult,
-  ClientLoginFinishResult as LoginFinishResult,
-  ClientLoginFinishParams as LoginFinishParams,
+  StartClientRegistrationParams as StartRegistrationParams,
+  StartClientRegistrationResult as StartRegistrationResult,
+  FinishClientRegistrationParams as FinishRegistrationParams,
+  FinishClientRegistrationResult as FinishRegistrationPesult,
+  StartClientLoginParams as StartLoginParams,
+  StartClientLoginResult as StartLoginResult,
+  FinishClientLoginResult as FinishLoginResult,
+  FinishClientLoginParams as FinishLoginParams,
 } from "./opaque";

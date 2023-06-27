@@ -1,13 +1,15 @@
 export {
   createServerSetup as createSetup,
-  serverLoginStart as startLogin,
-  serverLoginFinish as finishLogin,
-  serverRegistrationStart as startRegistration,
-  serverRegistrationFinish as finishRegistration,
+  startServerLogin as startLogin,
+  finishServerLogin as finishLogin,
+  createServerRegistrationResponse as createRegistrationResponse,
 } from "./opaque";
 
 export type {
-  ServerLoginStartParams as LoginStartParams,
-  ServerLoginFinishParams as LoginFinishParams,
-  ServerRegistrationStartParams as RegistrationStartParams,
+  StartServerLoginParams as LoginStartParams,
+  StartServerLoginResult as LoginStartResult,
+  FinishServerLoginParams as LoginFinishParams,
+  FinishServerLoginResult as LoginFinishResult,
+  CreateServerRegistrationResponseParams as CreateRegistrationResponseParams,
+  CreateServerRegistrationResponseResult as CreateRegistrationResponseResult,
 } from "./opaque";

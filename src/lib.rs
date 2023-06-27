@@ -1,13 +1,12 @@
 use argon2::Argon2;
-use js_sys::JsString;
 use opaque_ke::ciphersuite::CipherSuite;
 use opaque_ke::errors::ProtocolError;
 use opaque_ke::rand::rngs::OsRng;
 use opaque_ke::{
     ClientLogin, ClientLoginFinishParameters, ClientRegistration,
     ClientRegistrationFinishParameters, CredentialFinalization, CredentialRequest,
-    CredentialResponse, Identifiers, RegistrationRequest, RegistrationResponse, RegistrationUpload,
-    ServerLogin, ServerLoginStartParameters, ServerRegistration, ServerSetup,
+    CredentialResponse, Identifiers, RegistrationRequest, RegistrationResponse, ServerLogin,
+    ServerLoginStartParameters, ServerRegistration, ServerSetup,
 };
 
 use base64::{engine::general_purpose as b64, Engine as _};
@@ -122,7 +121,7 @@ fn get_identifiers(idents: &Option<CustomIdentifiers>) -> Identifiers {
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ServerRegistrationStartParams {
+pub struct CreateServerRegistrationResponseParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
     #[serde(rename = "userIdentifier")]
@@ -131,8 +130,17 @@ pub struct ServerRegistrationStartParams {
     registration_request: String,
 }
 
-#[wasm_bindgen(js_name = serverRegistrationStart)]
-pub fn server_registration_start(params: ServerRegistrationStartParams) -> Result<String, JsError> {
+#[derive(Debug, Serialize, Deserialize, Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct CreateServerRegistrationResponseResult {
+    #[serde(rename = "registrationResponse")]
+    registration_response: String,
+}
+
+#[wasm_bindgen(js_name = createServerRegistrationResponse)]
+pub fn create_server_registration_response(
+    params: CreateServerRegistrationResponseParams,
+) -> Result<CreateServerRegistrationResponseResult, JsError> {
     let server_setup = decode_server_setup(params.server_setup)?;
     let registration_request_bytes =
         base64_decode("registrationRequest", params.registration_request)?;
@@ -144,34 +152,22 @@ pub fn server_registration_start(params: ServerRegistrationStartParams) -> Resul
     )
     .map_err(from_protocol_error("start serverRegistration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
-    Ok(BASE64.encode(registration_response_bytes))
-}
 
-#[wasm_bindgen(js_name = serverRegistrationFinish)]
-pub fn server_registration_finish(message: JsString) -> Result<String, JsError> {
-    let message_bytes = base64_decode(
-        "message",
-        message
-            .as_string()
-            .ok_or(JsError::new("message must be a string"))?,
-    )?;
-    let password_file = ServerRegistration::finish(
-        RegistrationUpload::<DefaultCipherSuite>::deserialize(&message_bytes)
-            .map_err(from_protocol_error("deserialize message"))?,
-    );
-    Ok(BASE64.encode(password_file.serialize()))
+    Ok(CreateServerRegistrationResponseResult {
+        registration_response: BASE64.encode(registration_response_bytes),
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ServerLoginStartParams {
+pub struct StartServerLoginParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
-    #[serde(rename = "passwordFile")]
+    #[serde(rename = "registrationRecord")]
     #[tsify(type = "string | null | undefined")]
-    password_file: Option<String>,
-    #[serde(rename = "credentialRequest")]
-    credential_request: String,
+    registration_record: Option<String>,
+    #[serde(rename = "startLoginRequest")]
+    start_login_request: String,
     #[serde(rename = "userIdentifier")]
     user_identifier: String,
     #[tsify(optional)]
@@ -180,23 +176,23 @@ pub struct ServerLoginStartParams {
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ServerLoginStartResult {
-    #[serde(rename = "serverLogin")]
-    server_login: String,
-    #[serde(rename = "credentialResponse")]
-    credential_response: String,
+pub struct StartServerLoginResult {
+    #[serde(rename = "serverLoginState")]
+    server_login_state: String,
+    #[serde(rename = "loginResponse")]
+    login_response: String,
 }
 
-#[wasm_bindgen(js_name = serverLoginStart)]
-pub fn server_login_start(
-    params: ServerLoginStartParams,
-) -> Result<ServerLoginStartResult, JsError> {
+#[wasm_bindgen(js_name = startServerLogin)]
+pub fn start_server_login(
+    params: StartServerLoginParams,
+) -> Result<StartServerLoginResult, JsError> {
     let server_setup = decode_server_setup(params.server_setup)?;
-    let password_file_bytes = match params.password_file {
+    let password_file_bytes = match params.registration_record {
         Some(pw) => base64_decode("passwordFile", pw).map(Some),
         None => Ok(None),
     }?;
-    let credential_request_bytes = base64_decode("credentialRequest", params.credential_request)?;
+    let credential_request_bytes = base64_decode("credentialRequest", params.start_login_request)?;
 
     let mut rng: OsRng = OsRng;
 
@@ -224,30 +220,39 @@ pub fn server_login_start(
     )
     .map_err(from_protocol_error("start serverLogin"))?;
 
-    let credential_response = BASE64.encode(server_login_start_result.message.serialize());
-    let server_login = BASE64.encode(server_login_start_result.state.serialize());
+    let login_response = BASE64.encode(server_login_start_result.message.serialize());
+    let server_login_state = BASE64.encode(server_login_start_result.state.serialize());
 
-    let result = ServerLoginStartResult {
-        server_login,
-        credential_response,
+    let result = StartServerLoginResult {
+        server_login_state,
+        login_response,
     };
     Ok(result)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ServerLoginFinishParams {
-    #[serde(rename = "serverLogin")]
-    server_login: String,
-    #[serde(rename = "credentialFinalization")]
-    credential_finalization: String,
+pub struct FinishServerLoginParams {
+    #[serde(rename = "serverLoginState")]
+    server_login_state: String,
+    #[serde(rename = "finishLoginRequest")]
+    finish_login_request: String,
 }
 
-#[wasm_bindgen(js_name = serverLoginFinish)]
-pub fn server_login_finish(params: ServerLoginFinishParams) -> Result<String, JsError> {
+#[derive(Debug, Serialize, Deserialize, Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct FinishServerLoginResult {
+    #[serde(rename = "sessionKey")]
+    session_key: String,
+}
+
+#[wasm_bindgen(js_name = finishServerLogin)]
+pub fn finish_server_login(
+    params: FinishServerLoginParams,
+) -> Result<FinishServerLoginResult, JsError> {
     let credential_finalization_bytes =
-        base64_decode("credentialFinalization", params.credential_finalization)?;
-    let state_bytes = base64_decode("serverLogin", params.server_login)?;
+        base64_decode("credentialFinalization", params.finish_login_request)?;
+    let state_bytes = base64_decode("serverLogin", params.server_login_state)?;
     let state = ServerLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(from_protocol_error("deserialize serverLogin"))?;
     let server_login_finish_result = state
@@ -256,44 +261,49 @@ pub fn server_login_finish(params: ServerLoginFinishParams) -> Result<String, Js
                 .map_err(from_protocol_error("deserialize credentialFinalization"))?,
         )
         .map_err(from_protocol_error("finish serverLogin"))?;
-    Ok(BASE64.encode(server_login_finish_result.session_key))
+    Ok(FinishServerLoginResult {
+        session_key: BASE64.encode(server_login_finish_result.session_key),
+    })
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ClientLoginStartResult {
-    #[serde(rename = "clientLogin")]
-    client_login: String,
-    #[serde(rename = "credentialRequest")]
-    credential_request: String,
+pub struct StartClientLoginParams {
+    password: String,
 }
 
-#[wasm_bindgen(js_name = clientLoginStart)]
-pub fn client_login_start(password: JsString) -> Result<ClientLoginStartResult, JsError> {
-    let mut client_rng = OsRng;
-    let client_login_start_result = ClientLogin::<DefaultCipherSuite>::start(
-        &mut client_rng,
-        password
-            .as_string()
-            .ok_or(JsError::new("password must be a string"))?
-            .as_bytes(),
-    )
-    .map_err(from_protocol_error("start clientLogin"))?;
+#[derive(Debug, Serialize, Deserialize, Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct StartClientLoginResult {
+    #[serde(rename = "clientLoginState")]
+    client_login_state: String,
+    #[serde(rename = "startLoginRequest")]
+    start_login_request: String,
+}
 
-    let result = ClientLoginStartResult {
-        client_login: BASE64.encode(client_login_start_result.state.serialize()),
-        credential_request: BASE64.encode(client_login_start_result.message.serialize()),
+#[wasm_bindgen(js_name = startClientLogin)]
+pub fn start_client_login(
+    params: StartClientLoginParams,
+) -> Result<StartClientLoginResult, JsError> {
+    let mut client_rng = OsRng;
+    let client_login_start_result =
+        ClientLogin::<DefaultCipherSuite>::start(&mut client_rng, params.password.as_bytes())
+            .map_err(from_protocol_error("start clientLogin"))?;
+
+    let result = StartClientLoginResult {
+        client_login_state: BASE64.encode(client_login_start_result.state.serialize()),
+        start_login_request: BASE64.encode(client_login_start_result.message.serialize()),
     };
     Ok(result)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ClientLoginFinishParams {
-    #[serde(rename = "clientLogin")]
-    client_login: String,
-    #[serde(rename = "credentialResponse")]
-    credential_response: String,
+pub struct FinishClientLoginParams {
+    #[serde(rename = "clientLoginState")]
+    client_login_state: String,
+    #[serde(rename = "loginResponse")]
+    login_response: String,
     password: String,
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
@@ -301,9 +311,9 @@ pub struct ClientLoginFinishParams {
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ClientLoginFinishResult {
-    #[serde(rename = "credentialFinalization")]
-    credential_finalization: String,
+pub struct FinishClientLoginResult {
+    #[serde(rename = "finishLoginRequest")]
+    finish_login_request: String,
     #[serde(rename = "sessionKey")]
     session_key: String,
     #[serde(rename = "exportKey")]
@@ -312,13 +322,12 @@ pub struct ClientLoginFinishResult {
     server_static_public_key: String,
 }
 
-#[wasm_bindgen(js_name = clientLoginFinish)]
-pub fn client_login_finish(
-    params: ClientLoginFinishParams,
-) -> Result<Option<ClientLoginFinishResult>, JsError> {
-    let credential_response_bytes =
-        base64_decode("credentialResponse", params.credential_response)?;
-    let state_bytes = base64_decode("clientLogin", params.client_login)?;
+#[wasm_bindgen(js_name = finishClientLogin)]
+pub fn finish_client_login(
+    params: FinishClientLoginParams,
+) -> Result<Option<FinishClientLoginResult>, JsError> {
+    let credential_response_bytes = base64_decode("credentialResponse", params.login_response)?;
+    let state_bytes = base64_decode("clientLogin", params.client_login_state)?;
     let state = ClientLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(from_protocol_error("deserialize clientLogin"))?;
 
@@ -338,8 +347,8 @@ pub fn client_login_finish(
     }
     let client_login_finish_result = result.unwrap();
 
-    Ok(Some(ClientLoginFinishResult {
-        credential_finalization: BASE64.encode(client_login_finish_result.message.serialize()),
+    Ok(Some(FinishClientLoginResult {
+        finish_login_request: BASE64.encode(client_login_finish_result.message.serialize()),
         session_key: BASE64.encode(client_login_finish_result.session_key),
         export_key: BASE64.encode(client_login_finish_result.export_key),
         server_static_public_key: BASE64.encode(client_login_finish_result.server_s_pk.serialize()),
@@ -348,30 +357,34 @@ pub fn client_login_finish(
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ClientRegistrationStartResult {
-    #[serde(rename = "clientRegistration")]
-    client_registration: String,
+pub struct StartClientRegistrationParams {
+    password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct StartClientRegistrationResult {
+    #[serde(rename = "clientRegistrationState")]
+    client_registration_state: String,
     #[serde(rename = "registrationRequest")]
     registration_request: String,
 }
 
-#[wasm_bindgen(js_name = clientRegistrationStart)]
-pub fn client_registration_start(
-    password: JsString,
-) -> Result<ClientRegistrationStartResult, JsError> {
+#[wasm_bindgen(js_name = startClientRegistration)]
+pub fn start_client_registration(
+    params: StartClientRegistrationParams,
+) -> Result<StartClientRegistrationResult, JsError> {
     let mut client_rng = OsRng;
 
     let client_registration_start_result = ClientRegistration::<DefaultCipherSuite>::start(
         &mut client_rng,
-        password
-            .as_string()
-            .ok_or(JsError::new("password must be a string"))?
-            .as_bytes(),
+        params.password.as_bytes(),
     )
     .map_err(from_protocol_error("start clientRegistration"))?;
 
-    let result = ClientRegistrationStartResult {
-        client_registration: BASE64.encode(client_registration_start_result.state.serialize()),
+    let result = StartClientRegistrationResult {
+        client_registration_state: BASE64
+            .encode(client_registration_start_result.state.serialize()),
         registration_request: BASE64.encode(client_registration_start_result.message.serialize()),
     };
     Ok(result)
@@ -379,35 +392,36 @@ pub fn client_registration_start(
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ClientRegistrationFinishParams {
+pub struct FinishClientRegistrationParams {
     password: String,
     #[serde(rename = "registrationResponse")]
     registration_response: String,
-    #[serde(rename = "clientRegistration")]
-    client_registration: String,
+    #[serde(rename = "clientRegistrationState")]
+    client_registration_state: String,
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct ClientRegistrationFinishResult {
-    #[serde(rename = "registrationUpload")]
-    registration_upload: String,
+pub struct FinishClientRegistrationResult {
+    #[serde(rename = "registrationRecord")]
+    registration_record: String,
     #[serde(rename = "exportKey")]
     export_key: String,
     #[serde(rename = "serverStaticPublicKey")]
     server_static_public_key: String,
 }
 
-#[wasm_bindgen(js_name = clientRegistrationFinish)]
-pub fn client_registration_finish(
-    params: ClientRegistrationFinishParams,
-) -> Result<ClientRegistrationFinishResult, JsError> {
+#[wasm_bindgen(js_name = finishClientRegistration)]
+pub fn finish_client_registration(
+    params: FinishClientRegistrationParams,
+) -> Result<FinishClientRegistrationResult, JsError> {
     let registration_response_bytes =
         base64_decode("registrationResponse", params.registration_response)?;
     let mut rng: OsRng = OsRng;
-    let client_registration = base64_decode("clientRegistration", params.client_registration)?;
+    let client_registration =
+        base64_decode("clientRegistration", params.client_registration_state)?;
     let state = ClientRegistration::<DefaultCipherSuite>::deserialize(&client_registration)
         .map_err(from_protocol_error("deserialize clientRegistration"))?;
 
@@ -425,8 +439,8 @@ pub fn client_registration_finish(
         .map_err(from_protocol_error("finish clientRegistration"))?;
 
     let message_bytes = client_finish_registration_result.message.serialize();
-    let result = ClientRegistrationFinishResult {
-        registration_upload: BASE64.encode(message_bytes),
+    let result = FinishClientRegistrationResult {
+        registration_record: BASE64.encode(message_bytes),
         export_key: BASE64.encode(client_finish_registration_result.export_key),
         server_static_public_key: BASE64
             .encode(client_finish_registration_result.server_s_pk.serialize()),
