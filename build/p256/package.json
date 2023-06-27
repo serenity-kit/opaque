@@ -8,12 +8,15 @@
   "version": "0.6.0",
   "license": "MIT",
   "files": [
-    "index.d.ts",
+    "types/index.d.ts",
+    "types/client.d.ts",
+    "types/opaque.d.ts",
+    "types/server.d.ts",
     "esm/index.js",
     "cjs/index.js"
   ],
   "module": "esm/index.js",
-  "types": "index.d.ts",
+  "types": "types/index.d.ts",
   "main": "cjs/index.js",
   "browser": "esm/index.js",
   "bin": {

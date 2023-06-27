@@ -14,22 +14,22 @@ const opaque =
  * @param {Identifiers|undefined} identifiers
  */
 function setupAndRegister(userIdentifier, password, identifiers = undefined) {
-  const serverSetup = opaque.createServerSetup();
+  const serverSetup = opaque.server.createServerSetup();
   const { clientRegistration, registrationRequest } =
-    opaque.clientRegistrationStart(password);
-  const registrationResponse = opaque.serverRegistrationStart({
+    opaque.client.startRegistration(password);
+  const registrationResponse = opaque.server.startRegistration({
     serverSetup,
     userIdentifier,
     registrationRequest,
   });
   const { registrationUpload, exportKey, serverStaticPublicKey } =
-    opaque.clientRegistrationFinish({
+    opaque.client.finishRegistration({
       clientRegistration,
       registrationResponse,
       password,
       identifiers,
     });
-  const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
+  const passwordFile = opaque.server.finishRegistration(registrationUpload);
   return {
     serverSetup,
     passwordFile,
@@ -57,16 +57,16 @@ test("full registration & login flow", () => {
 
   expect(registrationUpload).toEqual(passwordFile);
 
-  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+  const { clientLogin, credentialRequest } = opaque.client.startLogin(password);
 
-  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+  const { serverLogin, credentialResponse } = opaque.server.startLogin({
     serverSetup,
     userIdentifier,
     passwordFile,
     credentialRequest,
   });
 
-  const loginResult = opaque.clientLoginFinish({
+  const loginResult = opaque.client.finishLogin({
     clientLogin,
     credentialResponse,
     password,
@@ -86,7 +86,7 @@ test("full registration & login flow", () => {
   expect(registrationExportKey).toEqual(loginExportKey);
   expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
 
-  const serverSessionKey = opaque.serverLoginFinish({
+  const serverSessionKey = opaque.server.finishLogin({
     serverLogin,
     credentialFinalization,
   });
@@ -102,16 +102,16 @@ test("full registration & login with bad password", () => {
     "hunter42"
   );
   const { clientLogin, credentialRequest } =
-    opaque.clientLoginStart("hunter42");
+    opaque.client.startLogin("hunter42");
 
-  const { credentialResponse } = opaque.serverLoginStart({
+  const { credentialResponse } = opaque.server.startLogin({
     serverSetup,
     userIdentifier,
     passwordFile,
     credentialRequest,
   });
 
-  const loginResult = opaque.clientLoginFinish({
+  const loginResult = opaque.client.finishLogin({
     clientLogin,
     credentialResponse,
     password: "hunter23",
@@ -131,9 +131,9 @@ test("full registration & login flow with mismatched custom client identifier on
     { client }
   );
 
-  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+  const { clientLogin, credentialRequest } = opaque.client.startLogin(password);
 
-  const { credentialResponse } = opaque.serverLoginStart({
+  const { credentialResponse } = opaque.server.startLogin({
     serverSetup,
     userIdentifier,
     passwordFile,
@@ -143,7 +143,7 @@ test("full registration & login flow with mismatched custom client identifier on
     },
   });
 
-  const loginResult = opaque.clientLoginFinish({
+  const loginResult = opaque.client.finishLogin({
     clientLogin,
     credentialResponse,
     password,
@@ -165,9 +165,9 @@ test("full registration & login attempt with mismatched server identifier", () =
     { server: "server-ident" }
   );
 
-  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+  const { clientLogin, credentialRequest } = opaque.client.startLogin(password);
 
-  const { credentialResponse } = opaque.serverLoginStart({
+  const { credentialResponse } = opaque.server.startLogin({
     serverSetup,
     passwordFile,
     credentialRequest,
@@ -177,7 +177,7 @@ test("full registration & login attempt with mismatched server identifier", () =
     },
   });
 
-  const loginResult = opaque.clientLoginFinish({
+  const loginResult = opaque.client.finishLogin({
     clientLogin,
     credentialResponse,
     password,
@@ -193,15 +193,15 @@ describe("clientRegistrationStart", () => {
   test("invalid argument type", () => {
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.clientRegistrationStart();
+      opaque.client.startRegistration();
     }).toThrow("password must be a string");
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.clientRegistrationStart(123);
+      opaque.client.startRegistration(123);
     }).toThrow("password must be a string");
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.clientRegistrationStart({});
+      opaque.client.startRegistration({});
     }).toThrow("password must be a string");
   });
 });
@@ -210,15 +210,15 @@ describe("clientLoginStart", () => {
   test("invalid argument type", () => {
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.clientLoginStart();
+      opaque.client.startLogin();
     }).toThrow("password must be a string");
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.clientLoginStart(123);
+      opaque.client.startLogin(123);
     }).toThrow("password must be a string");
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.clientLoginStart({});
+      opaque.client.startLogin({});
     }).toThrow("password must be a string");
   });
 });
@@ -227,21 +227,21 @@ describe("serverRegistrationFinish", () => {
   test("invalid argument type", () => {
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationFinish();
+      opaque.server.finishRegistration();
     }).toThrow("message must be a string");
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationFinish(123);
+      opaque.server.finishRegistration(123);
     }).toThrow("message must be a string");
     expect(() => {
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationFinish({});
+      opaque.server.finishRegistration({});
     }).toThrow("message must be a string");
   });
 
   test("invalid message", () => {
     expect(() => {
-      opaque.serverRegistrationFinish("");
+      opaque.server.finishRegistration("");
     }).toThrow(
       'opaque protocol error at "deserialize message"; Internal error encountered'
     );
@@ -249,7 +249,7 @@ describe("serverRegistrationFinish", () => {
 
   test("invalid encoding", () => {
     expect(() => {
-      opaque.serverRegistrationFinish("a");
+      opaque.server.finishRegistration("a");
     }).toThrow(
       'base64 decoding failed at "message"; Encoded text cannot have a 6-bit remainder.'
     );
@@ -260,19 +260,19 @@ describe("serverRegistrationStart", () => {
   test("invalid params type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationStart()
+      opaque.server.startRegistration()
     ).toThrow(
       "invalid type: unit value, expected struct ServerRegistrationStartParams"
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationStart(123)
+      opaque.server.startRegistration(123)
     ).toThrow(
       "invalid type: floating point `123`, expected struct ServerRegistrationStartParams"
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationStart("test")
+      opaque.server.startRegistration("test")
     ).toThrow(
       'invalid type: string "test", expected struct ServerRegistrationStartParams'
     );
@@ -281,15 +281,15 @@ describe("serverRegistrationStart", () => {
   test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationStart({})
+      opaque.server.startRegistration({})
     ).toThrow("missing field `serverSetup`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationStart({ serverSetup: "" })
+      opaque.server.startRegistration({ serverSetup: "" })
     ).toThrow("missing field `userIdentifier`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverRegistrationStart({
+      opaque.server.startRegistration({
         serverSetup: "",
         userIdentifier: "",
       })
@@ -298,8 +298,9 @@ describe("serverRegistrationStart", () => {
 
   test("serverSetup invalid", () => {
     expect(() => {
-      const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
-      opaque.serverRegistrationStart({
+      const { registrationRequest } =
+        opaque.client.startRegistration("hunter2");
+      opaque.server.startRegistration({
         serverSetup: "abcd",
         userIdentifier: "user1",
         registrationRequest,
@@ -311,8 +312,9 @@ describe("serverRegistrationStart", () => {
 
   test("serverSetup decoding", () => {
     expect(() => {
-      const { registrationRequest } = opaque.clientRegistrationStart("hunter2");
-      opaque.serverRegistrationStart({
+      const { registrationRequest } =
+        opaque.client.startRegistration("hunter2");
+      opaque.server.startRegistration({
         serverSetup: "a",
         userIdentifier: "user1",
         registrationRequest,
@@ -324,8 +326,8 @@ describe("serverRegistrationStart", () => {
 
   test("registrationRequest invalid", () => {
     expect(() => {
-      const serverSetup = opaque.createServerSetup();
-      opaque.serverRegistrationStart({
+      const serverSetup = opaque.server.createServerSetup();
+      opaque.server.startRegistration({
         serverSetup,
         userIdentifier: "user1",
         registrationRequest: "",
@@ -337,8 +339,8 @@ describe("serverRegistrationStart", () => {
 
   test("registrationRequest decoding", () => {
     expect(() => {
-      const serverSetup = opaque.createServerSetup();
-      opaque.serverRegistrationStart({
+      const serverSetup = opaque.server.createServerSetup();
+      opaque.server.startRegistration({
         serverSetup,
         userIdentifier: "user1",
         registrationRequest: "a",
@@ -353,19 +355,19 @@ describe("serverLoginStart", () => {
   test("invalid params type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart()
+      opaque.server.startLogin()
     ).toThrow(
       "invalid type: unit value, expected struct ServerLoginStartParams"
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart(123)
+      opaque.server.startLogin(123)
     ).toThrow(
       "invalid type: floating point `123`, expected struct ServerLoginStartParams"
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart("test")
+      opaque.server.startLogin("test")
     ).toThrow(
       'invalid type: string "test", expected struct ServerLoginStartParams'
     );
@@ -374,16 +376,16 @@ describe("serverLoginStart", () => {
   test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart({})
+      opaque.server.startLogin({})
     ).toThrow("missing field `serverSetup`");
 
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart({ serverSetup: "" })
+      opaque.server.startLogin({ serverSetup: "" })
     ).toThrow("missing field `credentialRequest`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart({
+      opaque.server.startLogin({
         serverSetup: "",
         credentialRequest: "",
       })
@@ -393,7 +395,7 @@ describe("serverLoginStart", () => {
   test("serverSetup invalid", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart({
+      opaque.server.startLogin({
         serverSetup: "",
         credentialRequest: "",
         userIdentifier: "",
@@ -406,7 +408,7 @@ describe("serverLoginStart", () => {
   test("serverSetup encoding invalid", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart({
+      opaque.server.startLogin({
         serverSetup: "a",
         credentialRequest: "",
         userIdentifier: "",
@@ -419,8 +421,8 @@ describe("serverLoginStart", () => {
   test("credentialRequest invalid", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart({
-        serverSetup: opaque.createServerSetup(),
+      opaque.server.startLogin({
+        serverSetup: opaque.server.createServerSetup(),
         credentialRequest: "",
         userIdentifier: "",
       })
@@ -432,8 +434,8 @@ describe("serverLoginStart", () => {
   test("credentialRequest encoding invalid", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.serverLoginStart({
-        serverSetup: opaque.createServerSetup(),
+      opaque.server.startLogin({
+        serverSetup: opaque.server.createServerSetup(),
         credentialRequest: "a",
         userIdentifier: "",
       })
@@ -444,16 +446,16 @@ describe("serverLoginStart", () => {
 
   test("dummy server login credential response", () => {
     const password = "hunter2";
-    const serverSetup = opaque.createServerSetup();
+    const serverSetup = opaque.server.createServerSetup();
     const { credentialRequest, clientLogin } =
-      opaque.clientLoginStart(password);
-    const { credentialResponse } = opaque.serverLoginStart({
+      opaque.client.startLogin(password);
+    const { credentialResponse } = opaque.server.startLogin({
       userIdentifier: "user1",
       serverSetup,
       credentialRequest,
       passwordFile: undefined,
     });
-    const result = opaque.clientLoginFinish({
+    const result = opaque.client.finishLogin({
       clientLogin,
       credentialResponse,
       password,

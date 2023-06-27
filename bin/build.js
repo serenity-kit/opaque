@@ -5,20 +5,6 @@ sh.config.fatal = true;
 
 const rootPkg = JSON.parse(sh.cat("package.json").toString());
 
-const entryModule = new sh.ShellString(`
-import wasmData from './opaque_bg.wasm'
-import init from './opaque'
-export const ready = init(wasmData())
-export * from './opaque'
-// This default export is not strictly necessary and is the reason why
-// rollup complains about mixing named and default exports.
-// We have it here because it is declared in the generated d.ts file
-// and strictly speaking our types would be wrong if we remove this export.
-// We could modify the d.ts file to remove the type declaration as part of the build
-// but that introduces more fragility to the build process with no real benefit.
-export {default} from './opaque'
-`);
-
 const packageJson = function (name) {
   return new sh.ShellString(`{
   "name": "@serenity-kit/${name}",
@@ -30,12 +16,15 @@ const packageJson = function (name) {
   "version": "${rootPkg.version}",
   "license": "MIT",
   "files": [
-    "index.d.ts",
+    "types/index.d.ts",
+    "types/client.d.ts",
+    "types/opaque.d.ts",
+    "types/server.d.ts",
     "esm/index.js",
     "cjs/index.js"
   ],
   "module": "esm/index.js",
-  "types": "index.d.ts",
+  "types": "types/index.d.ts",
   "main": "cjs/index.js",
   "browser": "esm/index.js",
   "bin": {
@@ -79,9 +68,16 @@ function main() {
   // build rust code and generate wasm bindings
   build_wbg();
 
-  // write entry module for intermediate builds
-  entryModule.to("build/wbg_ristretto/index.js");
-  entryModule.to("build/wbg_p256/index.js");
+  // copy wrapper module templates
+  sh.cp("bin/templates/*", "build/wbg_ristretto");
+  sh.cp("bin/templates/*", "build/wbg_p256");
+
+  sh.exec(
+    "npx tsc build/wbg_ristretto/index.ts --declaration --module es2020 --target es2020 --moduleResolution nodenext"
+  );
+  sh.exec(
+    "npx tsc build/wbg_p256/index.ts --declaration --module es2020 --target es2020 --moduleResolution nodenext"
+  );
 
   // rollup
   bundle("ristretto");
@@ -101,13 +97,10 @@ function main() {
   sh.cp("LICENSE", "build/p256/LICENSE");
 
   // copy type defs
-  sh.cp("build/wbg_ristretto/opaque.d.ts", "build/ristretto/index.d.ts");
-  sh.cp("build/wbg_p256/opaque.d.ts", "build/p256/index.d.ts");
-
-  // amend type defs
-  const ts = new sh.ShellString("export const ready: Promise<void>;");
-  ts.toEnd("build/ristretto/index.d.ts");
-  ts.toEnd("build/p256/index.d.ts");
+  sh.mkdir("build/ristretto/types");
+  sh.mkdir("build/p256/types");
+  sh.cp("build/wbg_ristretto/*.d.ts", "build/ristretto/types");
+  sh.cp("build/wbg_p256/*.d.ts", "build/p256/types");
 }
 
 main();
