@@ -5,14 +5,3 @@ import init from "./opaque";
 export const ready = init(wasmData()).then(() => {});
 export * as client from "./client";
 export * as server from "./server";
-export type {
-  ServerLoginStartParams,
-  ServerLoginFinishParams,
-  ServerRegistrationStartParams,
-  ClientRegistrationStartResult,
-  ClientRegistrationFinishParams,
-  ClientRegistrationFinishResult,
-  ClientLoginStartResult,
-  ClientLoginFinishResult,
-  ClientLoginFinishParams,
-} from "./opaque";
