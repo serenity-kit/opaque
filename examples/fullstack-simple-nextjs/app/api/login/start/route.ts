@@ -3,23 +3,23 @@ import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
 
 export async function POST(request: NextRequest) {
-  const { userIdentifier, credentialRequest } = await request.json();
+  const { userIdentifier, startLoginRequest } = await request.json();
 
   if (!userIdentifier)
     return NextResponse.json(
       { error: "missing userIdentifier" },
       { status: 400 }
     );
-  if (!credentialRequest)
+  if (!startLoginRequest)
     return NextResponse.json(
-      { error: "missing credentialRequest" },
+      { error: "missing startLoginRequest" },
       { status: 400 }
     );
 
   const db = await database;
-  const passwordFile = userIdentifier && db.getUser(userIdentifier);
+  const registrationRecord = userIdentifier && db.getUser(userIdentifier);
 
-  if (!passwordFile)
+  if (!registrationRecord)
     return NextResponse.json({ error: "user not registered" }, { status: 400 });
 
   if (db.hasLogin(userIdentifier))
@@ -28,13 +28,13 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
 
-  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+  const { serverLoginState, loginResponse } = opaque.server.startLogin({
     serverSetup: db.getServerSetup(),
     userIdentifier,
-    passwordFile,
-    credentialRequest,
+    registrationRecord,
+    startLoginRequest,
   });
 
-  await db.setLogin(userIdentifier, serverLogin);
-  return NextResponse.json({ credentialResponse });
+  await db.setLogin(userIdentifier, serverLoginState);
+  return NextResponse.json({ loginResponse });
 }

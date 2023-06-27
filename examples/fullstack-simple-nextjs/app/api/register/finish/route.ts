@@ -3,19 +3,18 @@ import { NextResponse } from "next/server";
 import database from "../../db";
 
 export async function POST(request: Request) {
-  const { userIdentifier, registrationUpload } = await request.json();
+  const { userIdentifier, registrationRecord } = await request.json();
   if (!userIdentifier)
     return NextResponse.json(
       { error: "missing userIdentifier" },
       { status: 400 }
     );
-  if (!registrationUpload)
+  if (!registrationRecord)
     return NextResponse.json(
-      { error: "missing registrationUpload" },
+      { error: "missing registrationRecord" },
       { status: 400 }
     );
   const db = await database;
-  const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
-  await db.setUser(userIdentifier, passwordFile);
+  await db.setUser(userIdentifier, registrationRecord);
   return NextResponse.json({ success: true });
 }

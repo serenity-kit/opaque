@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
 
-  const registrationResponse = opaque.serverRegistrationStart({
+  const { registrationResponse } = opaque.server.createRegistrationResponse({
     serverSetup: db.getServerSetup(),
     userIdentifier,
     registrationRequest,

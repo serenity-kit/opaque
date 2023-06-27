@@ -81,6 +81,9 @@ function writeDatabaseFile(filePath: string, db: Database) {
   return writeFile(filePath, data);
 }
 
+const SERVER_SETUP =
+  "Ki5T3U21n_UFhcGP5fR_mUstYEItKRsjEJ2UnvvrGasT3wvjdtbluS0BsiR_LtzqX8YLrCyWqQOJDf7cL0C8DRr9pGFBSx0X22ZujePyWpdq4VddBSPm0vIXepDJEBYJjRxmRNh09pLGxk_Y9bQuFWjYInqjcy_zOVsMHPHUkQw";
+
 const db = opaque.ready.then(async () => {
   console.log("initializing db");
   const file = "data.json";
@@ -93,7 +96,7 @@ const db = opaque.ready.then(async () => {
       );
       console.error(err);
     }
-    return Database.empty(opaque.createServerSetup());
+    return Database.empty(SERVER_SETUP);
   });
   db.addListener(() => writeDatabaseFile(file, db));
   return db;

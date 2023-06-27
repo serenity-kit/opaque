@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
 
 export async function POST(request: NextRequest) {
-  const { userIdentifier, credentialFinalization } = await request.json();
+  const { userIdentifier, finishLoginRequest } = await request.json();
 
   if (!userIdentifier)
     return NextResponse.json(
@@ -11,21 +11,21 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
 
-  if (!credentialFinalization)
+  if (!finishLoginRequest)
     return NextResponse.json(
-      { error: "missing credentialFinalization" },
+      { error: "missing finishLoginRequest" },
       { status: 400 }
     );
 
   const db = await database;
-  const serverLogin = userIdentifier && db.getLogin(userIdentifier);
+  const serverLoginState = userIdentifier && db.getLogin(userIdentifier);
 
-  if (!serverLogin)
+  if (!serverLoginState)
     return NextResponse.json({ error: "login not started" }, { status: 400 });
 
-  const sessionKey = opaque.serverLoginFinish({
-    credentialFinalization,
-    serverLogin,
+  const { sessionKey } = opaque.server.finishLogin({
+    finishLoginRequest,
+    serverLoginState,
   });
 
   await db.removeLogin(userIdentifier);

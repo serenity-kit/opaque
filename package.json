@@ -33,6 +33,6 @@
     "publish:ristretto": "cd build/ristretto && pnpm publish",
     "publish:p256": "cd build/p256 && pnpm publish",
     "publish:all": "pnpm publish:ristretto && pnpm publish:p256",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && cd examples/fullstack-simple-nextjs && tsc --noEmit"
   }
 }
