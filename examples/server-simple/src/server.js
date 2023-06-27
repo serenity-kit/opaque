@@ -73,7 +73,7 @@ app.post("/register/start", (req, res) => {
   if (db.hasUser(userIdentifier))
     return sendError(res, 400, "user already registered");
 
-  const registrationResponse = opaque.serverRegistrationStart({
+  const registrationResponse = opaque.server.startRegistration({
     serverSetup,
     userIdentifier,
     registrationRequest,
@@ -88,7 +88,7 @@ app.post("/register/finish", (req, res) => {
   if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
   if (!registrationUpload)
     return sendError(res, 400, "missing registrationUpload");
-  const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
+  const passwordFile = opaque.server.finishRegistration(registrationUpload);
   db.setUser(userIdentifier, passwordFile);
   res.writeHead(200);
   res.end();
@@ -105,7 +105,7 @@ app.post("/login/start", (req, res) => {
   if (db.hasLogin(userIdentifier))
     return sendError(res, 400, "login already started");
 
-  const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+  const { serverLogin, credentialResponse } = opaque.server.startLogin({
     serverSetup,
     userIdentifier,
     passwordFile,
@@ -126,7 +126,7 @@ app.post("/login/finish", (req, res) => {
     return sendError(res, 400, "missing credentialFinalization");
   if (!serverLogin) return sendError(res, 400, "login not started");
 
-  const sessionKey = opaque.serverLoginFinish({
+  const sessionKey = opaque.server.finishLogin({
     credentialFinalization,
     serverLogin,
   });
