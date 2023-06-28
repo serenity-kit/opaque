@@ -2,7 +2,10 @@
   "include": [
     "tests/**/*",
     "examples/server-simple",
-    "examples/server-with-password-reset"
+    "examples/server-with-password-reset",
+    "examples/client-simple-webpack",
+    "examples/client-with-password-reset",
+    "examples/client-simple-vite"
   ],
   "compilerOptions": {
     "target": "es2016",

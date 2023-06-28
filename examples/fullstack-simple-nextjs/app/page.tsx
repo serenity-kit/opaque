@@ -19,8 +19,8 @@ async function request(method: string, path: string, body: any = undefined) {
 }
 
 async function register(userIdentifier: string, password: string) {
-  const { clientRegistration, registrationRequest } =
-    opaque.clientRegistrationStart(password);
+  const { clientRegistrationState, registrationRequest } =
+    opaque.client.startRegistration({ password });
   const { registrationResponse } = await request(
     "POST",
     `/api/register/start`,
@@ -31,41 +31,45 @@ async function register(userIdentifier: string, password: string) {
   ).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
-  const { registrationUpload } = opaque.clientRegistrationFinish({
-    clientRegistration,
+  const { registrationRecord } = opaque.client.finishRegistration({
+    clientRegistrationState,
     registrationResponse,
     password,
   });
 
   const res = await request("POST", `/api/register/finish`, {
     userIdentifier,
-    registrationUpload,
+    registrationRecord,
   });
   console.log("finish successful", res.ok);
   return res.ok;
 }
 
 async function login(userIdentifier: string, password: string) {
-  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
-
-  const { credentialResponse } = await request("POST", "/api/login/start", {
-    userIdentifier,
-    credentialRequest,
-  }).then((res) => res.json());
-
-  const loginResult = opaque.clientLoginFinish({
-    clientLogin,
-    credentialResponse,
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
     password,
   });
 
+  const { loginResponse } = await request("POST", "/api/login/start", {
+    userIdentifier,
+    startLoginRequest,
+  }).then((res) => res.json());
+
+  console.log({ loginResponse });
+
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
+    password,
+  });
+  console.log({ loginResult });
   if (!loginResult) {
     return null;
   }
-  const { sessionKey, credentialFinalization } = loginResult;
+  const { sessionKey, finishLoginRequest } = loginResult;
   const res = await request("POST", "/api/login/finish", {
     userIdentifier,
-    credentialFinalization,
+    finishLoginRequest,
   });
   return res.ok ? sessionKey : null;
 }
@@ -190,7 +194,7 @@ function Button(props: ButtonProps) {
 }
 
 function runFullFlowDemo() {
-  const serverSetup = opaque.createServerSetup();
+  const serverSetup = opaque.server.createSetup();
   const username = "user@example.com";
   const password = "hunter2";
   runFullServerClientFlow(serverSetup, username, password);
@@ -210,17 +214,17 @@ function runFullServerClientFlow(
   console.log({ serverSetup, username, password });
 
   console.log();
-  console.log("clientRegistrationStart");
+  console.log("client.startRegistration");
   console.log("-----------------------");
-  const { clientRegistration, registrationRequest } =
-    opaque.clientRegistrationStart(password);
+  const { clientRegistrationState, registrationRequest } =
+    opaque.client.startRegistration({ password });
 
-  console.log({ clientRegistration, registrationRequest });
+  console.log({ clientRegistrationState, registrationRequest });
 
   console.log();
-  console.log("serverRegistrationStart");
+  console.log("server.createRegistrationResponse");
   console.log("-----------------------");
-  const registrationResponse = opaque.serverRegistrationStart({
+  const { registrationResponse } = opaque.server.createRegistrationResponse({
     serverSetup,
     registrationRequest,
     userIdentifier: username,
@@ -229,52 +233,51 @@ function runFullServerClientFlow(
   console.log({ registrationResponse });
 
   console.log();
-  console.log("clientRegistrationFinish");
+  console.log("client.finishRegistration");
   console.log("------------------------");
   const {
-    registrationUpload,
+    registrationRecord,
     exportKey: clientRegExportKey,
     serverStaticPublicKey: clientRegServerStaticPublicKey,
-  } = opaque.clientRegistrationFinish({
+  } = opaque.client.finishRegistration({
     password,
-    clientRegistration,
+    clientRegistrationState,
     registrationResponse,
   });
 
-  console.log({ clientRegExportKey, clientRegServerStaticPublicKey });
-
-  console.log();
-  console.log("serverRegistrationFinish");
-  console.log("------------------------");
-  const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
-
-  console.log({ passwordFile });
-
-  console.log();
-  console.log("clientLoginStart");
-  console.log("----------------");
-  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
-
-  console.log({ clientLogin, credentialRequest });
-
-  console.log();
-  console.log("serverLoginStart");
-  console.log("----------------");
-  const { credentialResponse, serverLogin } = opaque.serverLoginStart({
-    userIdentifier: username,
-    passwordFile,
-    serverSetup,
-    credentialRequest,
+  console.log({
+    clientRegExportKey,
+    clientRegServerStaticPublicKey,
+    registrationRecord,
   });
 
-  console.log({ credentialResponse, serverLogin });
+  console.log();
+  console.log("client.startLogin");
+  console.log("----------------");
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  console.log({ clientLoginState, startLoginRequest });
 
   console.log();
-  console.log("clientLoginFinish");
+  console.log("server.startLogin");
+  console.log("----------------");
+  const { loginResponse, serverLoginState } = opaque.server.startLogin({
+    userIdentifier: username,
+    registrationRecord,
+    serverSetup,
+    startLoginRequest,
+  });
+
+  console.log({ loginResponse, serverLoginState });
+
+  console.log();
+  console.log("client.finishLogin");
   console.log("-----------------");
-  const loginResult = opaque.clientLoginFinish({
-    clientLogin,
-    credentialResponse,
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
     password,
   });
 
@@ -284,7 +287,7 @@ function runFullServerClientFlow(
   }
 
   const {
-    credentialFinalization,
+    finishLoginRequest,
     exportKey: clientLoginExportKey,
     serverStaticPublicKey: clientLoginServerStaticPublicKey,
     sessionKey: clientSessionKey,
@@ -294,15 +297,15 @@ function runFullServerClientFlow(
     clientLoginExportKey,
     clientSessionKey,
     clientLoginServerStaticPublicKey,
-    credentialFinalization,
+    finishLoginRequest,
   });
 
   console.log();
-  console.log("serverLoginFinish");
+  console.log("server.finishLogin");
   console.log("-----------------");
-  const serverSessionKey = opaque.serverLoginFinish({
-    credentialFinalization,
-    serverLogin,
+  const serverSessionKey = opaque.server.finishLogin({
+    finishLoginRequest,
+    serverLoginState,
   });
 
   console.log({ serverSessionKey });
