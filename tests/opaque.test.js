@@ -398,7 +398,7 @@ describe("serverLoginStart", () => {
     );
   });
 
-  test("credentialRequest invalid", () => {
+  test("startLoginRequest invalid", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.server.startLogin({
@@ -407,11 +407,11 @@ describe("serverLoginStart", () => {
         userIdentifier: "",
       })
     ).toThrow(
-      'opaque protocol error at "deserialize credentialRequest"; Internal error encountered'
+      'opaque protocol error at "deserialize startLoginRequest"; Internal error encountered'
     );
   });
 
-  test("credentialRequest encoding invalid", () => {
+  test("startLoginRequest encoding invalid", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.server.startLogin({
@@ -420,7 +420,7 @@ describe("serverLoginStart", () => {
         userIdentifier: "",
       })
     ).toThrow(
-      'base64 decoding failed at "credentialRequest"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "startLoginRequest"; Encoded text cannot have a 6-bit remainder.'
     );
   });
 

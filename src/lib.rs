@@ -150,7 +150,7 @@ pub fn create_server_registration_response(
             .map_err(from_protocol_error("deserialize registrationRequest"))?,
         params.user_identifier.as_bytes(),
     )
-    .map_err(from_protocol_error("start serverRegistration"))?;
+    .map_err(from_protocol_error("start server registration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
 
     Ok(CreateServerRegistrationResponseResult {
@@ -188,18 +188,18 @@ pub fn start_server_login(
     params: StartServerLoginParams,
 ) -> Result<StartServerLoginResult, JsError> {
     let server_setup = decode_server_setup(params.server_setup)?;
-    let password_file_bytes = match params.registration_record {
-        Some(pw) => base64_decode("passwordFile", pw).map(Some),
+    let registration_record_bytes = match params.registration_record {
+        Some(pw) => base64_decode("registrationRecord", pw).map(Some),
         None => Ok(None),
     }?;
-    let credential_request_bytes = base64_decode("credentialRequest", params.start_login_request)?;
+    let credential_request_bytes = base64_decode("startLoginRequest", params.start_login_request)?;
 
     let mut rng: OsRng = OsRng;
 
-    let password_file = match password_file_bytes.as_ref() {
+    let registration_record = match registration_record_bytes.as_ref() {
         Some(bytes) => Some(
             ServerRegistration::<DefaultCipherSuite>::deserialize(bytes)
-                .map_err(from_protocol_error("deserialize passwordFile"))?,
+                .map_err(from_protocol_error("deserialize registrationRecord"))?,
         ),
         None => None,
     };
@@ -212,13 +212,13 @@ pub fn start_server_login(
     let server_login_start_result = ServerLogin::start(
         &mut rng,
         &server_setup,
-        password_file,
+        registration_record,
         CredentialRequest::deserialize(&credential_request_bytes)
-            .map_err(from_protocol_error("deserialize credentialRequest"))?,
+            .map_err(from_protocol_error("deserialize startLoginRequest"))?,
         params.user_identifier.as_bytes(),
         start_params,
     )
-    .map_err(from_protocol_error("start serverLogin"))?;
+    .map_err(from_protocol_error("start server login"))?;
 
     let login_response = BASE64.encode(server_login_start_result.message.serialize());
     let server_login_state = BASE64.encode(server_login_start_result.state.serialize());
@@ -251,16 +251,16 @@ pub fn finish_server_login(
     params: FinishServerLoginParams,
 ) -> Result<FinishServerLoginResult, JsError> {
     let credential_finalization_bytes =
-        base64_decode("credentialFinalization", params.finish_login_request)?;
-    let state_bytes = base64_decode("serverLogin", params.server_login_state)?;
+        base64_decode("finishLoginRequest", params.finish_login_request)?;
+    let state_bytes = base64_decode("serverLoginState", params.server_login_state)?;
     let state = ServerLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
-        .map_err(from_protocol_error("deserialize serverLogin"))?;
+        .map_err(from_protocol_error("deserialize serverLoginState"))?;
     let server_login_finish_result = state
         .finish(
             CredentialFinalization::deserialize(&credential_finalization_bytes)
-                .map_err(from_protocol_error("deserialize credentialFinalization"))?,
+                .map_err(from_protocol_error("deserialize finishLoginRequest"))?,
         )
-        .map_err(from_protocol_error("finish serverLogin"))?;
+        .map_err(from_protocol_error("finish server login"))?;
     Ok(FinishServerLoginResult {
         session_key: BASE64.encode(server_login_finish_result.session_key),
     })
@@ -288,7 +288,7 @@ pub fn start_client_login(
     let mut client_rng = OsRng;
     let client_login_start_result =
         ClientLogin::<DefaultCipherSuite>::start(&mut client_rng, params.password.as_bytes())
-            .map_err(from_protocol_error("start clientLogin"))?;
+            .map_err(from_protocol_error("start client login"))?;
 
     let result = StartClientLoginResult {
         client_login_state: BASE64.encode(client_login_start_result.state.serialize()),
@@ -326,10 +326,10 @@ pub struct FinishClientLoginResult {
 pub fn finish_client_login(
     params: FinishClientLoginParams,
 ) -> Result<Option<FinishClientLoginResult>, JsError> {
-    let credential_response_bytes = base64_decode("credentialResponse", params.login_response)?;
-    let state_bytes = base64_decode("clientLogin", params.client_login_state)?;
+    let credential_response_bytes = base64_decode("loginResponse", params.login_response)?;
+    let state_bytes = base64_decode("clientLoginState", params.client_login_state)?;
     let state = ClientLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
-        .map_err(from_protocol_error("deserialize clientLogin"))?;
+        .map_err(from_protocol_error("deserialize clientLoginState"))?;
 
     let finish_params =
         ClientLoginFinishParameters::new(None, get_identifiers(&params.identifiers), None);
@@ -337,7 +337,7 @@ pub fn finish_client_login(
     let result = state.finish(
         params.password.as_bytes(),
         CredentialResponse::deserialize(&credential_response_bytes)
-            .map_err(from_protocol_error("deserialize credentialResponse"))?,
+            .map_err(from_protocol_error("deserialize loginResponse"))?,
         finish_params,
     );
 
@@ -380,7 +380,7 @@ pub fn start_client_registration(
         &mut client_rng,
         params.password.as_bytes(),
     )
-    .map_err(from_protocol_error("start clientRegistration"))?;
+    .map_err(from_protocol_error("start client registration"))?;
 
     let result = StartClientRegistrationResult {
         client_registration_state: BASE64
@@ -421,9 +421,9 @@ pub fn finish_client_registration(
         base64_decode("registrationResponse", params.registration_response)?;
     let mut rng: OsRng = OsRng;
     let client_registration =
-        base64_decode("clientRegistration", params.client_registration_state)?;
+        base64_decode("clientRegistrationState", params.client_registration_state)?;
     let state = ClientRegistration::<DefaultCipherSuite>::deserialize(&client_registration)
-        .map_err(from_protocol_error("deserialize clientRegistration"))?;
+        .map_err(from_protocol_error("deserialize clientRegistrationState"))?;
 
     let finish_params =
         ClientRegistrationFinishParameters::new(get_identifiers(&params.identifiers), None);
@@ -436,11 +436,11 @@ pub fn finish_client_registration(
                 .map_err(from_protocol_error("deserialize registrationResponse"))?,
             finish_params,
         )
-        .map_err(from_protocol_error("finish clientRegistration"))?;
+        .map_err(from_protocol_error("finish client registration"))?;
 
-    let message_bytes = client_finish_registration_result.message.serialize();
+    let registration_record_bytes = client_finish_registration_result.message.serialize();
     let result = FinishClientRegistrationResult {
-        registration_record: BASE64.encode(message_bytes),
+        registration_record: BASE64.encode(registration_record_bytes),
         export_key: BASE64.encode(client_finish_registration_result.export_key),
         server_static_public_key: BASE64
             .encode(client_finish_registration_result.server_s_pk.serialize()),
