@@ -3,7 +3,8 @@
     "tests/**/*",
     "examples/server-simple",
     "examples/server-with-password-reset",
-    "examples/client-simple-webpack"
+    "examples/client-simple-webpack",
+    "examples/client-with-password-reset"
   ],
   "compilerOptions": {
     "target": "es2016",

@@ -6,7 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
-    <form id="form" class="p-12 space-y-4 max-w-xl" onsubmit="handleSubmit()">
+    <form id="form" class="p-12 space-y-4 max-w-xl">
       <h1 class="text-xl font-semibold">Login/Register</h1>
       <p class="text-gray-500 text-sm">
         Requires running example server. <br />
@@ -48,8 +48,8 @@
       </div>
       <div>
         <button
+          id="show_password_reset_form"
           class="underline text-gray-500 text-sm"
-          onclick="showPasswordResetForm(true)"
         >
           Forgot password?
         </button>
@@ -61,9 +61,9 @@
         Run full flow in-memory demo (check console.log output).
       </p>
       <button
+        id="run_full_flow_demo"
         name="login"
         class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
-        onclick="runFullFlowDemo()"
       >
         Demo
       </button>
@@ -72,13 +72,11 @@
     <div
       id="password_reset"
       class="bg-gray-300/90 flex items-start justify-center absolute inset-0 p-12"
-      onclick="handleBackdropClick()"
     >
       <form
         data-testid="password_reset_request"
         id="password_reset_form"
         class="bg-white p-12 shadow-lg rounded-lg space-y-8 w-full max-w-xl"
-        onsubmit="handleSubmitPasswordReset()"
       >
         <div class="text-xl">Forgot password</div>
         <div>
@@ -93,9 +91,9 @@
         </div>
         <div class="flex justify-end">
           <button
+            id="cancel_password_reset"
             type="button"
             class="font-semibold text-gray-400 hover:bg-gray-100 px-3 py-2 rounded hover:text-rose-500"
-            onclick="cancelPasswordReset()"
           >
             Cancel
           </button>
@@ -111,7 +109,6 @@
         data-testid="password_reset_confirm"
         id="password_reset_confirm"
         class="bg-white p-12 shadow-lg rounded-lg space-y-8 w-full max-w-xl hidden"
-        onsubmit="handleSubmitPasswordResetConfirm()"
       >
         <div class="text-xl">Reset password</div>
         <div class="space-y-4">
@@ -137,9 +134,9 @@
         </div>
         <div class="flex">
           <button
+            id="cancel_password_reset_confirm"
             type="button"
             class="font-semibold text-gray-400 hover:bg-gray-100 px-3 py-2 rounded hover:text-rose-500"
-            onclick="cancelPasswordReset()"
           >
             Cancel
           </button>

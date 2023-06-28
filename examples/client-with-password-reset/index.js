@@ -2,6 +2,59 @@ import * as opaque from "@serenity-kit/opaque";
 
 const host = "http://localhost:8089";
 
+const passwordResetConfirm = requireFormElement("password_reset_confirm");
+const passwordResetForm = requireFormElement("password_reset_form");
+const passwordReset = requireElement("password_reset");
+const form = requireFormElement("form");
+const showPasswordResetFormButton = requireElement("show_password_reset_form");
+const runFullFlowDemoButton = requireElement("run_full_flow_demo");
+const cancelPasswordResetButton = requireElement("cancel_password_reset");
+const cancelPasswordResetConfirmButton = requireElement(
+  "cancel_password_reset_confirm"
+);
+
+form.addEventListener("submit", handleSubmit);
+showPasswordResetFormButton.addEventListener("click", () => {
+  showPasswordResetForm(true);
+});
+runFullFlowDemoButton.addEventListener("click", runFullFlowDemo);
+passwordReset.addEventListener("click", handleBackdropClick);
+passwordResetForm.addEventListener("submit", handleSubmitPasswordReset);
+cancelPasswordResetButton.addEventListener("click", cancelPasswordReset);
+passwordResetConfirm.addEventListener(
+  "submit",
+  handleSubmitPasswordResetConfirm
+);
+cancelPasswordResetConfirmButton.addEventListener("click", cancelPasswordReset);
+
+showPasswordResetForm(false);
+
+/**
+ * @param {string} key
+ * @returns {HTMLFormElement}
+ */
+function requireFormElement(key) {
+  const elem = document.getElementById(key);
+  if (elem && elem.tagName === "FORM")
+    return /** @type {HTMLFormElement} */ (elem);
+  throw new Error(`no form element found with id "${key}"`);
+}
+
+/**
+ * @param {string} key
+ * @returns {HTMLElement}
+ */
+function requireElement(key) {
+  const elem = document.getElementById(key);
+  if (elem) return elem;
+  throw new Error(`no element found with id "${key}"`);
+}
+
+/**
+ * @param {string} method
+ * @param {string} path
+ * @param {any} body
+ */
 async function request(method, path, body = undefined) {
   console.log(`${method} ${host}${path}`, body);
   const res = await fetch(`${host}${path}`, {
@@ -17,60 +70,75 @@ async function request(method, path, body = undefined) {
   return res;
 }
 
+/**
+ * @param {string} userIdentifier
+ * @param {string} password
+ */
 async function register(userIdentifier, password) {
-  const { clientRegistration, registrationRequest } =
-    opaque.clientRegistrationStart(password);
+  const { clientRegistrationState, registrationRequest } =
+    opaque.client.startRegistration({ password });
   const { registrationResponse } = await request("POST", `/register/start`, {
     userIdentifier,
     registrationRequest,
   }).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
-  const { registrationUpload } = opaque.clientRegistrationFinish({
-    clientRegistration,
+  const { registrationRecord } = opaque.client.finishRegistration({
+    clientRegistrationState,
     registrationResponse,
     password,
   });
 
   const res = await request("POST", `/register/finish`, {
     userIdentifier,
-    registrationUpload,
+    registrationRecord,
   });
   console.log("finish successful", res.ok);
   return res.ok;
 }
 
+/**
+ * @param {string} userIdentifier
+ * @param {string} password
+ */
 async function login(userIdentifier, password) {
-  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
 
-  const { credentialResponse } = await request("POST", "/login/start", {
+  const { loginResponse } = await request("POST", "/login/start", {
     userIdentifier,
-    credentialRequest,
+    startLoginRequest,
   }).then((res) => res.json());
 
-  const loginResult = opaque.clientLoginFinish({
-    clientLogin,
-    credentialResponse,
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
     password,
   });
 
   if (!loginResult) {
     return null;
   }
-  const { sessionKey, credentialFinalization } = loginResult;
+  const { sessionKey, finishLoginRequest } = loginResult;
   const res = await request("POST", "/login/finish", {
     userIdentifier,
-    credentialFinalization,
+    finishLoginRequest,
   });
   return res.ok ? sessionKey : null;
 }
 
-window.handleSubmit = async function handleSubmit() {
-  event.preventDefault();
-
-  const username = event.target.username.value;
-  const password = event.target.password.value;
-  const action = event.submitter.name;
+/**
+ * @this {HTMLFormElement}
+ * @param {SubmitEvent} e
+ */
+async function handleSubmit(e) {
+  e.preventDefault();
+  const username = this.username.value;
+  const password = this.password.value;
+  const action = e.submitter
+    ? /** @type {HTMLButtonElement} */ (e.submitter).name
+    : "";
 
   try {
     if (action === "login") {
@@ -94,11 +162,16 @@ window.handleSubmit = async function handleSubmit() {
     console.error(err);
     alert(err);
   }
-};
+}
 
-window.handleSubmitPasswordReset = async function handleSubmitPasswordReset() {
-  event.preventDefault();
-  const userIdentifier = event.target.username.value;
+/**
+ * @this {HTMLFormElement}
+ * @param {SubmitEvent} e
+ */
+async function handleSubmitPasswordReset(e) {
+  e.preventDefault();
+
+  const userIdentifier = this.username.value;
 
   try {
     await request("POST", "/password/reset", {
@@ -109,94 +182,109 @@ window.handleSubmitPasswordReset = async function handleSubmitPasswordReset() {
     console.error(err);
     alert(err);
   }
-};
+}
 
-window.handleSubmitPasswordResetConfirm =
-  async function handleSubmitPasswordResetConfirm() {
-    try {
-      event.preventDefault();
-      const password = event.target.password.value;
-      const resetCode = event.target.code.value;
-      const userIdentifier = window.password_reset_form.username.value;
+/**
+ * @this {HTMLFormElement}
+ * @param {SubmitEvent} e
+ */
+async function handleSubmitPasswordResetConfirm(e) {
+  try {
+    e.preventDefault();
+    const password = this.password.value;
+    const resetCode = this.code.value;
+    const userIdentifier = passwordResetForm.username.value;
 
-      const { clientRegistration, registrationRequest } =
-        opaque.clientRegistrationStart(password);
-      const { registrationResponse } = await request(
-        "POST",
-        `/password/reset/confirm`,
-        {
-          userIdentifier,
-          resetCode,
-          registrationRequest,
-        }
-      ).then((res) => res.json());
-
-      console.log("registrationResponse", registrationResponse);
-      const { registrationUpload } = opaque.clientRegistrationFinish({
-        clientRegistration,
-        registrationResponse,
-        password,
-      });
-
-      const res = await request("POST", `/register/finish`, {
+    const { clientRegistrationState, registrationRequest } =
+      opaque.client.startRegistration({ password });
+    const { registrationResponse } = await request(
+      "POST",
+      `/password/reset/confirm`,
+      {
         userIdentifier,
-        registrationUpload,
-      });
-      console.log("finish successful", res.ok);
+        resetCode,
+        registrationRequest,
+      }
+    ).then((res) => res.json());
 
-      cancelPasswordReset();
-      alert(`Password reset for "${userIdentifier}" successful`);
-    } catch (err) {
-      showPasswordResetConfirm(false);
-      console.error(err);
-      alert(err);
-    }
-  };
+    console.log("registrationResponse", registrationResponse);
+    const { registrationRecord } = opaque.client.finishRegistration({
+      clientRegistrationState,
+      registrationResponse,
+      password,
+    });
 
-window.showPasswordResetConfirm = function showPasswordResetConfirm(show) {
-  if (show) {
-    window.password_reset_confirm.reset();
-    window.password_reset_confirm.classList.remove("hidden");
-    window.password_reset_form.classList.add("hidden");
-    window.password_reset_confirm.querySelector("input").focus();
-  } else {
-    window.password_reset_confirm.classList.add("hidden");
-    window.password_reset_form.classList.remove("hidden");
+    const res = await request("POST", `/register/finish`, {
+      userIdentifier,
+      registrationRecord,
+    });
+    console.log("finish successful", res.ok);
+
+    cancelPasswordReset();
+    alert(`Password reset for "${userIdentifier}" successful`);
+  } catch (err) {
+    showPasswordResetConfirm(false);
+    console.error(err);
+    alert(err);
   }
-};
+}
 
-window.cancelPasswordReset = function cancelPasswordReset() {
+/**
+ * @param {boolean} show
+ */
+function showPasswordResetConfirm(show) {
+  if (show) {
+    passwordResetConfirm.reset();
+    passwordResetConfirm.classList.remove("hidden");
+    passwordResetForm.classList.add("hidden");
+    passwordResetConfirm.querySelector("input")?.focus();
+  } else {
+    passwordResetConfirm.classList.add("hidden");
+    passwordResetForm.classList.remove("hidden");
+  }
+}
+
+function cancelPasswordReset() {
   showPasswordResetConfirm(false);
   showPasswordResetForm(false);
-};
+}
 
-window.showPasswordResetForm = function showPasswordResetForm(show) {
-  window.password_reset.style.display = show ? "flex" : "none";
+/**
+ * @param {boolean} show
+ */
+function showPasswordResetForm(show) {
+  passwordReset.style.display = show ? "flex" : "none";
   if (show) {
-    window.password_reset_form.reset();
-    window.password_reset_form.querySelector("input").focus();
+    passwordResetForm.reset();
+    passwordResetForm.querySelector("input")?.focus();
   }
-};
+}
 
-showPasswordResetForm(false);
-
-window.handleBackdropClick = function handleBackdropClick() {
+/**
+ * @param {Event} e
+ */
+function handleBackdropClick(e) {
   if (
-    !window.password_reset_form.contains(event.target) &&
-    !window.password_reset_confirm.contains(event.target)
+    !passwordResetForm.contains(/** @type {Node} */ (e.target)) &&
+    !passwordResetConfirm.contains(/** @type {Node} */ (e.target))
   ) {
     showPasswordResetConfirm(false);
     showPasswordResetForm(false);
   }
-};
+}
 
-window.runFullFlowDemo = function () {
-  const serverSetup = opaque.createServerSetup();
+function runFullFlowDemo() {
+  const serverSetup = opaque.server.createSetup();
   const username = "user@example.com";
   const password = "hunter2";
   runFullServerClientFlow(serverSetup, username, password);
-};
+}
 
+/**
+ * @param {string} serverSetup
+ * @param {string} username
+ * @param {string} password
+ */
 function runFullServerClientFlow(serverSetup, username, password) {
   console.log("############################################");
   console.log("#                                          #");
@@ -207,17 +295,17 @@ function runFullServerClientFlow(serverSetup, username, password) {
   console.log({ serverSetup, username, password });
 
   console.log();
-  console.log("clientRegistrationStart");
+  console.log("client.startRegistration");
   console.log("-----------------------");
-  const { clientRegistration, registrationRequest } =
-    opaque.clientRegistrationStart(password);
+  const { clientRegistrationState, registrationRequest } =
+    opaque.client.startRegistration({ password });
 
-  console.log({ clientRegistration, registrationRequest });
+  console.log({ clientRegistrationState, registrationRequest });
 
   console.log();
-  console.log("serverRegistrationStart");
+  console.log("server.createRegistrationResponse");
   console.log("-----------------------");
-  const registrationResponse = opaque.serverRegistrationStart({
+  const { registrationResponse } = opaque.server.createRegistrationResponse({
     serverSetup,
     registrationRequest,
     userIdentifier: username,
@@ -226,52 +314,51 @@ function runFullServerClientFlow(serverSetup, username, password) {
   console.log({ registrationResponse });
 
   console.log();
-  console.log("clientRegistrationFinish");
+  console.log("client.finishRegistration");
   console.log("------------------------");
   const {
-    registrationUpload,
+    registrationRecord,
     exportKey: clientRegExportKey,
     serverStaticPublicKey: clientRegServerStaticPublicKey,
-  } = opaque.clientRegistrationFinish({
+  } = opaque.client.finishRegistration({
     password,
-    clientRegistration,
+    clientRegistrationState,
     registrationResponse,
   });
 
-  console.log({ clientRegExportKey, clientRegServerStaticPublicKey });
-
-  console.log();
-  console.log("serverRegistrationFinish");
-  console.log("------------------------");
-  const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
-
-  console.log({ passwordFile });
-
-  console.log();
-  console.log("clientLoginStart");
-  console.log("----------------");
-  const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
-
-  console.log({ clientLogin, credentialRequest });
-
-  console.log();
-  console.log("serverLoginStart");
-  console.log("----------------");
-  const { credentialResponse, serverLogin } = opaque.serverLoginStart({
-    userIdentifier: username,
-    passwordFile,
-    serverSetup,
-    credentialRequest,
+  console.log({
+    clientRegExportKey,
+    clientRegServerStaticPublicKey,
+    registrationRecord,
   });
 
-  console.log({ credentialResponse, serverLogin });
+  console.log();
+  console.log("client.startLogin");
+  console.log("----------------");
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  console.log({ clientLoginState, startLoginRequest });
 
   console.log();
-  console.log("clientLoginFinish");
+  console.log("server.startLogin");
+  console.log("----------------");
+  const { loginResponse, serverLoginState } = opaque.server.startLogin({
+    userIdentifier: username,
+    registrationRecord,
+    serverSetup,
+    startLoginRequest,
+  });
+
+  console.log({ loginResponse, serverLoginState });
+
+  console.log();
+  console.log("client.finishLogin");
   console.log("-----------------");
-  const loginResult = opaque.clientLoginFinish({
-    clientLogin,
-    credentialResponse,
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
     password,
   });
 
@@ -281,7 +368,7 @@ function runFullServerClientFlow(serverSetup, username, password) {
   }
 
   const {
-    credentialFinalization,
+    finishLoginRequest,
     exportKey: clientLoginExportKey,
     serverStaticPublicKey: clientLoginServerStaticPublicKey,
     sessionKey: clientSessionKey,
@@ -291,15 +378,15 @@ function runFullServerClientFlow(serverSetup, username, password) {
     clientLoginExportKey,
     clientSessionKey,
     clientLoginServerStaticPublicKey,
-    credentialFinalization,
+    finishLoginRequest,
   });
 
   console.log();
-  console.log("serverLoginFinish");
+  console.log("server.finishLogin");
   console.log("-----------------");
-  const serverSessionKey = opaque.serverLoginFinish({
-    credentialFinalization,
-    serverLogin,
+  const serverSessionKey = opaque.server.finishLogin({
+    finishLoginRequest,
+    serverLoginState,
   });
 
   console.log({ serverSessionKey });

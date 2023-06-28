@@ -2,6 +2,33 @@ import * as opaque from "@serenity-kit/opaque";
 
 const host = "http://localhost:8089";
 
+const form = requireFormElement("form");
+const runFullFlowDemoButton = requireElement("run_full_flow_demo");
+
+form.addEventListener("submit", handleSubmit);
+runFullFlowDemoButton.addEventListener("click", runFullFlowDemo);
+
+/**
+ * @param {string} key
+ * @returns {HTMLFormElement}
+ */
+function requireFormElement(key) {
+  const elem = document.getElementById(key);
+  if (elem && elem.tagName === "FORM")
+    return /** @type {HTMLFormElement} */ (elem);
+  throw new Error(`no form element found with id "${key}"`);
+}
+
+/**
+ * @param {string} key
+ * @returns {HTMLElement}
+ */
+function requireElement(key) {
+  const elem = document.getElementById(key);
+  if (elem) return elem;
+  throw new Error(`no element found with id "${key}"`);
+}
+
 /**
  * @param {string} method
  * @param {string} path
@@ -80,17 +107,17 @@ async function login(userIdentifier, password) {
   return res.ok ? sessionKey : null;
 }
 
-window.handleSubmit = async function handleSubmit() {
-  if (!event || !event.target)
-    throw new Error("event or event.target is not defined");
-  event.preventDefault();
-
-  // @ts-expect-error
-  const username = event.target.username.value;
-  // @ts-expect-error
-  const password = event.target.password.value;
-  // @ts-expect-error
-  const action = event.submitter.name;
+/**
+ * @this {HTMLFormElement}
+ * @param {SubmitEvent} e
+ */
+async function handleSubmit(e) {
+  e.preventDefault();
+  const username = this.username.value;
+  const password = this.password.value;
+  const action = e.submitter
+    ? /** @type {HTMLButtonElement} */ (e.submitter).name
+    : "";
 
   try {
     if (action === "login") {
@@ -114,14 +141,14 @@ window.handleSubmit = async function handleSubmit() {
     console.error(err);
     alert(err);
   }
-};
+}
 
-window.runFullFlowDemo = function () {
+function runFullFlowDemo() {
   const serverSetup = opaque.server.createSetup();
   const username = "user@example.com";
   const password = "hunter2";
   runFullServerClientFlow(serverSetup, username, password);
-};
+}
 
 /**
  * @param {string} serverSetup
