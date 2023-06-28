@@ -6,7 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
-    <form id="form" class="p-12 space-y-4 max-w-xl" onsubmit="handleSubmit()">
+    <form id="form" class="p-12 space-y-4 max-w-xl">
       <h1 class="text-xl font-semibold">Login/Register</h1>
       <p class="text-gray-500 text-sm">
         Requires running example server. (<span
@@ -53,9 +53,9 @@
         Run full flow in-memory demo (check console.log output).
       </p>
       <button
+        id="run_full_flow_demo"
         name="login"
         class="bg-blue-500 py-1 px-3 text-white font-semibold rounded"
-        onclick="runFullFlowDemo()"
       >
         Demo
       </button>
