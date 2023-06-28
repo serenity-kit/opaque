@@ -43,7 +43,7 @@ const serverSetup = process.env.OPAQUE_SERVER_SETUP;
 For development purposes, you can also generate a server setup on the fly:
 
 ```ts
-const serverSetup = opaque.createServerSetup();
+const serverSetup = opaque.server.createSetup();
 ```
 
 Keep in mind that changing the serverSetup will invalidate all existing password files.
@@ -52,13 +52,13 @@ Keep in mind that changing the serverSetup will invalidate all existing password
 
 ```ts
 // client
-const { clientRegistration, registrationRequest } =
-  opaque.clientRegistrationStart(password);
+const { clientRegistrationState, registrationRequest } =
+  opaque.client.startRegistration({ password });
 ```
 
 ```ts
 // server
-const registrationResponse = opaque.serverRegistrationStart({
+const { registrationResponse } = opaque.server.createRegistrationResponse({
   serverSetup,
   userIdentifier,
   registrationRequest,
@@ -67,40 +67,39 @@ const registrationResponse = opaque.serverRegistrationStart({
 
 ```ts
 // client
-const { registrationUpload } = opaque.clientRegistrationFinish({
-  clientRegistration,
+const { registrationRecord } = opaque.client.finishRegistration({
+  clientRegistrationState,
   registrationResponse,
   password,
 });
-```
 
-```ts
-// server
-const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
+// send registrationRecord to server and create user account
 ```
 
 ### Login Flow
 
 ```ts
 // client
-const { clientLogin, credentialRequest } = opaque.clientLoginStart(password);
+const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+  password,
+});
 ```
 
 ```ts
 // server
-const { serverLogin, credentialResponse } = opaque.serverLoginStart({
-  serverSetup,
+const { loginResponse, serverLoginState } = opaque.server.startLogin({
   userIdentifier,
-  passwordFile,
-  credentialRequest,
+  registrationRecord,
+  serverSetup,
+  startLoginRequest,
 });
 ```
 
 ```ts
 // client
-const loginResult = opaque.clientLoginFinish({
-  clientLogin,
-  credentialResponse,
+const loginResult = opaque.client.finishLogin({
+  clientLoginState,
+  loginResponse,
   password,
 });
 if (!loginResult) {
@@ -111,10 +110,9 @@ const { credentialFinalization, sessionKey } = loginResult;
 
 ```ts
 // server
-const sessionKey = opaque.serverLoginFinish({
-  serverSetup,
-  credentialFinalization,
-  serverLogin,
+const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
+  finishLoginRequest,
+  serverLoginState,
 });
 ```
 

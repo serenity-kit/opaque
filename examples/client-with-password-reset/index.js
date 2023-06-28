@@ -384,7 +384,7 @@ function runFullServerClientFlow(serverSetup, username, password) {
   console.log();
   console.log("server.finishLogin");
   console.log("-----------------");
-  const serverSessionKey = opaque.server.finishLogin({
+  const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
     finishLoginRequest,
     serverLoginState,
   });
