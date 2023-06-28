@@ -60,6 +60,9 @@ function rollup(name) {
 }
 
 function tsc(entry) {
+  // Run tsc primarily to generate d.ts declaration files.
+  // Our inputs are only ts files because we need to re-export types.
+  // The target option is not that important because the result will be used as entry point for rollup.
   sh.exec(
     `pnpm tsc ${entry} --declaration --module es2020 --target es2020 --moduleResolution nodenext --removeComments`
   );
@@ -75,10 +78,11 @@ function main() {
   sh.cp("bin/templates/*", "build/wbg_ristretto");
   sh.cp("bin/templates/*", "build/wbg_p256");
 
+  // run tsc on our entry module wrapper
   tsc("build/wbg_ristretto/index.ts");
   tsc("build/wbg_p256/index.ts");
 
-  // rollup
+  // run rollup to bundle the js with wasm inlined and also bundle d.ts files
   rollup("ristretto");
   rollup("p256");
 
@@ -86,6 +90,7 @@ function main() {
   packageJson("opaque").to("build/ristretto/package.json");
   packageJson("opaque-p256").to("build/p256/package.json");
 
+  // write create-server-setup bin script
   createServerSetupBin.to("build/ristretto/create-server-setup.js");
   createServerSetupBin.to("build/p256/create-server-setup.js");
 

@@ -1,3 +1,8 @@
+// This file serves only as a template and will be copied
+// by the build script into the build directory.
+// The imports in this file are relative to the target build
+// directory so will show up as errors here.
+
 export {
   startClientRegistration as startRegistration,
   finishClientRegistration as finishRegistration,
