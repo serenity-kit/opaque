@@ -105,12 +105,12 @@ const loginResult = opaque.client.finishLogin({
 if (!loginResult) {
   throw new Error("Login failed");
 }
-const { credentialFinalization, sessionKey } = loginResult;
+const { finishLoginRequest, sessionKey } = loginResult;
 ```
 
 ```ts
 // server
-const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
+const { sessionKey } = opaque.server.finishLogin({
   finishLoginRequest,
   serverLoginState,
 });
