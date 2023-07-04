@@ -22,34 +22,42 @@ In case of an error the server MUST respond with a JSON object containing an `er
 
 TDB ERROR RESPONSE IN CASE OF INVALID REQUEST BODY
 
-Upon successful validation of the request body a registration response MUST be obtained by calling opaque.serverRegistrationStart with the provided data.
+Upon successful validation of the request body a registrationResponse message MUST be obtained by calling `opaque.server.createRegistrationResponse` with the provided data.
 
 ### Response Body
 
-- `registrationResponse` the registration response from opaque (a non-empty string)
+- `registrationResponse` the registrationResponse message from opaque (a non-empty string)
 
 ## register/finish
 
 ### Request Body
 
-- `registrationUpload` the registration upload obtained from opaque (non-empty string)
+- `registrationRecord` the registrationRecord obtained from `opaque.client.finishRegistration` (non-empty string)
 - `userData` application-defined user data, can be of any type but is recommended to be an object and SHOULD contain at least the user identifier
 
 ### Response Body
 
-- `payload` arbitrary application-defined data
+- `userData` arbitrary application-defined data
 
 ## login/start
 
 ### Request Body
 
 - `userIdentifier` a non-empty string that should uniquely identify the user (application-defined, can be user id, email, username etc.)
-- `credentialRequest` the credential request obtained from opaque.clientLoginStart (a non-empty string)
+- `startLoginRequest` the startLoginRequest message obtained from opaque.client.startLogin (a non-empty string)
 
 ### Response Body
 
-- `credentialResponse` the credential response obtained from opaque.serverLoginStart
+- `loginResponse` the loginResponse message obtained from opaque.server.startLogin (non-empty string)
 
 ## login/finish
 
-TBD
+### Request Body
+
+- `userIdentifier` a non-empty string that should uniquely identify the user (application-defined, can be user id, email, username etc.)
+- finishLoginRequest
+- customData
+
+### Response Body
+
+The response body is always `{"ok": true}` if the login was successful, otherwise an error response is sent.

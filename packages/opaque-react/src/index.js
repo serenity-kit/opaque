@@ -28,8 +28,8 @@ export function useOpaqueRegister(config) {
      */
     async (userIdentifier, password, userData) => {
       const { fetch = window.fetch, opaque, basePath } = ref.current;
-      const { clientRegistration, registrationRequest } =
-        opaque.clientRegistrationStart(password);
+      const { clientRegistrationState, registrationRequest } =
+        opaque.client.startRegistration({ password });
       const { registrationResponse } = await fetch(
         `${basePath}/register/start`,
         {
@@ -45,8 +45,8 @@ export function useOpaqueRegister(config) {
         }
       ).then((res) => res.json());
 
-      const { registrationUpload } = opaque.clientRegistrationFinish({
-        clientRegistration,
+      const { registrationRecord } = opaque.client.finishRegistration({
+        clientRegistrationState,
         registrationResponse,
         password,
       });
@@ -59,7 +59,7 @@ export function useOpaqueRegister(config) {
         },
         body: JSON.stringify({
           userData,
-          registrationUpload,
+          registrationRecord,
         }),
       });
       const data = await res.json();
@@ -68,8 +68,8 @@ export function useOpaqueRegister(config) {
           "error" in data ? data.error : "ERR_UNKNOWN_SERVER_RESPONSE"
         );
       }
-      if ("payload" in data) {
-        return data.payload;
+      if ("userData" in data) {
+        return data.userData;
       } else {
         throw new Error("ERR_UNKNOWN_SERVER_RESPONSE");
       }
@@ -99,8 +99,9 @@ export function useOpaqueLogin(config) {
     async (userIdentifier, password, customData) => {
       const { fetch = window.fetch, opaque, basePath } = ref.current;
 
-      const { clientLogin, credentialRequest } =
-        opaque.clientLoginStart(password);
+      const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+        password,
+      });
 
       let res = await fetch(`${basePath}/login/start`, {
         method: "POST",
@@ -110,7 +111,7 @@ export function useOpaqueLogin(config) {
         },
         body: JSON.stringify({
           userIdentifier,
-          credentialRequest,
+          startLoginRequest,
         }),
       });
 
@@ -121,18 +122,18 @@ export function useOpaqueLogin(config) {
         );
       }
 
-      const { credentialResponse } = await res.json();
+      const { loginResponse } = await res.json();
 
-      const loginResult = opaque.clientLoginFinish({
-        clientLogin,
-        credentialResponse,
+      const loginResult = opaque.client.finishLogin({
+        clientLoginState,
+        loginResponse,
         password,
       });
 
       if (!loginResult) {
         throw new Error("ERR_CREDENTIALS_INVALID");
       }
-      const { sessionKey, credentialFinalization } = loginResult;
+      const { sessionKey, finishLoginRequest } = loginResult;
 
       res = await fetch(`${basePath}/login/finish`, {
         method: "POST",
@@ -142,7 +143,7 @@ export function useOpaqueLogin(config) {
         },
         body: JSON.stringify({
           userIdentifier,
-          credentialFinalization,
+          finishLoginRequest,
           customData,
         }),
       });

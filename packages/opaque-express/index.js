@@ -8,7 +8,7 @@ import express, { Router } from "express";
 /**
  * @template User
  * @template Payload
- * @typedef {(user: User, passwordFile: string) => MaybeAsync<Payload>} CreateUser
+ * @typedef {(user: User, registrationRecord: string) => MaybeAsync<Payload>} RegistrationSuccessHandler
  */
 
 /**
@@ -24,19 +24,19 @@ import express, { Router } from "express";
 
 /**
  * @template CustomData
- * @typedef {(userIdent: string, sessionKey: string, customData: CustomData) => MaybeAsync<void>} FinishLogin
+ * @typedef {(userIdent: string, sessionKey: string, customData: CustomData) => MaybeAsync<void>} LoginSuccessHandler
  */
 
 /**
  * @template [User=unknown]
- * @template [CreateResponse=unknown]
+ * @template [RegistrationSuccessResponse=unknown]
  * @template [CustomData=unknown]
  * @typedef {Object} Config
- * @prop {CreateUser<User, CreateResponse>} createUser
+ * @prop {RegistrationSuccessHandler<User, RegistrationSuccessResponse>} onRegistrationSuccess
  * @prop {string} serverSetup
  * @prop {LoginStore} [loginStore]
- * @prop {(userIdent: string) => MaybeAsync<string>} getPasswordFile
- * @prop {FinishLogin<CustomData>} finishLogin
+ * @prop {(userIdent: string) => MaybeAsync<string>} getRegistrationRecord
+ * @prop {LoginSuccessHandler<CustomData>} onLoginSuccess
  * @prop {typeof import("@serenity-kit/opaque")} opaque
  */
 
@@ -155,7 +155,7 @@ export default function ({ serverSetup, opaque, ...config }) {
     if (!userIdentifier) return sendError(res, 400, ERR_USER_IDENT);
     if (!registrationRequest) return sendError(res, 400, ERR_REG_REQUEST);
 
-    const registrationResponse = opaque.serverRegistrationStart({
+    const { registrationResponse } = opaque.server.createRegistrationResponse({
       serverSetup,
       userIdentifier,
       registrationRequest,
@@ -166,16 +166,17 @@ export default function ({ serverSetup, opaque, ...config }) {
   });
 
   router.post("/register/finish", async (req, res) => {
-    const { registrationUpload, userData } = req.body || {};
+    const { registrationRecord, userData } = req.body || {};
 
-    if (!registrationUpload) return sendError(res, 400, ERR_REG_UPLOAD);
+    if (!registrationRecord) return sendError(res, 400, ERR_REG_UPLOAD);
     if (!userData) return sendError(res, 400, ERR_USER);
 
-    const passwordFile = opaque.serverRegistrationFinish(registrationUpload);
-
     try {
-      const payload = await config.createUser(userData, passwordFile);
-      res.send({ payload });
+      const userDataResponse = await config.onRegistrationSuccess(
+        userData,
+        registrationRecord
+      );
+      res.send({ userData: userDataResponse });
       res.end();
     } catch (err) {
       return sendError(res, 400, getError(err, ERR_USER_CREATE));
@@ -183,65 +184,64 @@ export default function ({ serverSetup, opaque, ...config }) {
   });
 
   router.post("/login/start", async (req, res) => {
-    const { userIdentifier, credentialRequest } = req.body || {};
+    const { userIdentifier, startLoginRequest } = req.body || {};
     if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-    if (!credentialRequest)
-      return sendError(res, 400, "missing credentialRequest");
+    if (!startLoginRequest)
+      return sendError(res, 400, "missing startLoginRequest");
 
-    const passwordFileResult = await attempt(() =>
-      config.getPasswordFile(userIdentifier)
+    const registrationResult = await attempt(() =>
+      config.getRegistrationRecord(userIdentifier)
     );
 
-    if (!passwordFileResult.ok) {
+    if (!registrationResult.ok) {
       return sendError(
         res,
         400,
-        getError(passwordFileResult.error, ERR_GET_PASSWORD_FILE)
+        getError(registrationResult.error, ERR_GET_PASSWORD_FILE)
       );
     }
 
-    const passwordFile = passwordFileResult.value;
+    const registrationRecord = registrationResult.value;
 
-    const { serverLogin, credentialResponse } = opaque.serverLoginStart({
+    const { serverLoginState, loginResponse } = opaque.server.startLogin({
       serverSetup,
       userIdentifier,
-      passwordFile,
-      credentialRequest,
+      registrationRecord,
+      startLoginRequest,
     });
 
     const startResult = await attempt(() =>
-      loginStore.createLogin(userIdentifier, serverLogin)
+      loginStore.createLogin(userIdentifier, serverLoginState)
     );
     if (!startResult.ok) {
       return sendError(res, 400, getError(startResult.error, ERR_LOGIN_CREATE));
     }
 
-    res.send({ credentialResponse });
+    res.send({ loginResponse });
     res.end();
   });
 
   router.post("/login/finish", async (req, res) => {
-    const { userIdentifier, credentialFinalization, customData } =
-      req.body || {};
+    const { userIdentifier, finishLoginRequest, customData } = req.body || {};
 
     if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-    if (!credentialFinalization)
-      return sendError(res, 400, "missing credentialFinalization");
+    if (!finishLoginRequest)
+      return sendError(res, 400, "missing finishLoginRequest");
 
     const remove = await attempt(() => loginStore.removeLogin(userIdentifier));
     if (!remove.ok) {
       return sendError(res, 400, getError(remove.error, ERR_LOGIN_REMOVE));
     }
 
-    const serverLogin = remove.value;
+    const serverLoginState = remove.value;
     try {
-      const sessionKey = opaque.serverLoginFinish({
-        credentialFinalization,
-        serverLogin,
+      const { sessionKey } = opaque.server.finishLogin({
+        finishLoginRequest,
+        serverLoginState,
       });
 
       const finish = await attempt(() =>
-        config.finishLogin(userIdentifier, sessionKey, customData)
+        config.onLoginSuccess(userIdentifier, sessionKey, customData)
       );
       if (!finish.ok) {
         return sendError(res, 400, getError(finish.error, ERR_LOGIN_FINISH));
