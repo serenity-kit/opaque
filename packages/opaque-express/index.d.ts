@@ -7,7 +7,7 @@
  */
 export default function _default<User, Payload, CustomData>({ serverSetup, opaque, ...config }: Config<User, Payload, CustomData>): Router;
 export type MaybeAsync<T> = T | Promise<T>;
-export type CreateUser<User, Payload> = (user: User, passwordFile: string) => MaybeAsync<Payload>;
+export type RegistrationSuccessHandler<User, Payload> = (user: User, registrationRecord: string) => MaybeAsync<Payload>;
 export type Result<L, R> = {
     ok: true;
     value: R;
@@ -15,18 +15,17 @@ export type Result<L, R> = {
     ok: false;
     error: L;
 };
-export type Reader<T> = (input: unknown) => Result<string, T>;
 export type LoginStore = {
     createLogin: (userIdent: string, login: string) => MaybeAsync<void>;
     removeLogin: (userIdent: string) => MaybeAsync<string>;
 };
-export type FinishLogin<CustomData> = (userIdent: string, sessionKey: string, customData: CustomData) => MaybeAsync<void>;
-export type Config<User = unknown, CreateResponse = unknown, CustomData = unknown> = {
-    createUser: CreateUser<User, CreateResponse>;
+export type LoginSuccessHandler<CustomData> = (userIdent: string, sessionKey: string, customData: CustomData) => MaybeAsync<void>;
+export type Config<User = unknown, RegistrationSuccessResponse = unknown, CustomData = unknown> = {
+    onRegistrationSuccess: RegistrationSuccessHandler<User, RegistrationSuccessResponse>;
     serverSetup: string;
     loginStore?: LoginStore | undefined;
-    getPasswordFile: (userIdent: string) => MaybeAsync<string>;
-    finishLogin: FinishLogin<CustomData>;
+    getRegistrationRecord: (userIdent: string) => MaybeAsync<string>;
+    onLoginSuccess: LoginSuccessHandler<CustomData>;
     opaque: typeof import("@serenity-kit/opaque");
 };
 import { Router } from "express";

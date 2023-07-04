@@ -13,10 +13,10 @@ const serverSetup =
  */
 
 /**
- * @typedef {User & {passwordFile: string; id: number, insertedAt: number}} DbUser
+ * @typedef {User & {registrationRecord: string; id: number, insertedAt: number}} DbUser
  */
 
-/** @type {Record<string,DbUser>} */
+/** @type {Record<string, DbUser>} */
 const db = {};
 
 /** @type {Record<string, string>} */
@@ -26,22 +26,22 @@ let nextUserId = 1;
 
 /**
  * @param {User} user
- * @param {string} passwordFile
- * @returns {Omit<DbUser, 'passwordFile'>}
+ * @param {string} registrationRecord
+ * @returns {Omit<DbUser, 'registrationRecord'>}
  */
-function createUser(user, passwordFile) {
+function createUser(user, registrationRecord) {
   console.log("CREATE USER", user);
   if (db[user.name] != null) {
     throw new Error("USER_EXISTS");
   }
   const dbUser = {
     ...user,
-    passwordFile,
+    registrationRecord,
     id: nextUserId++,
     insertedAt: new Date().getTime(),
   };
   db[user.name] = dbUser;
-  const { passwordFile: _, ...result } = dbUser;
+  const { registrationRecord: _, ...result } = dbUser;
   return result;
 }
 
@@ -50,8 +50,8 @@ function createUser(user, passwordFile) {
  * @param {string} sessionKey
  * @param {{rememberMe: boolean}} props
  */
-function finishLogin(userIdent, sessionKey, props) {
-  console.log("FINISH LOGIN", props);
+function startSession(userIdent, sessionKey, props) {
+  console.log("START SESSION", { userIdent, sessionKey, props });
   sessions[userIdent] = sessionKey;
 }
 
@@ -59,19 +59,19 @@ function finishLogin(userIdent, sessionKey, props) {
  * @param {string} userIdent
  * @returns string
  */
-function getPasswordFile(userIdent) {
+function getRegistrationRecord(userIdent) {
   if (db[userIdent] == null) {
     throw new Error("USER_NOT_FOUND");
   }
-  return db[userIdent].passwordFile;
+  return db[userIdent].registrationRecord;
 }
 
 const opaqueRouter = opaqueExpress({
   opaque,
   serverSetup,
-  createUser,
-  finishLogin,
-  getPasswordFile,
+  onRegistrationSuccess: createUser,
+  onLoginSuccess: startSession,
+  getRegistrationRecord,
 });
 
 const app = express();
