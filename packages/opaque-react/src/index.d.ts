@@ -25,6 +25,8 @@ export function useOpaqueRegisterState<UserResponse = unknown, UserData = unknow
     register: (userIdentifier: string, password: string, userData: UserData) => Promise<UserResponse | null>;
     isLoading: boolean;
     error: unknown;
+    userData: UserResponse | null;
+    reset: () => void;
 };
 /**
  * @template [CustomData=unknown]
@@ -35,6 +37,7 @@ export function useOpaqueLoginState<CustomData = unknown>(config: OpaqueConfig):
     isLoading: boolean;
     error: unknown;
     sessionKey: string | null;
+    reset: () => void;
 };
 export type OpaqueConfig = {
     basePath: string;
