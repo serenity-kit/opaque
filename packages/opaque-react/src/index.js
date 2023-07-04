@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * @typedef {Object} OpaqueConfig
@@ -165,6 +165,10 @@ export function useOpaqueRegisterState(config) {
   const doRegister = useOpaqueRegister(config);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(/** @returns {unknown|null} */ () => null);
+  const [userData, setUserData] = useState(
+    /** @returns {UserResponse|null} */ () => null
+  );
+  const reset = useCallback(() => setUserData(null), []);
   const register = useCallback(
     /**
      * @param {string} userIdentifier
@@ -176,6 +180,7 @@ export function useOpaqueRegisterState(config) {
       try {
         setLoading(true);
         const result = await doRegister(userIdentifier, password, userData);
+        setUserData(result);
         setLoading(false);
         setError(null);
         return result;
@@ -187,7 +192,7 @@ export function useOpaqueRegisterState(config) {
     },
     [doRegister]
   );
-  return { register, isLoading, error };
+  return { register, isLoading, error, userData, reset };
 }
 
 /**
@@ -201,6 +206,7 @@ export function useOpaqueLoginState(config) {
   const [sessionKey, setSessionKey] = useState(
     /** @returns {string|null} **/ () => null
   );
+  const reset = useCallback(() => setSessionKey(null), []);
   const login = useCallback(
     /**
      * @param {string} userIdentifier
@@ -225,5 +231,5 @@ export function useOpaqueLoginState(config) {
     },
     [doLogin]
   );
-  return { login, isLoading, error, sessionKey };
+  return { login, isLoading, error, sessionKey, reset };
 }

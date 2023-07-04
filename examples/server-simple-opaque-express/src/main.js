@@ -13,7 +13,7 @@ const serverSetup =
  */
 
 /**
- * @typedef {User & {registrationRecord: string; id: number, insertedAt: number}} DbUser
+ * @typedef {User & {registrationRecord: string; id: number, insertedAt: string}} DbUser
  */
 
 /** @type {Record<string, DbUser>} */
@@ -38,7 +38,7 @@ function createUser(user, registrationRecord) {
     ...user,
     registrationRecord,
     id: nextUserId++,
-    insertedAt: new Date().getTime(),
+    insertedAt: new Date().toISOString(),
   };
   db[user.name] = dbUser;
   const { registrationRecord: _, ...result } = dbUser;
