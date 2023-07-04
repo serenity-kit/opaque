@@ -4,3 +4,5 @@ examples/server-simple/data.json
 pnpm-lock.yaml
 build/
 .next/
+packages/opaque-express/index.d.ts
+packages/opaque-react/src/index.d.ts
