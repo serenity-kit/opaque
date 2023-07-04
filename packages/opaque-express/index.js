@@ -50,17 +50,19 @@ function sendError(res, status, error) {
   res.end(JSON.stringify({ error }));
 }
 
-const ERR_USER_IDENT = "ERR_USER_IDENT";
-const ERR_REG_REQUEST = "ERR_REG_REQUEST";
-const ERR_REG_UPLOAD = "ERR_REG_UPLOAD";
-const ERR_USER_CREATE = "ERR_USER_CREATE";
-const ERR_LOGIN_CREATE = "ERR_LOGIN_CREATE";
-const ERR_LOGIN_REMOVE = "ERR_LOGIN_REMOVE";
-const ERR_LOGIN_FINISH = "ERR_LOGIN_FINISH";
-const ERR_GET_PASSWORD_FILE = "ERR_GET_PASSWORD_FILE";
+const ERR_INVALID_USER_IDENTIFIER = "ERR_INVALID_USER_IDENTIFIER";
+const ERR_INVALID_REGISTRATION_REQUEST = "ERR_INVALID_REGISTRATION_REQUEST";
+const ERR_INVALID_REGISTRATION_RECORD = "ERR_INVALID_REGISTRATION_RECORD";
+const ERR_INVALID_START_LOGIN_REQUEST = "ERR_INVALID_START_LOGIN_REQUEST";
+const ERR_INVALID_FINISH_LOGIN_REQUEST = "ERR_INVALID_FINISH_LOGIN_REQUEST";
+const ERR_ON_REGISTRATION_SUCCESS = "ERR_ON_REGISTRATION_SUCCESS";
+const ERR_LOGIN_STORE_CREATE = "ERR_LOGIN_STORE_CREATE";
+const ERR_LOGIN_STORE_REMOVE = "ERR_LOGIN_STORE_REMOVE";
+const ERR_ON_LOGIN_SUCCESS = "ERR_ON_LOGIN_SUCCESS";
+const ERR_GET_REGISTRATION_RECORD = "ERR_GET_REGISTRATION_RECORD";
 const ERR_UNKNOWN = "ERR_UNKNOWN";
 
-const ERR_USER = "ERR_USER";
+const ERR_INVALID_USER_DATA = "ERR_INVALID_USER_DATA";
 
 const ERR_LOGIN_STATE_NOT_FOUND = "ERR_LOGIN_STATE_NOT_FOUND";
 const ERR_LOGIN_STATE_ALREADY_ACTIVE = "ERR_LOGIN_STATE_ALREADY_ACTIVE";
@@ -152,8 +154,10 @@ export default function ({ serverSetup, opaque, ...config }) {
   router.post("/register/start", (req, res) => {
     const { userIdentifier, registrationRequest } = req.body || {};
 
-    if (!userIdentifier) return sendError(res, 400, ERR_USER_IDENT);
-    if (!registrationRequest) return sendError(res, 400, ERR_REG_REQUEST);
+    if (!userIdentifier)
+      return sendError(res, 400, ERR_INVALID_USER_IDENTIFIER);
+    if (!registrationRequest)
+      return sendError(res, 400, ERR_INVALID_REGISTRATION_REQUEST);
 
     const { registrationResponse } = opaque.server.createRegistrationResponse({
       serverSetup,
@@ -168,8 +172,9 @@ export default function ({ serverSetup, opaque, ...config }) {
   router.post("/register/finish", async (req, res) => {
     const { registrationRecord, userData } = req.body || {};
 
-    if (!registrationRecord) return sendError(res, 400, ERR_REG_UPLOAD);
-    if (!userData) return sendError(res, 400, ERR_USER);
+    if (!registrationRecord)
+      return sendError(res, 400, ERR_INVALID_REGISTRATION_RECORD);
+    if (!userData) return sendError(res, 400, ERR_INVALID_USER_DATA);
 
     try {
       const userDataResponse = await config.onRegistrationSuccess(
@@ -179,15 +184,16 @@ export default function ({ serverSetup, opaque, ...config }) {
       res.send({ userData: userDataResponse });
       res.end();
     } catch (err) {
-      return sendError(res, 400, getError(err, ERR_USER_CREATE));
+      return sendError(res, 400, getError(err, ERR_ON_REGISTRATION_SUCCESS));
     }
   });
 
   router.post("/login/start", async (req, res) => {
     const { userIdentifier, startLoginRequest } = req.body || {};
-    if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
+    if (!userIdentifier)
+      return sendError(res, 400, ERR_INVALID_USER_IDENTIFIER);
     if (!startLoginRequest)
-      return sendError(res, 400, "missing startLoginRequest");
+      return sendError(res, 400, ERR_INVALID_START_LOGIN_REQUEST);
 
     const registrationResult = await attempt(() =>
       config.getRegistrationRecord(userIdentifier)
@@ -197,7 +203,7 @@ export default function ({ serverSetup, opaque, ...config }) {
       return sendError(
         res,
         400,
-        getError(registrationResult.error, ERR_GET_PASSWORD_FILE)
+        getError(registrationResult.error, ERR_GET_REGISTRATION_RECORD)
       );
     }
 
@@ -214,7 +220,11 @@ export default function ({ serverSetup, opaque, ...config }) {
       loginStore.createLogin(userIdentifier, serverLoginState)
     );
     if (!startResult.ok) {
-      return sendError(res, 400, getError(startResult.error, ERR_LOGIN_CREATE));
+      return sendError(
+        res,
+        400,
+        getError(startResult.error, ERR_LOGIN_STORE_CREATE)
+      );
     }
 
     res.send({ loginResponse });
@@ -224,13 +234,18 @@ export default function ({ serverSetup, opaque, ...config }) {
   router.post("/login/finish", async (req, res) => {
     const { userIdentifier, finishLoginRequest, customData } = req.body || {};
 
-    if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
+    if (!userIdentifier)
+      return sendError(res, 400, ERR_INVALID_USER_IDENTIFIER);
     if (!finishLoginRequest)
-      return sendError(res, 400, "missing finishLoginRequest");
+      return sendError(res, 400, ERR_INVALID_FINISH_LOGIN_REQUEST);
 
     const remove = await attempt(() => loginStore.removeLogin(userIdentifier));
     if (!remove.ok) {
-      return sendError(res, 400, getError(remove.error, ERR_LOGIN_REMOVE));
+      return sendError(
+        res,
+        400,
+        getError(remove.error, ERR_LOGIN_STORE_REMOVE)
+      );
     }
 
     const serverLoginState = remove.value;
@@ -244,7 +259,11 @@ export default function ({ serverSetup, opaque, ...config }) {
         config.onLoginSuccess(userIdentifier, sessionKey, customData)
       );
       if (!finish.ok) {
-        return sendError(res, 400, getError(finish.error, ERR_LOGIN_FINISH));
+        return sendError(
+          res,
+          400,
+          getError(finish.error, ERR_ON_LOGIN_SUCCESS)
+        );
       }
 
       res.send({ ok: true });
