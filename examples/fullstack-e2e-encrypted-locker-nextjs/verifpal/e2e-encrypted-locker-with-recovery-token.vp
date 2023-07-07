@@ -1,0 +1,56 @@
+attacker[active]
+
+principal Alice_session_1[
+	knows private locker_content
+	knows private export_key
+	knows private recovery_export_key
+	export_publickey = G^export_key
+	recovery_export_publickey = G^recovery_export_key
+	knows private session_key_1
+	knows public additional_data
+	knows public salt
+	symmetric_key = HKDF(salt, export_key, nil)
+	ciphertext = AEAD_ENC(symmetric_key, locker_content, additional_data)
+	tag = MAC(session_key_1, ciphertext)
+	recovery_lockbox = PKE_ENC(recovery_export_publickey, symmetric_key)
+]
+
+Alice_session_1 -> Server: ciphertext, recovery_lockbox, tag
+
+principal Server[
+	knows private session_key_1
+	knows private session_key_2
+	_ = ASSERT(tag, MAC(session_key_1, ciphertext))?
+]
+
+Server -> Alice_session_2: ciphertext
+
+principal Alice_session_2[
+	knows private export_key
+	knows private session_key_2
+	symmetric_key2 = HKDF(salt, export_key, nil)
+	locker_content_2 = AEAD_DEC(symmetric_key2, ciphertext, additional_data)?
+]
+
+Server -> Alice_recovery: ciphertext, recovery_lockbox
+
+principal Alice_recovery[
+	knows private recovery_export_key
+	knows private session_key_3
+	symmetric_key3 = PKE_DEC(recovery_export_key, recovery_lockbox)
+	locker_content_recovery = AEAD_DEC(symmetric_key3, ciphertext, additional_data)?
+]
+
+queries[
+	confidentiality? export_key
+	confidentiality? recovery_export_key
+	confidentiality? session_key_1
+	confidentiality? session_key_2
+	confidentiality? session_key_3
+	confidentiality? locker_content
+	confidentiality? locker_content_2
+	confidentiality? locker_content_recovery
+	authentication? Alice_session_1 -> Server: ciphertext
+	authentication? Server -> Alice_session_2: ciphertext
+	authentication? Server -> Alice_recovery: ciphertext
+]

@@ -149,6 +149,10 @@ importers:
       typescript:
         specifier: 5.1.3
         version: 5.1.3
+    devDependencies:
+      '@types/libsodium-wrappers':
+        specifier: ^0.7.10
+        version: 0.7.10
 
   examples/fullstack-simple-nextjs:
     dependencies:
@@ -2300,6 +2304,10 @@ packages:
   /@types/json5@0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
     dev: false
+
+  /@types/libsodium-wrappers@0.7.10:
+    resolution: {integrity: sha512-BqI9B92u+cM3ccp8mpHf+HzJ8fBlRwdmyd6+fz3p99m3V6ifT5O3zmOMi612PGkpeFeG/G6loxUnzlDNhfjPSA==}
+    dev: true
 
   /@types/mime@1.3.2:
     resolution: {integrity: sha512-YATxVxgRqNH6nHEIsvg6k2Boc1JHI9ZbH5iWFFv/MTkchz3b1ieGDa5T0a9RznNdI0KhVbdbWSN+KWWrQZRxTw==}
