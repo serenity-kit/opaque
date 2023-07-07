@@ -14,7 +14,7 @@ jobs:
         run: rustup target add wasm32-unknown-unknown
       - uses: pnpm/action-setup@v2
         with:
-          version: 7
+          version: 8
       - name: install dependencies
         run: pnpm install
       - name: Build opaque
