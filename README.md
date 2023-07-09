@@ -175,6 +175,25 @@ pnpm example:client-with-password-reset:dev
 
 ## Advanced usage
 
+### Identifiers
+
+By default the server-side sets a `userIdentifier` during the registration and login process. This `userIdentifier` does not even need to be exposed to be exposed to a client.
+
+`opaque.client.finishRegistration`, `opaque.server.startLogin` and `opaque.client.finishLogin` all accept an optional object `identifiers`. It accepts an optional string value for the property `client` and an optional string value for `server`.
+
+```ts
+type Identifiers = {
+  client?: string;
+  server?: string;
+};
+```
+
+The identifiers will be public, but cryptographically bound to the registration record.
+
+Once provided in the `opaque.client.finishRegistration` function call, the identical identifiers must be provided in the `opaque.server.startLogin` and `opaque.client.finishLogin` function call. Otherwise the login will result in an error.
+
+### P256 Support
+
 The default implementation uses [ristretto255](https://ristretto.group/) for the OPRF and the group mode.
 
 If you would like to use the [P-256](https://docs.rs/p256/latest/p256/) curve instead, you can use the [@serenity-kit/opaque-p256](https://www.npmjs.com/package/@serenity-kit/opaque) package. The API is identical.
