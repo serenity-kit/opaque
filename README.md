@@ -52,12 +52,16 @@ Keep in mind that changing the serverSetup will invalidate all existing password
 
 ```ts
 // client
+const password = "sup-krah.42-UOI"; // user password
+
 const { clientRegistrationState, registrationRequest } =
   opaque.client.startRegistration({ password });
 ```
 
 ```ts
 // server
+const userIdentifier = "20e14cd8-ab09-4f4b-87a8-06d2e2e9ff68"; // userId/email/username
+
 const { registrationResponse } = opaque.server.createRegistrationResponse({
   serverSetup,
   userIdentifier,
@@ -80,6 +84,8 @@ const { registrationRecord } = opaque.client.finishRegistration({
 
 ```ts
 // client
+const password = "sup-krah.42-UOI"; // user password
+
 const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
   password,
 });
@@ -87,6 +93,8 @@ const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
 
 ```ts
 // server
+const userIdentifier = "20e14cd8-ab09-4f4b-87a8-06d2e2e9ff68"; // userId/email/username
+
 const { loginResponse, serverLoginState } = opaque.server.startLogin({
   userIdentifier,
   registrationRecord,
