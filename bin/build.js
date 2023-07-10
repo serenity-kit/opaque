@@ -26,7 +26,8 @@ const packageJson = function (name) {
   "browser": "esm/index.js",
   "bin": {
     "create-server-setup": "./create-server-setup.js"
-  }
+  },
+  "repository": "github:serenity-kit/opaque"
 }`);
 };
 
