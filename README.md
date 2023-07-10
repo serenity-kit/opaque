@@ -175,6 +175,107 @@ pnpm example:client-with-password-reset:dev
 
 ## Advanced usage
 
+### Server Static Public Key
+
+The result of `opaque.client.finishRegistration` and `opaque.client.finishLogin` also contains a property `serverStaticPublicKey`. It can be used to verify the authenticity of the server.
+
+It's recommended to verify the server static public key in the application layer e.g. hard-code it into the application code and verify it's correctness.
+
+#### Example Registration
+
+```ts
+// client
+const { serverStaticPublicKey } = opaque.client.finishRegistration({
+  clientRegistrationState,
+  registrationResponse,
+  password,
+});
+```
+
+#### Example Login
+
+```ts
+// client
+const loginResult = opaque.client.finishLogin({
+  clientLoginState,
+  loginResponse,
+  password,
+});
+if (!loginResult) {
+  throw new Error("Login failed");
+}
+const { serverStaticPublicKey } = loginResult;
+```
+
+### Identifiers
+
+By default the server-side sets a `userIdentifier` during the registration and login process. This `userIdentifier` does not even need to be exposed to be exposed to a client.
+
+`opaque.client.finishRegistration`, `opaque.server.startLogin` and `opaque.client.finishLogin` all accept an optional object `identifiers`. It accepts an optional string value for the property `client` and an optional string value for `server`.
+
+```ts
+type Identifiers = {
+  client?: string;
+  server?: string;
+};
+```
+
+The identifiers will be public, but cryptographically bound to the registration record.
+
+Once provided in the `opaque.client.finishRegistration` function call, the identical identifiers must be provided in the `opaque.server.startLogin` and `opaque.client.finishLogin` function call. Otherwise the login will result in an error.
+
+#### Example Registration
+
+```ts
+// client
+const { registrationRecord } = opaque.client.finishRegistration({
+  clientRegistrationState,
+  registrationResponse,
+  password,
+  identifiers: {
+    client: "jane@example.com",
+    server: "mastodon.example.com",
+  },
+});
+
+// send registrationRecord to server and create user account
+```
+
+#### Example Login
+
+```ts
+// server
+const { serverLoginState, loginResponse } = opaque.server.startLogin({
+  serverSetup,
+  userIdentifier,
+  registrationRecord,
+  startLoginRequest,
+  identifiers: {
+    client: "jane@example.com",
+    server: "mastodon.example.com",
+  },
+});
+```
+
+```ts
+// client
+const loginResult = opaque.client.finishLogin({
+  clientLoginState,
+  loginResponse,
+  password,
+  identifiers: {
+    client: "jane@example.com",
+    server: "mastodon.example.com",
+  },
+});
+if (!loginResult) {
+  throw new Error("Login failed");
+}
+const { finishLoginRequest, sessionKey } = loginResult;
+```
+
+### P256 Support
+
 The default implementation uses [ristretto255](https://ristretto.group/) for the OPRF and the group mode.
 
 If you would like to use the [P-256](https://docs.rs/p256/latest/p256/) curve instead, you can use the [@serenity-kit/opaque-p256](https://www.npmjs.com/package/@serenity-kit/opaque) package. The API is identical.
