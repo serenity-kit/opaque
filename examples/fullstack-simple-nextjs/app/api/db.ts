@@ -81,8 +81,10 @@ function writeDatabaseFile(filePath: string, db: Database) {
   return writeFile(filePath, data);
 }
 
-const SERVER_SETUP =
-  "Ki5T3U21n_UFhcGP5fR_mUstYEItKRsjEJ2UnvvrGasT3wvjdtbluS0BsiR_LtzqX8YLrCyWqQOJDf7cL0C8DRr9pGFBSx0X22ZujePyWpdq4VddBSPm0vIXepDJEBYJjRxmRNh09pLGxk_Y9bQuFWjYInqjcy_zOVsMHPHUkQw";
+const SERVER_SETUP = process.env.OPAQUE_SERVER_SETUP;
+if (!SERVER_SETUP) {
+  throw new Error("OPAQUE_SERVER_SETUP env variable value is missing");
+}
 
 const db = opaque.ready.then(async () => {
   console.log("initializing db");
