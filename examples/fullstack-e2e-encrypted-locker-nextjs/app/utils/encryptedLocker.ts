@@ -1,6 +1,14 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
 
+export type PublicAdditionalData =
+  | string
+  | number
+  | boolean
+  | Date
+  | { [x: string]: PublicAdditionalData }
+  | Array<PublicAdditionalData>;
+
 export type RecoveryLockbox = {
   receiverPublicKey: string;
   creatorPublicKey: string;
@@ -55,7 +63,7 @@ export const createLocker = ({
 
 export type EncryptLockerParams = {
   data: string | Uint8Array;
-  publicAdditionalData: string | Uint8Array;
+  publicAdditionalData: PublicAdditionalData;
   lockerSecretKey: Uint8Array;
   sessionKey: string;
 };
@@ -69,9 +77,14 @@ export const encryptLocker = ({
   const nonce = sodium.randombytes_buf(
     sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
   );
+
+  const publicAdditionalDataString = canonicalize(publicAdditionalData);
+  if (!publicAdditionalDataString) {
+    throw new Error("publicAdditionalData can't be serialized");
+  }
   const ciphertext = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
     data,
-    publicAdditionalData,
+    publicAdditionalDataString,
     null,
     nonce,
     lockerSecretKey
@@ -107,20 +120,24 @@ export const isValidLockerTag = ({
     ciphertext,
     nonce,
   });
-  if (!tagContent) throw new Error("tagContent is undefined");
-  return sodium.crypto_auth_verify(
-    sodium.from_base64(tag),
-    tagContent,
-    sodium.from_base64(sessionKey)
-  );
+  try {
+    if (!tagContent) throw new Error("tagContent is undefined");
+    return sodium.crypto_auth_verify(
+      sodium.from_base64(tag),
+      tagContent,
+      sodium.from_base64(sessionKey)
+    );
+  } catch (err) {
+    return false;
+  }
 };
 
 export type DecryptLockerParams = {
   ciphertext: string;
-  publicAdditionalData: string;
+  publicAdditionalData: PublicAdditionalData;
   nonce: string;
   exportKey: string;
-  outputFormat: "string" | "uint8array";
+  outputFormat?: "string" | "uint8array";
 };
 
 export const decryptLocker = ({
@@ -138,10 +155,14 @@ export const decryptLocker = ({
     exportKeyAsUint8Array
   );
 
+  const publicAdditionalDataString = canonicalize(publicAdditionalData);
+  if (!publicAdditionalDataString) {
+    throw new Error("publicAdditionalData can't be serialized");
+  }
   const contentAsUint8Array = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
     null,
     sodium.from_base64(ciphertext),
-    publicAdditionalData,
+    publicAdditionalDataString,
     sodium.from_base64(nonce),
     lockerSecretKey
   );
@@ -154,11 +175,11 @@ export const decryptLocker = ({
 
 export type DecryptLockerFromRecoveryExportKeyParams = {
   ciphertext: string;
-  publicAdditionalData: string;
+  publicAdditionalData: PublicAdditionalData;
   nonce: string;
   recoveryExportKey: string;
   recoveryLockbox: RecoveryLockbox;
-  outputFormat: "string" | "uint8array";
+  outputFormat?: "string" | "uint8array";
 };
 
 export const decryptLockerFromRecoveryExportKey = ({
@@ -181,10 +202,14 @@ export const decryptLockerFromRecoveryExportKey = ({
     recoveryKeyPair.privateKey
   );
 
+  const publicAdditionalDataString = canonicalize(publicAdditionalData);
+  if (!publicAdditionalDataString) {
+    throw new Error("publicAdditionalData can't be serialized");
+  }
   const contentAsUint8Array = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
     null,
     sodium.from_base64(ciphertext),
-    publicAdditionalData,
+    publicAdditionalDataString,
     sodium.from_base64(nonce),
     lockerSecretKey
   );
