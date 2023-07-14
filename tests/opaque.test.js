@@ -192,7 +192,7 @@ test("full registration & login attempt with mismatched server identifier", () =
   expect(loginResult).toBeUndefined();
 });
 
-describe("clientRegistrationStart", () => {
+describe("client.startRegistration", () => {
   test("invalid argument type", () => {
     expect(() => {
       // @ts-expect-error intentional test of invalid input
@@ -213,6 +213,114 @@ describe("clientRegistrationStart", () => {
   });
 });
 
+describe("client.finishRegistration", () => {
+  test("invalid argument type", () => {
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishRegistration()
+    ).toThrow(
+      "invalid type: unit value, expected struct FinishClientRegistrationParams"
+    );
+
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishRegistration(123)
+    ).toThrow(
+      "invalid type: floating point `123`, expected struct FinishClientRegistrationParams"
+    );
+  });
+  test("incomplete params object", () => {
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishRegistration({})
+    ).toThrow("Error: missing field `password`");
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishRegistration({
+        password: "hunter2",
+        clientRegistrationState: "",
+      })
+    ).toThrow("Error: missing field `registrationResponse`");
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishRegistration({
+        password: "hunter2",
+        registrationResponse: "",
+      })
+    ).toThrow("Error: missing field `clientRegistrationState`");
+  });
+
+  test("registrationResponse invalid", () => {
+    const { clientRegistrationState } = opaque.client.startRegistration({
+      password: "hunter2",
+    });
+    expect(() => {
+      opaque.client.finishRegistration({
+        password: "hunter2",
+        registrationResponse: "",
+        clientRegistrationState,
+      });
+    }).toThrow(
+      'opaque protocol error at "deserialize registrationResponse"; Internal error encountered'
+    );
+  });
+
+  test("registrationResponse encoding invalid", () => {
+    const { clientRegistrationState } = opaque.client.startRegistration({
+      password: "hunter2",
+    });
+    expect(() => {
+      opaque.client.finishRegistration({
+        password: "hunter2",
+        registrationResponse: "a",
+        clientRegistrationState,
+      });
+    }).toThrow(
+      'base64 decoding failed at "registrationResponse"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+
+  test("clientRegistrationState invalid", () => {
+    const { registrationRequest } = opaque.client.startRegistration({
+      password: "hunter2",
+    });
+    const { registrationResponse } = opaque.server.createRegistrationResponse({
+      userIdentifier: "user123",
+      registrationRequest,
+      serverSetup: opaque.server.createSetup(),
+    });
+    expect(() => {
+      opaque.client.finishRegistration({
+        password: "hunter2",
+        registrationResponse,
+        clientRegistrationState: "",
+      });
+    }).toThrow(
+      'opaque protocol error at "deserialize clientRegistrationState"; Internal error encountered'
+    );
+  });
+
+  test("clientRegistrationState encoding invalid", () => {
+    const { registrationRequest } = opaque.client.startRegistration({
+      password: "hunter2",
+    });
+    const { registrationResponse } = opaque.server.createRegistrationResponse({
+      userIdentifier: "user123",
+      registrationRequest,
+      serverSetup: opaque.server.createSetup(),
+    });
+    expect(() => {
+      opaque.client.finishRegistration({
+        password: "hunter2",
+        registrationResponse,
+        clientRegistrationState: "a",
+      });
+    }).toThrow(
+      'base64 decoding failed at "clientRegistrationState"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+});
+
 describe("client.startLogin", () => {
   test("invalid argument type", () => {
     expect(() => {
@@ -227,6 +335,8 @@ describe("client.startLogin", () => {
     }).toThrow(
       "invalid type: floating point `123`, expected struct StartClientLoginParams"
     );
+  });
+  test("incomplete params object", () => {
     expect(() => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startLogin({});
@@ -249,14 +359,13 @@ describe("client.finishLogin", () => {
     ).toThrow(
       "invalid type: floating point `123`, expected struct FinishClientLoginParams"
     );
+  });
 
+  test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.client.finishLogin({})
     ).toThrow("missing field `clientLoginState`");
-  });
-
-  test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.client.finishLogin({ clientLoginState: "" })
@@ -419,7 +528,7 @@ describe("server.createRegistrationResponse", () => {
   });
 });
 
-describe("serverLoginStart", () => {
+describe("server.startLogin", () => {
   test("invalid params type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
