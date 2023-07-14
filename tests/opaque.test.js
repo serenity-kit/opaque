@@ -213,7 +213,7 @@ describe("clientRegistrationStart", () => {
   });
 });
 
-describe("clientLoginStart", () => {
+describe("client.startLogin", () => {
   test("invalid argument type", () => {
     expect(() => {
       // @ts-expect-error intentional test of invalid input
@@ -234,7 +234,95 @@ describe("clientLoginStart", () => {
   });
 });
 
-describe("createRegistrationResponse", () => {
+describe("client.finishLogin", () => {
+  test("invalid argument type", () => {
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishLogin()
+    ).toThrow(
+      "invalid type: unit value, expected struct FinishClientLoginParams"
+    );
+
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishLogin(123)
+    ).toThrow(
+      "invalid type: floating point `123`, expected struct FinishClientLoginParams"
+    );
+
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishLogin({})
+    ).toThrow("missing field `clientLoginState`");
+  });
+
+  test("incomplete params object", () => {
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishLogin({ clientLoginState: "" })
+    ).toThrow("missing field `loginResponse`");
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.client.finishLogin({ clientLoginState: "", loginResponse: "" })
+    ).toThrow("missing field `password`");
+  });
+
+  test("clientLoginState invalid", () => {
+    expect(() =>
+      opaque.client.finishLogin({
+        clientLoginState: "",
+        loginResponse: "",
+        password: "hunter2",
+      })
+    ).toThrow(
+      'opaque protocol error at "deserialize clientLoginState"; Internal error encountered'
+    );
+  });
+
+  test("clientLoginState encoding invalid", () => {
+    expect(() =>
+      opaque.client.finishLogin({
+        clientLoginState: "a",
+        loginResponse: "",
+        password: "hunter2",
+      })
+    ).toThrow(
+      'base64 decoding failed at "clientLoginState"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+
+  test("loginResponse invalid", () => {
+    expect(() => {
+      const { clientLoginState } = opaque.client.startLogin({
+        password: "hunter2",
+      });
+      opaque.client.finishLogin({
+        clientLoginState,
+        loginResponse: "",
+        password: "hunter2",
+      });
+    }).toThrow(
+      'opaque protocol error at "deserialize loginResponse"; Internal error encountered'
+    );
+  });
+
+  test("loginResponse encoding invalid", () => {
+    expect(() => {
+      const { clientLoginState } = opaque.client.startLogin({
+        password: "hunter2",
+      });
+      opaque.client.finishLogin({
+        clientLoginState,
+        loginResponse: "a",
+        password: "hunter2",
+      });
+    }).toThrow(
+      'base64 decoding failed at "loginResponse"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+});
+
+describe("server.createRegistrationResponse", () => {
   test("invalid params type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
