@@ -10,8 +10,6 @@ A JavaScript implementation of the [OPAQUE protocol](https://datatracker.ietf.or
 - Security against pre-computation attacks upon server compromise
 - Foundation for encrypted backups and end-to-end encryption apps
 
-**WARNING**: This is a work in progress and not ready for production use.
-
 ## Install
 
 ```sh
