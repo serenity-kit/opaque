@@ -206,6 +206,8 @@ describe("client.startRegistration", () => {
     }).toThrow(
       "invalid type: floating point `123`, expected struct StartClientRegistrationParams"
     );
+  });
+  test("incomplete params object", () => {
     expect(() => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startRegistration({});
@@ -639,5 +641,136 @@ describe("server.startLogin", () => {
       password,
     });
     expect(result).toBeUndefined();
+  });
+});
+
+describe("server.finishLogin", () => {
+  test("invalid params type", () => {
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.server.finishLogin()
+    ).toThrow(
+      "invalid type: unit value, expected struct FinishServerLoginParams"
+    );
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.server.finishLogin(123)
+    ).toThrow(
+      "invalid type: floating point `123`, expected struct FinishServerLoginParams"
+    );
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.server.finishLogin("test")
+    ).toThrow(
+      'invalid type: string "test", expected struct FinishServerLoginParams'
+    );
+  });
+
+  test("incomplete params object", () => {
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.server.finishLogin({ finishLoginRequest: "" })
+    ).toThrow("missing field `serverLoginState`");
+
+    expect(() =>
+      // @ts-expect-error intentional test of invalid input
+      opaque.server.finishLogin({ serverLoginState: "" })
+    ).toThrow("missing field `finishLoginRequest`");
+  });
+
+  test("finishLoginRequest invalid", () => {
+    const { startLoginRequest } = opaque.client.startLogin({
+      password: "hunter2",
+    });
+    const { serverLoginState } = opaque.server.startLogin({
+      registrationRecord: null,
+      serverSetup: opaque.server.createSetup(),
+      startLoginRequest,
+      userIdentifier: "user123",
+    });
+    expect(() => {
+      opaque.server.finishLogin({ serverLoginState, finishLoginRequest: "" });
+    }).toThrow(
+      'opaque protocol error at "deserialize finishLoginRequest"; Internal error encountered'
+    );
+  });
+
+  test("finishLoginRequest encoding invalid", () => {
+    const { startLoginRequest } = opaque.client.startLogin({
+      password: "hunter2",
+    });
+    const { serverLoginState } = opaque.server.startLogin({
+      registrationRecord: null,
+      serverSetup: opaque.server.createSetup(),
+      startLoginRequest,
+      userIdentifier: "user123",
+    });
+    expect(() => {
+      opaque.server.finishLogin({ serverLoginState, finishLoginRequest: "a" });
+    }).toThrow(
+      'base64 decoding failed at "finishLoginRequest"; Encoded text cannot have a 6-bit remainder'
+    );
+  });
+
+  test("serverLoginState invalid", () => {
+    const username = "user123";
+    const password = "hunter2";
+    const { serverSetup, registrationRecord } = setupAndRegister(
+      username,
+      password
+    );
+    const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
+      password,
+    });
+    const { loginResponse } = opaque.server.startLogin({
+      registrationRecord,
+      serverSetup,
+      startLoginRequest,
+      userIdentifier: username,
+    });
+    const result = opaque.client.finishLogin({
+      clientLoginState,
+      loginResponse,
+      password,
+    });
+    expect(result).not.toBeUndefined();
+    if (!result) throw new TypeError();
+    const { finishLoginRequest } = result;
+    expect(() => {
+      opaque.server.finishLogin({ serverLoginState: "", finishLoginRequest });
+    }).toThrow(
+      'opaque protocol error at "deserialize serverLoginState"; Internal error encountered'
+    );
+  });
+
+  test("serverLoginState encoding invalid", () => {
+    const username = "user123";
+    const password = "hunter2";
+    const { serverSetup, registrationRecord } = setupAndRegister(
+      username,
+      password
+    );
+    const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
+      password,
+    });
+    const { loginResponse } = opaque.server.startLogin({
+      registrationRecord,
+      serverSetup,
+      startLoginRequest,
+      userIdentifier: username,
+    });
+    const result = opaque.client.finishLogin({
+      clientLoginState,
+      loginResponse,
+      password,
+    });
+    expect(result).not.toBeUndefined();
+    if (!result) throw new TypeError();
+    const { finishLoginRequest } = result;
+    expect(() => {
+      opaque.server.finishLogin({ serverLoginState: "a", finishLoginRequest });
+    }).toThrow(
+      'base64 decoding failed at "serverLoginState"; Encoded text cannot have a 6-bit remainder.'
+    );
   });
 });
