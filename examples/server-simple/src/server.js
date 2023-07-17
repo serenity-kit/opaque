@@ -1,7 +1,11 @@
 import cors from "cors";
 import express from "express";
 import * as opaque from "@serenity-kit/opaque";
-import Database, { readDatabaseFile, writeDatabaseFile } from "./database.js";
+import InMemoryStore, {
+  readDatabaseFile,
+  writeDatabaseFile,
+} from "./InMemoryStore.js";
+import RedisStore from "./RedisStore.js";
 
 /**
  * @type {Record<string, string>}
@@ -9,26 +13,27 @@ import Database, { readDatabaseFile, writeDatabaseFile } from "./database.js";
 const activeSessions = {};
 const dbFile = "./data.json";
 const enableJsonFilePersistence = !process.argv.includes("--no-fs");
+const enableRedis = process.argv.includes("--redis");
 
 /**
  * @param {string} filePath
  */
-async function initDatabase(filePath) {
+async function initStore(filePath) {
   await opaque.ready;
   if (!enableJsonFilePersistence) {
-    return Database.empty(opaque.server.createSetup());
+    return InMemoryStore.empty(opaque.server.createSetup());
   }
   try {
     return readDatabaseFile(filePath);
   } catch (err) {
     console.log("failed to open database, initializing empty", err);
-    const db = Database.empty(opaque.server.createSetup());
+    const db = InMemoryStore.empty(opaque.server.createSetup());
     return db;
   }
 }
 
 /**
- * @type {Database}
+ * @type {Datastore}
  */
 let db;
 
@@ -37,15 +42,36 @@ let db;
  */
 let serverSetup;
 
-async function setupDb() {
-  db = await initDatabase(dbFile);
-  serverSetup = db.serverSetup;
+async function setUpInMemoryStore() {
+  const memDb = await initStore(dbFile);
+  serverSetup = memDb.serverSetup;
 
   if (enableJsonFilePersistence) {
-    writeDatabaseFile(dbFile, db);
-    db.addListener(() => {
-      writeDatabaseFile(dbFile, db);
+    writeDatabaseFile(dbFile, memDb);
+    memDb.addListener(() => {
+      writeDatabaseFile(dbFile, memDb);
     });
+  }
+  db = memDb;
+}
+
+async function setUpRedisStore() {
+  const redis = new RedisStore();
+  await redis.connect();
+  let _serverSetup = await redis.getServerSetup();
+  if (_serverSetup == null) {
+    _serverSetup = opaque.server.createSetup();
+    redis.setServerSetup(_serverSetup);
+  }
+  serverSetup = _serverSetup;
+  db = redis;
+}
+
+async function setupDb() {
+  if (enableRedis) {
+    await setUpRedisStore();
+  } else {
+    await setUpInMemoryStore();
   }
 }
 
@@ -64,14 +90,17 @@ function sendError(res, status, error) {
   res.end(JSON.stringify({ error }));
 }
 
-app.post("/register/start", (req, res) => {
+app.post("/register/start", async (req, res) => {
   const { userIdentifier, registrationRequest } = req.body || {};
 
   if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
   if (!registrationRequest)
     return sendError(res, 400, "missing registrationRequest");
-  if (db.hasUser(userIdentifier))
+
+  const userExists = await db.hasUser(userIdentifier);
+  if (userExists) {
     return sendError(res, 400, "user already registered");
+  }
 
   const { registrationResponse } = opaque.server.createRegistrationResponse({
     serverSetup,
@@ -83,26 +112,32 @@ app.post("/register/start", (req, res) => {
   res.end();
 });
 
-app.post("/register/finish", (req, res) => {
+app.post("/register/finish", async (req, res) => {
   const { userIdentifier, registrationRecord } = req.body || {};
   if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
   if (!registrationRecord)
     return sendError(res, 400, "missing registrationRecord");
-  db.setUser(userIdentifier, registrationRecord);
+
+  await db.setUser(userIdentifier, registrationRecord);
+
   res.writeHead(200);
   res.end();
 });
 
-app.post("/login/start", (req, res) => {
+app.post("/login/start", async (req, res) => {
   const { userIdentifier, startLoginRequest } = req.body || {};
-  const registrationRecord = userIdentifier && db.getUser(userIdentifier);
-
   if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
+
   if (!startLoginRequest)
     return sendError(res, 400, "missing startLoginRequest");
+
+  const registrationRecord = await db.getUser(userIdentifier);
   if (!registrationRecord) return sendError(res, 400, "user not registered");
-  if (db.hasLogin(userIdentifier))
+
+  const loginExists = await db.hasLogin(userIdentifier);
+  if (loginExists) {
     return sendError(res, 400, "login already started");
+  }
 
   const { serverLoginState, loginResponse } = opaque.server.startLogin({
     serverSetup,
@@ -111,18 +146,20 @@ app.post("/login/start", (req, res) => {
     startLoginRequest,
   });
 
-  db.setLogin(userIdentifier, serverLoginState);
+  await db.setLogin(userIdentifier, serverLoginState);
+
   res.send({ loginResponse });
   res.end();
 });
 
-app.post("/login/finish", (req, res) => {
+app.post("/login/finish", async (req, res) => {
   const { userIdentifier, finishLoginRequest } = req.body || {};
-  const serverLoginState = userIdentifier && db.getLogin(userIdentifier);
 
   if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
   if (!finishLoginRequest)
     return sendError(res, 400, "missing finishLoginRequest");
+
+  const serverLoginState = await db.getLogin(userIdentifier);
   if (!serverLoginState) return sendError(res, 400, "login not started");
 
   const { sessionKey } = opaque.server.finishLogin({
@@ -131,7 +168,9 @@ app.post("/login/finish", (req, res) => {
   });
 
   activeSessions[sessionKey] = userIdentifier;
-  db.removeLogin(userIdentifier);
+
+  await db.removeLogin(userIdentifier);
+
   res.writeHead(200);
   res.end();
 });

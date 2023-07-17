@@ -1,7 +1,10 @@
 import { readFileSync } from "fs";
 import { writeFile } from "fs/promises";
 
-export default class Database {
+/**
+ * @implements Datastore
+ */
+export default class InMemoryStore {
   /**
    * @constructor
    * @param {string} serverSetup
@@ -39,7 +42,7 @@ export default class Database {
    * @param {string} serverSetup
    */
   static empty(serverSetup) {
-    return new Database(serverSetup, {}, {});
+    return new InMemoryStore(serverSetup, {}, {});
   }
 
   stringify() {
@@ -57,39 +60,41 @@ export default class Database {
   /**
    * @param {string} name
    */
-  getUser(name) {
+  async getUser(name) {
     return this.users[name];
   }
 
   /**
    * @param {string} name
    */
-  hasUser(name) {
+  async hasUser(name) {
     return this.users[name] != null;
   }
 
   /**
    * @param {string} name
    */
-  getLogin(name) {
-    return this.hasLogin(name) ? this.logins[name].value : null;
+  async getLogin(name) {
+    const hasLogin = await this.hasLogin(name);
+    return hasLogin ? this.logins[name].value : null;
   }
 
   /**
    * @param {string} name
    */
-  hasLogin(name) {
+  async hasLogin(name) {
     const login = this.logins[name];
-    if (login == null) return null;
+    if (login == null) return false;
     const now = new Date().getTime();
     const elapsed = now - login.timestamp;
     return elapsed < 2000;
   }
+
   /**
    * @param {string} name
    * @param {string} value
    */
-  setUser(name, value) {
+  async setUser(name, value) {
     this.users[name] = value;
     this._notifyListeners();
   }
@@ -98,7 +103,7 @@ export default class Database {
    * @param {string} name
    * @param {string} value
    */
-  setLogin(name, value) {
+  async setLogin(name, value) {
     this.logins[name] = { value, timestamp: new Date().getTime() };
     this._notifyListeners();
   }
@@ -106,7 +111,7 @@ export default class Database {
   /**
    * @param {string} name
    */
-  removeLogin(name) {
+  async removeLogin(name) {
     delete this.logins[name];
     this._notifyListeners();
   }
@@ -118,13 +123,13 @@ export default class Database {
 export function readDatabaseFile(filePath) {
   const json = readFileSync(filePath, "utf-8");
   const data = JSON.parse(json);
-  const db = new Database(data.serverSetup, data.users, data.logins);
+  const db = new InMemoryStore(data.serverSetup, data.users, data.logins);
   return db;
 }
 
 /**
  * @param {string} filePath
- * @param {Database} db
+ * @param {InMemoryStore} db
  */
 export function writeDatabaseFile(filePath, db) {
   const data = db.stringify();
