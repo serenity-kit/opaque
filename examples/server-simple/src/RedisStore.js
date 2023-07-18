@@ -5,7 +5,7 @@ import * as redis from "redis";
  */
 export default class RedisStore {
   /**
-   * @param {string|undefined} url
+   * @param {string} url
    */
   constructor(url) {
     this.client = redis.createClient({ url });

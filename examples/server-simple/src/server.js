@@ -15,6 +15,8 @@ const dbFile = "./data.json";
 const enableJsonFilePersistence = !process.argv.includes("--no-fs");
 const enableRedis = process.argv.includes("--redis");
 
+const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
+
 /**
  * @param {string} filePath
  */
@@ -57,17 +59,18 @@ async function setUpInMemoryStore() {
 
 function getRedisUrl() {
   const optIndex = process.argv.indexOf("--redis");
-  if (optIndex == -1) return undefined;
+  if (optIndex == -1) return DEFAULT_REDIS_URL;
   const valIndex = optIndex + 1;
   if (valIndex < process.argv.length) {
     return process.argv[valIndex];
   }
-  return undefined;
+  return DEFAULT_REDIS_URL;
 }
 
 async function setUpRedisStore() {
   try {
-    const redis = new RedisStore(getRedisUrl());
+    const redisUrl = getRedisUrl();
+    const redis = new RedisStore(redisUrl);
     redis.onError((err) => {
       console.error("Redis Error:", err instanceof Error ? err.message : err);
       process.exit(1);
@@ -80,6 +83,7 @@ async function setUpRedisStore() {
     }
     serverSetup = _serverSetup;
     db = redis;
+    console.log("connected to redis at", redisUrl);
   } catch (err) {
     console.error(
       "Redis Setup Error:",
