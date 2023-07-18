@@ -1,0 +1,43 @@
+attacker[active]
+
+principal Alice[
+	knows private locker_content
+	knows private export_key
+	knows private session_1_key
+	generates additional_data
+	ciphertext = AEAD_ENC(export_key, locker_content, additional_data)
+	ciphertext_additional_data = ENC(session_1_key, additional_data)
+	tag = MAC(session_1_key, CONCAT(ciphertext, ciphertext_additional_data))
+]
+
+Alice -> Server: ciphertext, ciphertext_additional_data, tag
+
+principal Server[
+	knows private session_1_key
+	knows private session_2_key
+	_ = ASSERT(tag, MAC(session_1_key, CONCAT(ciphertext, ciphertext_additional_data)))?
+	additional_data_server = DEC(session_1_key, ciphertext_additional_data)
+	ciphertext_additional_data_server = ENC(session_2_key, additional_data_server)
+	tag2 = MAC(session_2_key, CONCAT(ciphertext, ciphertext_additional_data_server))
+]
+
+Server -> Alice2: ciphertext, ciphertext_additional_data_server, tag2
+
+principal Alice2[
+	knows private export_key
+	knows private session_2_key
+	_ = ASSERT(tag2, MAC(session_2_key, CONCAT(ciphertext, ciphertext_additional_data_server)))?
+	additional_data_2 = DEC(session_2_key, ciphertext_additional_data_server)
+	locker_content2 = AEAD_DEC(export_key, ciphertext, additional_data_2)?
+]
+
+queries[
+	confidentiality? export_key
+	confidentiality? locker_content
+	confidentiality? locker_content2
+	confidentiality? additional_data
+	authentication? Alice -> Server: ciphertext
+	authentication? Alice -> Server: ciphertext_additional_data
+	authentication? Server -> Alice2: ciphertext
+	authentication? Server -> Alice2: ciphertext_additional_data_server
+]

@@ -1,0 +1,23 @@
+attacker[active]
+
+principal Alice[
+	knows private locker_content
+	knows private export_key
+	generates additional_data
+	ciphertext = AEAD_ENC(export_key, locker_content, additional_data)
+]
+
+Alice -> Alice2: ciphertext, additional_data
+
+principal Alice2[
+	knows private export_key
+	locker_content2 = AEAD_DEC(export_key, ciphertext, additional_data)?
+]
+
+queries[
+	confidentiality? export_key
+	confidentiality? locker_content
+	confidentiality? locker_content2
+	authentication? Alice -> Alice2: ciphertext
+	authentication? Alice -> Alice2: additional_data
+]

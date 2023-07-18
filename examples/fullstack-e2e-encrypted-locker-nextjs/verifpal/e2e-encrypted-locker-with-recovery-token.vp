@@ -7,7 +7,7 @@ principal Alice_session_1[
 	export_publickey = G^export_key
 	recovery_export_publickey = G^recovery_export_key
 	knows private session_key_1
-	knows public additional_data
+	generates additional_data
 	knows public salt
 	symmetric_key = HKDF(salt, export_key, nil)
 	ciphertext = AEAD_ENC(symmetric_key, locker_content, additional_data)
@@ -15,7 +15,7 @@ principal Alice_session_1[
 	recovery_lockbox = PKE_ENC(recovery_export_publickey, symmetric_key)
 ]
 
-Alice_session_1 -> Server: ciphertext, recovery_lockbox, tag
+Alice_session_1 -> Server: ciphertext, additional_data, recovery_lockbox, tag
 
 principal Server[
 	knows private session_key_1
@@ -23,7 +23,7 @@ principal Server[
 	_ = ASSERT(tag, MAC(session_key_1, ciphertext))?
 ]
 
-Server -> Alice_session_2: ciphertext
+Server -> Alice_session_2: ciphertext, additional_data
 
 principal Alice_session_2[
 	knows private export_key
@@ -32,7 +32,7 @@ principal Alice_session_2[
 	locker_content_2 = AEAD_DEC(symmetric_key2, ciphertext, additional_data)?
 ]
 
-Server -> Alice_recovery: ciphertext, recovery_lockbox
+Server -> Alice_recovery: ciphertext, additional_data, recovery_lockbox
 
 principal Alice_recovery[
 	knows private recovery_export_key
