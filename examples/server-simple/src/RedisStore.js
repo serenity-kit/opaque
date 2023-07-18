@@ -4,9 +4,18 @@ import * as redis from "redis";
  * @implements Datastore
  */
 export default class RedisStore {
-  constructor() {
-    this.client = redis.createClient();
-    this.client.on("error", (err) => console.error("Redis Client Error", err));
+  /**
+   * @param {string|undefined} url
+   */
+  constructor(url) {
+    this.client = redis.createClient({ url });
+  }
+
+  /**
+   * @param {(err: unknown) => void} handler
+   */
+  onError(handler) {
+    this.client.on("error", handler);
   }
 
   connect() {

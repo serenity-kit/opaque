@@ -55,16 +55,38 @@ async function setUpInMemoryStore() {
   db = memDb;
 }
 
-async function setUpRedisStore() {
-  const redis = new RedisStore();
-  await redis.connect();
-  let _serverSetup = await redis.getServerSetup();
-  if (_serverSetup == null) {
-    _serverSetup = opaque.server.createSetup();
-    redis.setServerSetup(_serverSetup);
+function getRedisUrl() {
+  const optIndex = process.argv.indexOf("--redis");
+  if (optIndex == -1) return undefined;
+  const valIndex = optIndex + 1;
+  if (valIndex < process.argv.length) {
+    return process.argv[valIndex];
   }
-  serverSetup = _serverSetup;
-  db = redis;
+  return undefined;
+}
+
+async function setUpRedisStore() {
+  try {
+    const redis = new RedisStore(getRedisUrl());
+    redis.onError((err) => {
+      console.error("Redis Error:", err instanceof Error ? err.message : err);
+      process.exit(1);
+    });
+    await redis.connect();
+    let _serverSetup = await redis.getServerSetup();
+    if (_serverSetup == null) {
+      _serverSetup = opaque.server.createSetup();
+      redis.setServerSetup(_serverSetup);
+    }
+    serverSetup = _serverSetup;
+    db = redis;
+  } catch (err) {
+    console.error(
+      "Redis Setup Error:",
+      err instanceof Error ? err.message : err
+    );
+    process.exit(1);
+  }
 }
 
 async function setupDb() {
