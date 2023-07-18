@@ -20,15 +20,26 @@ const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 /**
  * @param {string} filePath
  */
-async function initStore(filePath) {
+async function initInMemoryStore(filePath) {
   await opaque.ready;
   if (!enableJsonFilePersistence) {
     return InMemoryStore.empty(opaque.server.createSetup());
   }
   try {
-    return readDatabaseFile(filePath);
+    const db = readDatabaseFile(filePath);
+    console.log(`database successfully initialized from file "${filePath}"`);
+    return db;
   } catch (err) {
-    console.log("failed to open database, initializing empty", err);
+    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+      console.log(
+        `no database file "${filePath}" found, initializing empty database`
+      );
+    } else {
+      console.error(
+        `failed to open database file "${filePath}", initializing empty database`,
+        err
+      );
+    }
     const db = InMemoryStore.empty(opaque.server.createSetup());
     return db;
   }
@@ -45,7 +56,7 @@ let db;
 let serverSetup;
 
 async function setUpInMemoryStore() {
-  const memDb = await initStore(dbFile);
+  const memDb = await initInMemoryStore(dbFile);
   serverSetup = memDb.serverSetup;
 
   if (enableJsonFilePersistence) {
