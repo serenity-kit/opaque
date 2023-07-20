@@ -1,7 +1,7 @@
 import sodium from "libsodium-wrappers";
 import {
   RecoveryLockbox,
-  createLocker,
+  createRecoveryLockbox,
   decryptLockerFromRecoveryExportKey,
   encryptLocker,
 } from "./encryptedLocker";
@@ -20,20 +20,18 @@ let encryptedLocker: {
   tag: string;
 };
 let recoveryLockbox: RecoveryLockbox;
-let lockerSecretKey: string;
 
 beforeAll(async () => {
   await sodium.ready;
-  const locker = createLocker({
+  const createRecoveryLockboxResult = createRecoveryLockbox({
     exportKey,
     recoveryExportKey,
   });
-  lockerSecretKey = locker.lockerSecretKey;
-  recoveryLockbox = locker.recoveryLockbox;
+  recoveryLockbox = createRecoveryLockboxResult.recoveryLockbox;
   encryptedLocker = encryptLocker({
     data,
     publicAdditionalData,
-    lockerSecretKey: sodium.from_base64(locker.lockerSecretKey),
+    exportKey,
     sessionKey,
   });
 });
@@ -67,7 +65,7 @@ it("should decrypt locker as Uint8Array", () => {
   const otherEncryptedLocker = encryptLocker({
     data: new Uint8Array([0, 42, 0, 99]),
     publicAdditionalData,
-    lockerSecretKey: sodium.from_base64(lockerSecretKey),
+    exportKey,
     sessionKey,
   });
   const decryptedLocker = decryptLockerFromRecoveryExportKey({

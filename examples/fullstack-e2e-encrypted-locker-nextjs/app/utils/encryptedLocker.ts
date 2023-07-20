@@ -18,26 +18,37 @@ export type RecoveryLockbox = {
 
 export type CreateLockerParams = {
   exportKey: string;
-  recoveryExportKey: string;
 };
 
-export const createLocker = ({
-  exportKey,
-  recoveryExportKey,
-}: CreateLockerParams) => {
+export const createLockerSecretKey = ({ exportKey }: CreateLockerParams) => {
   const exportKeyAsUint8Array = sodium.from_base64(exportKey);
-  const recoveryExportKeyAsUint8Array = sodium.from_base64(recoveryExportKey);
   const lockerSecretKey = sodium.crypto_kdf_derive_from_key(
     sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
     42, // publicly available subkey_id
     "locker",
     exportKeyAsUint8Array
   );
+
+  return { lockerSecretKey };
+};
+
+export type CreateRecoveryLockboxParams = {
+  exportKey: string;
+  recoveryExportKey: string;
+};
+
+export const createRecoveryLockbox = ({
+  exportKey,
+  recoveryExportKey,
+}: CreateRecoveryLockboxParams) => {
+  const exportKeyAsUint8Array = sodium.from_base64(exportKey);
+  const recoveryExportKeyAsUint8Array = sodium.from_base64(recoveryExportKey);
+  const { lockerSecretKey } = createLockerSecretKey({ exportKey });
+
   const keyPair = sodium.crypto_box_seed_keypair(exportKeyAsUint8Array);
   const recoveryKeyPair = sodium.crypto_box_seed_keypair(
     recoveryExportKeyAsUint8Array
   );
-
   const recoveryLockboxNonce = sodium.randombytes_buf(
     sodium.crypto_box_NONCEBYTES
   );
@@ -47,7 +58,6 @@ export const createLocker = ({
     recoveryKeyPair.publicKey,
     keyPair.privateKey
   );
-
   const recoveryLockbox: RecoveryLockbox = {
     receiverPublicKey: sodium.to_base64(recoveryKeyPair.publicKey),
     creatorPublicKey: sodium.to_base64(keyPair.publicKey),
@@ -56,7 +66,6 @@ export const createLocker = ({
   };
 
   return {
-    lockerSecretKey: sodium.to_base64(lockerSecretKey),
     recoveryLockbox,
   };
 };
@@ -64,19 +73,20 @@ export const createLocker = ({
 export type EncryptLockerParams = {
   data: string | Uint8Array;
   publicAdditionalData: PublicAdditionalData;
-  lockerSecretKey: Uint8Array;
+  exportKey: string;
   sessionKey: string;
 };
 
 export const encryptLocker = ({
   data,
   publicAdditionalData,
-  lockerSecretKey,
+  exportKey,
   sessionKey,
 }: EncryptLockerParams) => {
   const nonce = sodium.randombytes_buf(
     sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
   );
+  const { lockerSecretKey } = createLockerSecretKey({ exportKey });
 
   const publicAdditionalDataString = canonicalize(publicAdditionalData);
   if (!publicAdditionalDataString) {

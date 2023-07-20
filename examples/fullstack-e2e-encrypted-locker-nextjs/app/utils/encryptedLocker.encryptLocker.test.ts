@@ -1,6 +1,6 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import { createLocker, encryptLocker } from "./encryptedLocker";
+import { encryptLocker } from "./encryptedLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = { createdAt: new Date("2023-10-31") };
@@ -15,14 +15,10 @@ beforeAll(async () => {
 });
 
 it("should encrypt locker data", () => {
-  const locker = createLocker({
-    exportKey,
-    recoveryExportKey,
-  });
   const encryptedLocker = encryptLocker({
     data,
     publicAdditionalData,
-    lockerSecretKey: sodium.from_base64(locker.lockerSecretKey),
+    exportKey,
     sessionKey,
   });
 
@@ -46,65 +42,45 @@ it("should encrypt locker data", () => {
 });
 
 it("should throw an error for invalid sessionKey", () => {
-  const locker = createLocker({
-    exportKey,
-    recoveryExportKey,
-  });
-
   expect(() =>
     encryptLocker({
       data,
       publicAdditionalData,
-      lockerSecretKey: sodium.from_base64(locker.lockerSecretKey),
+      exportKey,
       sessionKey: invalidKey,
     })
   ).toThrow("invalid input");
 });
 
 it("should throw an error for invalid lockerSecretKey", () => {
-  const locker = createLocker({
-    exportKey,
-    recoveryExportKey,
-  });
-
   expect(() =>
     encryptLocker({
       data,
       publicAdditionalData,
-      lockerSecretKey: new Uint8Array([0, 0, 0, 0]),
+      exportKey: sodium.to_base64(new Uint8Array([0, 0, 0, 0])),
       sessionKey,
     })
   ).toThrow("invalid key length");
 });
 
 it("should throw an error for invalid publicAdditionalData", () => {
-  const locker = createLocker({
-    exportKey,
-    recoveryExportKey,
-  });
-
   expect(() =>
     encryptLocker({
       data,
       publicAdditionalData: NaN,
-      lockerSecretKey: sodium.from_base64(locker.lockerSecretKey),
+      exportKey,
       sessionKey,
     })
   ).toThrow("NaN is not allowed");
 });
 
 it("should throw an error for invalid data", () => {
-  const locker = createLocker({
-    exportKey,
-    recoveryExportKey,
-  });
-
   expect(() =>
     encryptLocker({
       // @ts-expect-error
       data: new Date(),
       publicAdditionalData,
-      lockerSecretKey: sodium.from_base64(locker.lockerSecretKey),
+      exportKey,
       sessionKey,
     })
   ).toThrow("unsupported input type for message");
