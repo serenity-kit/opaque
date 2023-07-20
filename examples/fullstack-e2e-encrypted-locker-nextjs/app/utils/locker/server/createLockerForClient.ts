@@ -1,6 +1,6 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import { EncryptedLocker, PublicAdditionalData } from "../types";
+import { Locker, PublicAdditionalData } from "../types";
 
 type createLockerForClient = {
   ciphertext: string;
@@ -38,7 +38,7 @@ export const createLockerForClient = ({
   if (!tagContent) throw new Error("tagContent is undefined");
   const tag = sodium.crypto_auth(tagContent, sodium.from_base64(sessionKey));
 
-  const encryptedLocker: EncryptedLocker = {
+  const locker: Locker = {
     data: {
       ciphertext,
       nonce,
@@ -49,5 +49,5 @@ export const createLockerForClient = ({
     },
     tag: sodium.to_base64(tag),
   };
-  return encryptedLocker;
+  return locker;
 };

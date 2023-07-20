@@ -12,7 +12,7 @@ const exportKey = "iX3NooF-7W5dXzJWEso-ilpcYE-v_vj1Uam3rpDvKBQ";
 const sessionKey = "dQcJZvTqCgDzW36bzQrnJ6PIcVcZgiRRaFHwC5D4QxY";
 const invalidKey = "invalidKey";
 
-let encryptedLocker: {
+let locker: {
   data: {
     ciphertext: string;
     nonce: string;
@@ -26,7 +26,7 @@ let encryptedLocker: {
 
 beforeAll(async () => {
   await sodium.ready;
-  encryptedLocker = encryptLocker({
+  locker = encryptLocker({
     data,
     publicAdditionalData,
     exportKey,
@@ -36,21 +36,21 @@ beforeAll(async () => {
 
 it("should return true for valid tag", () => {
   const isValidTag = isValidLockerTag({
-    encryptedLocker,
+    locker,
     sessionKey,
   });
 
   expect(isValidTag).toBeTruthy();
 
   const anotherLocker = createLockerForClient({
-    ciphertext: encryptedLocker.data.ciphertext,
-    nonce: encryptedLocker.data.nonce,
+    ciphertext: locker.data.ciphertext,
+    nonce: locker.data.nonce,
     publicAdditionalData,
     sessionKey,
   });
 
   const isValidTag2 = isValidLockerTag({
-    encryptedLocker: anotherLocker,
+    locker: anotherLocker,
     sessionKey,
   });
   expect(isValidTag2).toBeTruthy();
@@ -58,9 +58,9 @@ it("should return true for valid tag", () => {
 
 it("should return false for invalid tag", () => {
   const isValidTag = isValidLockerTag({
-    encryptedLocker: {
-      ...encryptedLocker,
-      tag: encryptedLocker.tag + "a",
+    locker: {
+      ...locker,
+      tag: locker.tag + "a",
     },
     sessionKey,
   });
@@ -70,13 +70,13 @@ it("should return false for invalid tag", () => {
 
 it("should return false for invalid tag", () => {
   const isValidTag = isValidLockerTag({
-    encryptedLocker: {
-      ...encryptedLocker,
+    locker: {
+      ...locker,
       data: {
-        ...encryptedLocker.data,
+        ...locker.data,
         nonce: "XJutX1MPVYVeyTFvwPF63rHab2TC3SuJ", // wrong nonce
       },
-      tag: encryptedLocker.tag + "a",
+      tag: locker.tag + "a",
     },
     sessionKey,
   });
@@ -86,7 +86,7 @@ it("should return false for invalid tag", () => {
 
 it("should return false for invalid sessionKey", () => {
   const isValidTag = isValidLockerTag({
-    encryptedLocker,
+    locker,
     sessionKey: invalidKey,
   });
 
@@ -94,7 +94,7 @@ it("should return false for invalid sessionKey", () => {
 });
 
 it("should return false for another encrypted locker", () => {
-  const otherEncryptedLocker = encryptLocker({
+  const otherLocker = encryptLocker({
     data,
     publicAdditionalData,
     exportKey,
@@ -102,7 +102,7 @@ it("should return false for another encrypted locker", () => {
   });
 
   const isValidTag = isValidLockerTag({
-    encryptedLocker: { ...otherEncryptedLocker, tag: encryptedLocker.tag },
+    locker: { ...otherLocker, tag: locker.tag },
     sessionKey,
   });
 

@@ -3,10 +3,10 @@ import sodium from "libsodium-wrappers";
 import { VerifyLockerTagParams } from "./types";
 
 export const isValidLockerTag = ({
-  encryptedLocker,
+  locker,
   sessionKey,
 }: VerifyLockerTagParams) => {
-  const { data, publicAdditionalData, tag } = encryptedLocker;
+  const { data, publicAdditionalData, tag } = locker;
   const tagContent = canonicalize({
     data,
     publicAdditionalData,

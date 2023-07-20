@@ -1,6 +1,6 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import { EncryptedLocker } from "../types";
+import { Locker } from "../types";
 import { decryptLocker } from "./decryptLocker";
 import { encryptLocker } from "./encryptLocker";
 
@@ -13,11 +13,11 @@ const exportKey = "iX3NooF-7W5dXzJWEso-ilpcYE-v_vj1Uam3rpDvKBQ";
 const sessionKey = "dQcJZvTqCgDzW36bzQrnJ6PIcVcZgiRRaFHwC5D4QxY";
 const invalidKey = "invalidKey";
 
-let encryptedLocker: EncryptedLocker;
+let locker: Locker;
 
 beforeAll(async () => {
   await sodium.ready;
-  encryptedLocker = encryptLocker({
+  locker = encryptLocker({
     data,
     publicAdditionalData,
     exportKey,
@@ -27,7 +27,7 @@ beforeAll(async () => {
 
 it("should decrypt locker as string by default", () => {
   const decryptedLocker = decryptLocker({
-    encryptedLocker,
+    locker,
     sessionKey,
     exportKey,
   });
@@ -38,7 +38,7 @@ it("should decrypt locker as string by default", () => {
 
 it("should decrypt locker as string if output string is provided", () => {
   const decryptedLocker = decryptLocker({
-    encryptedLocker,
+    locker,
     sessionKey,
     exportKey,
     outputFormat: "string",
@@ -49,7 +49,7 @@ it("should decrypt locker as string if output string is provided", () => {
 });
 
 it("should decrypt locker as Uint8Array", () => {
-  const otherEncryptedLocker = encryptLocker({
+  const otherLocker = encryptLocker({
     data: new Uint8Array([0, 42, 0, 99]),
     publicAdditionalData,
     exportKey,
@@ -57,7 +57,7 @@ it("should decrypt locker as Uint8Array", () => {
   });
 
   const decryptedLocker = decryptLocker({
-    encryptedLocker: otherEncryptedLocker,
+    locker: otherLocker,
     sessionKey,
     exportKey,
     outputFormat: "uint8array",
@@ -70,15 +70,15 @@ it("should decrypt locker as Uint8Array", () => {
 it("should throw an error for an invalid publicAdditionalData", () => {
   const invalidPublicAdditionalDataCiphertext = sodium.crypto_secretbox_easy(
     JSON.stringify({ wrong: "additional data" }),
-    sodium.from_base64(encryptedLocker.publicAdditionalData.nonce),
+    sodium.from_base64(locker.publicAdditionalData.nonce),
     sodium.from_base64(sessionKey)
   );
 
   const tagContent = {
-    data: encryptedLocker.data,
+    data: locker.data,
     publicAdditionalData: {
       ciphertext: sodium.to_base64(invalidPublicAdditionalDataCiphertext),
-      nonce: encryptedLocker.publicAdditionalData.nonce,
+      nonce: locker.publicAdditionalData.nonce,
     },
   };
   const canonicalizedTagContent = canonicalize(tagContent);
@@ -91,7 +91,7 @@ it("should throw an error for an invalid publicAdditionalData", () => {
 
   expect(() =>
     decryptLocker({
-      encryptedLocker: {
+      locker: {
         ...tagContent,
         tag: sodium.to_base64(tag),
       },
@@ -105,9 +105,9 @@ it("should throw an error for invalid data ciphertext", () => {
   const tagContent = {
     data: {
       ciphertext: "ups",
-      nonce: encryptedLocker.data.nonce,
+      nonce: locker.data.nonce,
     },
-    publicAdditionalData: encryptedLocker.publicAdditionalData,
+    publicAdditionalData: locker.publicAdditionalData,
   };
   const canonicalizedTagContent = canonicalize(tagContent);
   if (!canonicalizedTagContent)
@@ -119,7 +119,7 @@ it("should throw an error for invalid data ciphertext", () => {
 
   expect(() =>
     decryptLocker({
-      encryptedLocker: {
+      locker: {
         ...tagContent,
         tag: sodium.to_base64(tag),
       },
@@ -131,10 +131,10 @@ it("should throw an error for invalid data ciphertext", () => {
 
 it("should throw an error for invalid publicAdditionalData ciphertext", () => {
   const tagContent = {
-    data: encryptedLocker.data,
+    data: locker.data,
     publicAdditionalData: {
       ciphertext: "ups",
-      nonce: encryptedLocker.publicAdditionalData.nonce,
+      nonce: locker.publicAdditionalData.nonce,
     },
   };
   const canonicalizedTagContent = canonicalize(tagContent);
@@ -147,7 +147,7 @@ it("should throw an error for invalid publicAdditionalData ciphertext", () => {
 
   expect(() =>
     decryptLocker({
-      encryptedLocker: {
+      locker: {
         ...tagContent,
         tag: sodium.to_base64(tag),
       },
@@ -160,7 +160,7 @@ it("should throw an error for invalid publicAdditionalData ciphertext", () => {
 it("should throw an error for invalid exportKey", () => {
   expect(() =>
     decryptLocker({
-      encryptedLocker,
+      locker,
       exportKey: invalidKey,
       sessionKey,
     })
@@ -170,7 +170,7 @@ it("should throw an error for invalid exportKey", () => {
 it("should throw an error for invalid sessionKey", () => {
   expect(() =>
     decryptLocker({
-      encryptedLocker,
+      locker,
       exportKey,
       sessionKey: invalidKey,
     })

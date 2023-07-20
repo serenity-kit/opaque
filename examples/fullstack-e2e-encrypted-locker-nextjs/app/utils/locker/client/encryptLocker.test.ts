@@ -16,32 +16,32 @@ beforeAll(async () => {
 });
 
 it("should encrypt locker data", () => {
-  const encryptedLocker = encryptLocker({
+  const locker = encryptLocker({
     data,
     publicAdditionalData,
     exportKey,
     sessionKey,
   });
 
-  expect(typeof encryptedLocker.data.ciphertext).toBe("string");
-  expect(typeof encryptedLocker.data.nonce).toBe("string");
-  expect(typeof encryptedLocker.tag).toBe("string");
+  expect(typeof locker.data.ciphertext).toBe("string");
+  expect(typeof locker.data.nonce).toBe("string");
+  expect(typeof locker.tag).toBe("string");
 
   const tagContent = canonicalize({
     data: {
-      ciphertext: encryptedLocker.data.ciphertext,
-      nonce: encryptedLocker.data.nonce,
+      ciphertext: locker.data.ciphertext,
+      nonce: locker.data.nonce,
     },
     publicAdditionalData: {
-      ciphertext: encryptedLocker.publicAdditionalData.ciphertext,
-      nonce: encryptedLocker.publicAdditionalData.nonce,
+      ciphertext: locker.publicAdditionalData.ciphertext,
+      nonce: locker.publicAdditionalData.nonce,
     },
   });
   if (!tagContent) throw new Error("tagContent is undefined");
 
   expect(
     sodium.crypto_auth_verify(
-      sodium.from_base64(encryptedLocker.tag),
+      sodium.from_base64(locker.tag),
       tagContent,
       sodium.from_base64(sessionKey)
     )

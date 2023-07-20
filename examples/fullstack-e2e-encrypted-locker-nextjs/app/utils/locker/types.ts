@@ -1,4 +1,4 @@
-export type EncryptedLocker = {
+export type Locker = {
   data: {
     ciphertext: string;
     nonce: string;
@@ -29,12 +29,12 @@ export type CreateLockerSecretKeyParams = {
 };
 
 export type VerifyLockerTagParams = {
-  encryptedLocker: EncryptedLocker;
+  locker: Locker;
   sessionKey: string;
 };
 
 export type ValidateAndDecryptPublicAdditionalDataParams = {
-  encryptedLocker: EncryptedLocker;
+  locker: Locker;
   sessionKey: string;
 };
 
@@ -51,14 +51,14 @@ export type EncryptLockerParams = {
 };
 
 export type DecryptLockerParams = {
-  encryptedLocker: EncryptedLocker;
+  locker: Locker;
   exportKey: string;
   sessionKey: string;
   outputFormat?: "string" | "uint8array";
 };
 
 export type DecryptLockerFromRecoveryLockboxParams = {
-  encryptedLocker: EncryptedLocker;
+  locker: Locker;
   recoveryExportKey: string;
   recoverySessionKey: string;
   recoveryLockbox: RecoveryLockbox;

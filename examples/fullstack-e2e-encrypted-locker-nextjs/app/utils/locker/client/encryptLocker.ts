@@ -1,14 +1,14 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
 import { createLockerSecretKey } from "../client/createLockerSecretKey";
-import { EncryptLockerParams, EncryptedLocker } from "../types";
+import { EncryptLockerParams, Locker } from "../types";
 
 export const encryptLocker = ({
   data,
   publicAdditionalData,
   exportKey,
   sessionKey,
-}: EncryptLockerParams): EncryptedLocker => {
+}: EncryptLockerParams): Locker => {
   const nonce = sodium.randombytes_buf(
     sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
   );

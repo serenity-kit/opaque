@@ -4,21 +4,21 @@ import { isValidLockerTag } from "../isValidLockerTag";
 import { DecryptLockerFromRecoveryLockboxParams } from "../types";
 
 export const decryptLockerFromRecoveryLockbox = ({
-  encryptedLocker,
+  locker,
   recoveryExportKey,
   recoverySessionKey,
   recoveryLockbox,
   outputFormat = "string",
 }: DecryptLockerFromRecoveryLockboxParams) => {
-  if (!isValidLockerTag({ encryptedLocker, sessionKey: recoverySessionKey })) {
+  if (!isValidLockerTag({ locker, sessionKey: recoverySessionKey })) {
     throw new Error("Invalid locker tag");
   }
 
   const publicAdditionalData = JSON.parse(
     sodium.to_string(
       sodium.crypto_secretbox_open_easy(
-        sodium.from_base64(encryptedLocker.publicAdditionalData.ciphertext),
-        sodium.from_base64(encryptedLocker.publicAdditionalData.nonce),
+        sodium.from_base64(locker.publicAdditionalData.ciphertext),
+        sodium.from_base64(locker.publicAdditionalData.nonce),
         sodium.from_base64(recoverySessionKey)
       )
     )
@@ -42,9 +42,9 @@ export const decryptLockerFromRecoveryLockbox = ({
 
   const contentAsUint8Array = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
     null,
-    sodium.from_base64(encryptedLocker.data.ciphertext),
+    sodium.from_base64(locker.data.ciphertext),
     publicAdditionalDataString,
-    sodium.from_base64(encryptedLocker.data.nonce),
+    sodium.from_base64(locker.data.nonce),
     lockerSecretKey
   );
   if (outputFormat === "uint8array") {
