@@ -3,10 +3,11 @@ import sodium from "libsodium-wrappers";
 import { encryptLocker } from "./encryptedLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
-const publicAdditionalData = { createdAt: new Date("2023-10-31") };
+const publicAdditionalData = {
+  createdAt: new Date("2023-10-31").toISOString(),
+};
 // sodium.to_base64(sodium.randombytes_buf(32))
 const exportKey = "iX3NooF-7W5dXzJWEso-ilpcYE-v_vj1Uam3rpDvKBQ";
-const recoveryExportKey = "J3aJn5inymm39WL11Yb0qewnAHL3hB_CMB6V2VV_GQg";
 const sessionKey = "dQcJZvTqCgDzW36bzQrnJ6PIcVcZgiRRaFHwC5D4QxY";
 const invalidKey = "invalidKey";
 
@@ -22,13 +23,19 @@ it("should encrypt locker data", () => {
     sessionKey,
   });
 
-  expect(typeof encryptedLocker.ciphertext).toBe("string");
-  expect(typeof encryptedLocker.nonce).toBe("string");
+  expect(typeof encryptedLocker.data.ciphertext).toBe("string");
+  expect(typeof encryptedLocker.data.nonce).toBe("string");
   expect(typeof encryptedLocker.tag).toBe("string");
 
   const tagContent = canonicalize({
-    ciphertext: encryptedLocker.ciphertext,
-    nonce: encryptedLocker.nonce,
+    data: {
+      ciphertext: encryptedLocker.data.ciphertext,
+      nonce: encryptedLocker.data.nonce,
+    },
+    publicAdditionalData: {
+      ciphertext: encryptedLocker.publicAdditionalData.ciphertext,
+      nonce: encryptedLocker.publicAdditionalData.nonce,
+    },
   });
   if (!tagContent) throw new Error("tagContent is undefined");
 
