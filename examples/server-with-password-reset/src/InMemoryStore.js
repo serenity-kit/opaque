@@ -35,7 +35,10 @@ function pruneResetCodes(codes) {
   return result;
 }
 
-export default class Database {
+/**
+ * @implements DatastoreWithPasswordReset
+ */
+export default class InMemoryStore {
   /**
    * @constructor
    * @param {string} serverSetup
@@ -67,7 +70,7 @@ export default class Database {
    * }} params
    */
   static init({ serverSetup, ...data }) {
-    const db = new Database(serverSetup);
+    const db = new InMemoryStore(serverSetup);
     db.users = data.users || {};
     db.logins = data.logins || {};
     db.resetCodes = data.resetCodes || {};
@@ -98,7 +101,7 @@ export default class Database {
    * @param {string} serverSetup
    */
   static empty(serverSetup) {
-    return new Database(serverSetup);
+    return new InMemoryStore(serverSetup);
   }
 
   stringify() {
@@ -117,30 +120,31 @@ export default class Database {
   /**
    * @param {string} name
    */
-  getUser(name) {
+  async getUser(name) {
     return this.users[name];
   }
 
   /**
    * @param {string} name
    */
-  hasUser(name) {
+  async hasUser(name) {
     return this.users[name] != null;
   }
 
   /**
    * @param {string} name
    */
-  getLogin(name) {
-    return this.hasLogin(name) ? this.logins[name].value : null;
+  async getLogin(name) {
+    const hasLogin = await this.hasLogin(name);
+    return hasLogin ? this.logins[name].value : null;
   }
 
   /**
    * @param {string} name
    */
-  hasLogin(name) {
+  async hasLogin(name) {
     const login = this.logins[name];
-    if (login == null) return null;
+    if (login == null) return false;
     const now = new Date().getTime();
     const elapsed = now - login.timestamp;
     return elapsed < 2000;
@@ -150,7 +154,7 @@ export default class Database {
    * @param {string} name
    * @param {string} value
    */
-  setUser(name, value) {
+  async setUser(name, value) {
     this.users[name] = value;
     this._notifyListeners();
   }
@@ -159,7 +163,7 @@ export default class Database {
    * @param {string} name
    * @param {string} value
    */
-  setLogin(name, value) {
+  async setLogin(name, value) {
     this.logins[name] = { value, timestamp: new Date().getTime() };
     this._notifyListeners();
   }
@@ -167,7 +171,7 @@ export default class Database {
   /**
    * @param {string} name
    */
-  removeLogin(name) {
+  async removeLogin(name) {
     delete this.logins[name];
     this._notifyListeners();
   }
@@ -175,7 +179,7 @@ export default class Database {
   /**
    * @param {string} user
    */
-  hasResetCode(user) {
+  async hasResetCode(user) {
     const entry = this.getResetCode(user);
     return entry != null;
   }
@@ -184,7 +188,7 @@ export default class Database {
    * @param {string} user
    * @param {string} code
    */
-  setResetCode(user, code) {
+  async setResetCode(user, code) {
     this.resetCodes[user] = { code, timestamp: new Date().getTime() };
     this._notifyListeners();
   }
@@ -192,7 +196,7 @@ export default class Database {
   /**
    * @param {string} user
    */
-  removeResetCode(user) {
+  async removeResetCode(user) {
     if (this.resetCodes[user] != null) {
       delete this.resetCodes[user];
       this._notifyListeners();
@@ -202,13 +206,13 @@ export default class Database {
   /**
    * @param {string} user
    */
-  getResetCode(user) {
+  async getResetCode(user) {
     const entry = this.resetCodes[user];
     if (entry != null) {
       if (isResetCodeValid(entry.timestamp)) {
-        return entry;
+        return entry.code;
       }
-      this.removeResetCode(user);
+      await this.removeResetCode(user);
     }
     return null;
   }
@@ -220,13 +224,13 @@ export default class Database {
 export function readDatabaseFile(filePath) {
   const json = readFileSync(filePath, "utf-8");
   const data = JSON.parse(json);
-  const db = Database.init(data);
+  const db = InMemoryStore.init(data);
   return db;
 }
 
 /**
  * @param {string} filePath
- * @param {Database} db
+ * @param {InMemoryStore} db
  */
 export function writeDatabaseFile(filePath, db) {
   const data = db.stringify();
