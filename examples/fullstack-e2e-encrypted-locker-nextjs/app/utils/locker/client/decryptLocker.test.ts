@@ -1,8 +1,8 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
 import { Locker } from "../types";
+import { createLocker } from "./createLocker";
 import { decryptLocker } from "./decryptLocker";
-import { encryptLocker } from "./encryptLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = {
@@ -17,7 +17,7 @@ let locker: Locker;
 
 beforeAll(async () => {
   await sodium.ready;
-  locker = encryptLocker({
+  locker = createLocker({
     data,
     publicAdditionalData,
     exportKey,
@@ -49,7 +49,7 @@ it("should decrypt locker as string if output string is provided", () => {
 });
 
 it("should decrypt locker as Uint8Array", () => {
-  const otherLocker = encryptLocker({
+  const otherLocker = createLocker({
     data: new Uint8Array([0, 42, 0, 99]),
     publicAdditionalData,
     exportKey,

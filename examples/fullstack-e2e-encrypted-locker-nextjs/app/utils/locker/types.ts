@@ -33,7 +33,7 @@ export type VerifyLockerTagParams = {
   sessionKey: string;
 };
 
-export type ValidateAndDecryptPublicAdditionalDataParams = {
+export type ValidateLockerAndDecryptPublicAdditionalDataParams = {
   locker: Locker;
   sessionKey: string;
 };
@@ -43,7 +43,7 @@ export type CreateRecoveryLockboxParams = {
   recoveryExportKey: string;
 };
 
-export type EncryptLockerParams = {
+export type CreateLockerParams = {
   data: string | Uint8Array;
   publicAdditionalData: PublicAdditionalData;
   exportKey: string;

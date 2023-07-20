@@ -1,6 +1,6 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import { encryptLocker } from "./encryptLocker";
+import { createLocker } from "./createLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = {
@@ -16,7 +16,7 @@ beforeAll(async () => {
 });
 
 it("should encrypt locker data", () => {
-  const locker = encryptLocker({
+  const locker = createLocker({
     data,
     publicAdditionalData,
     exportKey,
@@ -50,7 +50,7 @@ it("should encrypt locker data", () => {
 
 it("should throw an error for invalid sessionKey", () => {
   expect(() =>
-    encryptLocker({
+    createLocker({
       data,
       publicAdditionalData,
       exportKey,
@@ -61,7 +61,7 @@ it("should throw an error for invalid sessionKey", () => {
 
 it("should throw an error for invalid lockerSecretKey", () => {
   expect(() =>
-    encryptLocker({
+    createLocker({
       data,
       publicAdditionalData,
       exportKey: sodium.to_base64(new Uint8Array([0, 0, 0, 0])),
@@ -72,7 +72,7 @@ it("should throw an error for invalid lockerSecretKey", () => {
 
 it("should throw an error for invalid publicAdditionalData", () => {
   expect(() =>
-    encryptLocker({
+    createLocker({
       data,
       publicAdditionalData: NaN,
       exportKey,
@@ -83,7 +83,7 @@ it("should throw an error for invalid publicAdditionalData", () => {
 
 it("should throw an error for invalid data", () => {
   expect(() =>
-    encryptLocker({
+    createLocker({
       // @ts-expect-error
       data: new Date(),
       publicAdditionalData,

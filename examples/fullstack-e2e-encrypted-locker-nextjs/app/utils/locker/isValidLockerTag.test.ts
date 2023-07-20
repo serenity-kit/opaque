@@ -1,5 +1,5 @@
 import sodium from "libsodium-wrappers";
-import { encryptLocker } from "./client/encryptLocker";
+import { createLocker } from "./client/createLocker";
 import { isValidLockerTag } from "./isValidLockerTag";
 import { createLockerForClient } from "./server/createLockerForClient";
 
@@ -26,7 +26,7 @@ let locker: {
 
 beforeAll(async () => {
   await sodium.ready;
-  locker = encryptLocker({
+  locker = createLocker({
     data,
     publicAdditionalData,
     exportKey,
@@ -94,7 +94,7 @@ it("should return false for invalid sessionKey", () => {
 });
 
 it("should return false for another encrypted locker", () => {
-  const otherLocker = encryptLocker({
+  const otherLocker = createLocker({
     data,
     publicAdditionalData,
     exportKey,

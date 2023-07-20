@@ -1,11 +1,11 @@
 import sodium from "libsodium-wrappers";
 import { isValidLockerTag } from "../isValidLockerTag";
-import { ValidateAndDecryptPublicAdditionalDataParams } from "../types";
+import { ValidateLockerAndDecryptPublicAdditionalDataParams } from "../types";
 
-export const validateAndDecryptPublicAdditionalData = ({
+export const validateLockerAndDecryptPublicAdditionalData = ({
   locker,
   sessionKey,
-}: ValidateAndDecryptPublicAdditionalDataParams) => {
+}: ValidateLockerAndDecryptPublicAdditionalDataParams) => {
   if (!isValidLockerTag({ locker, sessionKey })) {
     throw new Error("Invalid locker tag");
   }

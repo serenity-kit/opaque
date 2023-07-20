@@ -2,9 +2,9 @@ import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
 import { createLockerForClient } from "../server/createLockerForClient";
 import { Locker, RecoveryLockbox } from "../types";
+import { createLocker } from "./createLocker";
 import { createRecoveryLockbox } from "./createRecoveryLockbox";
 import { decryptLockerFromRecoveryLockbox } from "./decryptLockerFromRecoveryLockbox";
-import { encryptLocker } from "./encryptLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = {
@@ -27,7 +27,7 @@ beforeAll(async () => {
     recoveryExportKey,
   });
   recoveryLockbox = createRecoveryLockboxResult.recoveryLockbox;
-  const originalLocker = encryptLocker({
+  const originalLocker = createLocker({
     data,
     publicAdditionalData,
     exportKey,
@@ -67,7 +67,7 @@ it("should decrypt locker as string if output string is provided", () => {
 });
 
 it("should decrypt locker as Uint8Array", () => {
-  const otherLocker = encryptLocker({
+  const otherLocker = createLocker({
     data: new Uint8Array([0, 42, 0, 99]),
     publicAdditionalData,
     exportKey,
