@@ -1,12 +1,8 @@
 export type Locker = {
-  data: {
-    ciphertext: string;
-    nonce: string;
-  };
-  publicAdditionalData: {
-    ciphertext: string;
-    nonce: string;
-  };
+  ciphertext: string;
+  nonce: string;
+  publicAdditionalDataCiphertext: string;
+  publicAdditionalDataNonce: string;
   tag: string;
 };
 

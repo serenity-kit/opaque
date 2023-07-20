@@ -2,6 +2,7 @@ import sodium from "libsodium-wrappers";
 import { createLocker } from "./client/createLocker";
 import { isValidLockerTag } from "./isValidLockerTag";
 import { createLockerForClient } from "./server/createLockerForClient";
+import { Locker } from "./types";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = {
@@ -12,17 +13,7 @@ const exportKey = "iX3NooF-7W5dXzJWEso-ilpcYE-v_vj1Uam3rpDvKBQ";
 const sessionKey = "dQcJZvTqCgDzW36bzQrnJ6PIcVcZgiRRaFHwC5D4QxY";
 const invalidKey = "invalidKey";
 
-let locker: {
-  data: {
-    ciphertext: string;
-    nonce: string;
-  };
-  publicAdditionalData: {
-    ciphertext: string;
-    nonce: string;
-  };
-  tag: string;
-};
+let locker: Locker;
 
 beforeAll(async () => {
   await sodium.ready;
@@ -43,8 +34,8 @@ it("should return true for valid tag", () => {
   expect(isValidTag).toBeTruthy();
 
   const anotherLocker = createLockerForClient({
-    ciphertext: locker.data.ciphertext,
-    nonce: locker.data.nonce,
+    ciphertext: locker.ciphertext,
+    nonce: locker.nonce,
     publicAdditionalData,
     sessionKey,
   });
@@ -72,10 +63,7 @@ it("should return false for invalid tag", () => {
   const isValidTag = isValidLockerTag({
     locker: {
       ...locker,
-      data: {
-        ...locker.data,
-        nonce: "XJutX1MPVYVeyTFvwPF63rHab2TC3SuJ", // wrong nonce
-      },
+      nonce: "XJutX1MPVYVeyTFvwPF63rHab2TC3SuJ", // wrong nonce
       tag: locker.tag + "a",
     },
     sessionKey,

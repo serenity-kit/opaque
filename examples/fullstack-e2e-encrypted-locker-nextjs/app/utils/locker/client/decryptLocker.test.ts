@@ -70,16 +70,17 @@ it("should decrypt locker as Uint8Array", () => {
 it("should throw an error for an invalid publicAdditionalData", () => {
   const invalidPublicAdditionalDataCiphertext = sodium.crypto_secretbox_easy(
     JSON.stringify({ wrong: "additional data" }),
-    sodium.from_base64(locker.publicAdditionalData.nonce),
+    sodium.from_base64(locker.publicAdditionalDataNonce),
     sodium.from_base64(sessionKey)
   );
 
   const tagContent = {
-    data: locker.data,
-    publicAdditionalData: {
-      ciphertext: sodium.to_base64(invalidPublicAdditionalDataCiphertext),
-      nonce: locker.publicAdditionalData.nonce,
-    },
+    ciphertext: locker.ciphertext,
+    nonce: locker.nonce,
+    publicAdditionalDataCiphertext: sodium.to_base64(
+      invalidPublicAdditionalDataCiphertext
+    ),
+    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
   };
   const canonicalizedTagContent = canonicalize(tagContent);
   if (!canonicalizedTagContent)
@@ -103,11 +104,10 @@ it("should throw an error for an invalid publicAdditionalData", () => {
 
 it("should throw an error for invalid data ciphertext", () => {
   const tagContent = {
-    data: {
-      ciphertext: "ups",
-      nonce: locker.data.nonce,
-    },
-    publicAdditionalData: locker.publicAdditionalData,
+    ciphertext: "ups",
+    nonce: locker.nonce,
+    publicAdditionalDataCiphertext: locker.publicAdditionalDataCiphertext,
+    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
   };
   const canonicalizedTagContent = canonicalize(tagContent);
   if (!canonicalizedTagContent)
@@ -131,11 +131,10 @@ it("should throw an error for invalid data ciphertext", () => {
 
 it("should throw an error for invalid publicAdditionalData ciphertext", () => {
   const tagContent = {
-    data: locker.data,
-    publicAdditionalData: {
-      ciphertext: "ups",
-      nonce: locker.publicAdditionalData.nonce,
-    },
+    ciphertext: locker.ciphertext,
+    nonce: locker.nonce,
+    publicAdditionalDataCiphertext: "ups",
+    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
   };
   const canonicalizedTagContent = canonicalize(tagContent);
   if (!canonicalizedTagContent)

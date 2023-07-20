@@ -23,19 +23,15 @@ it("should encrypt locker data", () => {
     sessionKey,
   });
 
-  expect(typeof locker.data.ciphertext).toBe("string");
-  expect(typeof locker.data.nonce).toBe("string");
+  expect(typeof locker.ciphertext).toBe("string");
+  expect(typeof locker.nonce).toBe("string");
   expect(typeof locker.tag).toBe("string");
 
   const tagContent = canonicalize({
-    data: {
-      ciphertext: locker.data.ciphertext,
-      nonce: locker.data.nonce,
-    },
-    publicAdditionalData: {
-      ciphertext: locker.publicAdditionalData.ciphertext,
-      nonce: locker.publicAdditionalData.nonce,
-    },
+    ciphertext: locker.ciphertext,
+    nonce: locker.nonce,
+    publicAdditionalDataCiphertext: locker.publicAdditionalDataCiphertext,
+    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
   });
   if (!tagContent) throw new Error("tagContent is undefined");
 

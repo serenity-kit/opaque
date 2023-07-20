@@ -6,10 +6,18 @@ export const isValidLockerTag = ({
   locker,
   sessionKey,
 }: VerifyLockerTagParams) => {
-  const { data, publicAdditionalData, tag } = locker;
+  const {
+    ciphertext,
+    nonce,
+    publicAdditionalDataCiphertext,
+    publicAdditionalDataNonce,
+    tag,
+  } = locker;
   const tagContent = canonicalize({
-    data,
-    publicAdditionalData,
+    ciphertext,
+    nonce,
+    publicAdditionalDataCiphertext,
+    publicAdditionalDataNonce,
   });
   try {
     if (!tagContent) throw new Error("tagContent is undefined");

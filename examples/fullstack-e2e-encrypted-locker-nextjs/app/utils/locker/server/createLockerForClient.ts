@@ -25,28 +25,24 @@ export const createLockerForClient = ({
   );
 
   const tagContent = canonicalize({
-    data: {
-      ciphertext,
-      nonce,
-    },
-    publicAdditionalData: {
-      ciphertext: sodium.to_base64(publicAdditionalDataCiphertext),
-      nonce: sodium.to_base64(publicAdditionalDataNonce),
-    },
+    ciphertext,
+    nonce,
+    publicAdditionalDataCiphertext: sodium.to_base64(
+      publicAdditionalDataCiphertext
+    ),
+    publicAdditionalDataNonce: sodium.to_base64(publicAdditionalDataNonce),
   });
 
   if (!tagContent) throw new Error("tagContent is undefined");
   const tag = sodium.crypto_auth(tagContent, sodium.from_base64(sessionKey));
 
   const locker: Locker = {
-    data: {
-      ciphertext,
-      nonce,
-    },
-    publicAdditionalData: {
-      ciphertext: sodium.to_base64(publicAdditionalDataCiphertext),
-      nonce: sodium.to_base64(publicAdditionalDataNonce),
-    },
+    ciphertext,
+    nonce,
+    publicAdditionalDataCiphertext: sodium.to_base64(
+      publicAdditionalDataCiphertext
+    ),
+    publicAdditionalDataNonce: sodium.to_base64(publicAdditionalDataNonce),
     tag: sodium.to_base64(tag),
   };
   return locker;

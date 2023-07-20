@@ -13,8 +13,8 @@ export const validateLockerAndDecryptPublicAdditionalData = ({
   const publicAdditionalData = JSON.parse(
     sodium.to_string(
       sodium.crypto_secretbox_open_easy(
-        sodium.from_base64(locker.publicAdditionalData.ciphertext),
-        sodium.from_base64(locker.publicAdditionalData.nonce),
+        sodium.from_base64(locker.publicAdditionalDataCiphertext),
+        sodium.from_base64(locker.publicAdditionalDataNonce),
         sodium.from_base64(sessionKey)
       )
     )

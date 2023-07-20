@@ -17,8 +17,8 @@ export const decryptLockerFromRecoveryLockbox = ({
   const publicAdditionalData = JSON.parse(
     sodium.to_string(
       sodium.crypto_secretbox_open_easy(
-        sodium.from_base64(locker.publicAdditionalData.ciphertext),
-        sodium.from_base64(locker.publicAdditionalData.nonce),
+        sodium.from_base64(locker.publicAdditionalDataCiphertext),
+        sodium.from_base64(locker.publicAdditionalDataNonce),
         sodium.from_base64(recoverySessionKey)
       )
     )
@@ -42,9 +42,9 @@ export const decryptLockerFromRecoveryLockbox = ({
 
   const contentAsUint8Array = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
     null,
-    sodium.from_base64(locker.data.ciphertext),
+    sodium.from_base64(locker.ciphertext),
     publicAdditionalDataString,
-    sodium.from_base64(locker.data.nonce),
+    sodium.from_base64(locker.nonce),
     lockerSecretKey
   );
   if (outputFormat === "uint8array") {

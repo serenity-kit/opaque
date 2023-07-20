@@ -36,28 +36,24 @@ export const createLocker = ({
   );
 
   const tagContent = canonicalize({
-    data: {
-      ciphertext: sodium.to_base64(ciphertext),
-      nonce: sodium.to_base64(nonce),
-    },
-    publicAdditionalData: {
-      ciphertext: sodium.to_base64(publicAdditionalDataCiphertext),
-      nonce: sodium.to_base64(publicAdditionalDataNonce),
-    },
+    ciphertext: sodium.to_base64(ciphertext),
+    nonce: sodium.to_base64(nonce),
+    publicAdditionalDataCiphertext: sodium.to_base64(
+      publicAdditionalDataCiphertext
+    ),
+    publicAdditionalDataNonce: sodium.to_base64(publicAdditionalDataNonce),
   });
 
   if (!tagContent) throw new Error("tagContent is undefined");
   const tag = sodium.crypto_auth(tagContent, sodium.from_base64(sessionKey));
 
   return {
-    data: {
-      ciphertext: sodium.to_base64(ciphertext),
-      nonce: sodium.to_base64(nonce),
-    },
-    publicAdditionalData: {
-      ciphertext: sodium.to_base64(publicAdditionalDataCiphertext),
-      nonce: sodium.to_base64(publicAdditionalDataNonce),
-    },
+    ciphertext: sodium.to_base64(ciphertext),
+    nonce: sodium.to_base64(nonce),
+    publicAdditionalDataCiphertext: sodium.to_base64(
+      publicAdditionalDataCiphertext
+    ),
+    publicAdditionalDataNonce: sodium.to_base64(publicAdditionalDataNonce),
     tag: sodium.to_base64(tag),
   };
 };
