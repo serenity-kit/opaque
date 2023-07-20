@@ -1,9 +1,7 @@
 import sodium from "libsodium-wrappers";
-import {
-  createLockerForClient,
-  encryptLocker,
-  isValidLockerTag,
-} from "./encryptedLocker";
+import { encryptLocker } from "./client/encryptLocker";
+import { isValidLockerTag } from "./isValidLockerTag";
+import { createLockerForClient } from "./server/createLockerForClient";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = {

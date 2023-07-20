@@ -1,6 +1,6 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import { encryptLocker } from "./encryptedLocker";
+import { encryptLocker } from "./encryptLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = {

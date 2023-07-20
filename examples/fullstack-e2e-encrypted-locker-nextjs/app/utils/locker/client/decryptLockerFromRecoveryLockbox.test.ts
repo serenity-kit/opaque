@@ -1,13 +1,10 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import {
-  EncryptedLocker,
-  RecoveryLockbox,
-  createLockerForClient,
-  createRecoveryLockbox,
-  decryptLockerFromRecoveryExportKey,
-  encryptLocker,
-} from "./encryptedLocker";
+import { createLockerForClient } from "../server/createLockerForClient";
+import { EncryptedLocker, RecoveryLockbox } from "../types";
+import { createRecoveryLockbox } from "./createRecoveryLockbox";
+import { decryptLockerFromRecoveryLockbox } from "./decryptLockerFromRecoveryLockbox";
+import { encryptLocker } from "./encryptLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
 const publicAdditionalData = {
@@ -45,7 +42,7 @@ beforeAll(async () => {
 });
 
 it("should decrypt locker as string by default", () => {
-  const decryptedLocker = decryptLockerFromRecoveryExportKey({
+  const decryptedLocker = decryptLockerFromRecoveryLockbox({
     encryptedLocker,
     recoveryExportKey,
     recoveryLockbox,
@@ -57,7 +54,7 @@ it("should decrypt locker as string by default", () => {
 });
 
 it("should decrypt locker as string if output string is provided", () => {
-  const decryptedLocker = decryptLockerFromRecoveryExportKey({
+  const decryptedLocker = decryptLockerFromRecoveryLockbox({
     encryptedLocker,
     recoveryExportKey,
     recoveryLockbox,
@@ -76,7 +73,7 @@ it("should decrypt locker as Uint8Array", () => {
     exportKey,
     sessionKey: recoverySessionKey,
   });
-  const decryptedLocker = decryptLockerFromRecoveryExportKey({
+  const decryptedLocker = decryptLockerFromRecoveryLockbox({
     encryptedLocker: otherEncryptedLocker,
     recoveryExportKey,
     recoveryLockbox,
@@ -110,7 +107,7 @@ it("should throw an error for an invalid publicAdditionalData", () => {
   );
 
   expect(() =>
-    decryptLockerFromRecoveryExportKey({
+    decryptLockerFromRecoveryLockbox({
       encryptedLocker: {
         ...tagContent,
         tag: sodium.to_base64(tag),
@@ -139,7 +136,7 @@ it("should throw an error for invalid data ciphertext", () => {
   );
 
   expect(() =>
-    decryptLockerFromRecoveryExportKey({
+    decryptLockerFromRecoveryLockbox({
       encryptedLocker: {
         ...tagContent,
         tag: sodium.to_base64(tag),
@@ -168,7 +165,7 @@ it("should throw an error for invalid publicAdditionalData ciphertext", () => {
   );
 
   expect(() =>
-    decryptLockerFromRecoveryExportKey({
+    decryptLockerFromRecoveryLockbox({
       encryptedLocker: {
         ...tagContent,
         tag: sodium.to_base64(tag),
@@ -182,7 +179,7 @@ it("should throw an error for invalid publicAdditionalData ciphertext", () => {
 
 it("should throw an error for invalid recoveryExportKey", () => {
   expect(() =>
-    decryptLockerFromRecoveryExportKey({
+    decryptLockerFromRecoveryLockbox({
       encryptedLocker,
       recoveryExportKey: invalidKey,
       recoveryLockbox,
@@ -193,7 +190,7 @@ it("should throw an error for invalid recoveryExportKey", () => {
 
 it("should throw an error for invalid recoverySessionKey", () => {
   expect(() =>
-    decryptLockerFromRecoveryExportKey({
+    decryptLockerFromRecoveryLockbox({
       encryptedLocker,
       recoveryExportKey,
       recoveryLockbox,
@@ -204,7 +201,7 @@ it("should throw an error for invalid recoverySessionKey", () => {
 
 it("should throw an error for invalid ciphertext in recoveryLockbox", () => {
   expect(() =>
-    decryptLockerFromRecoveryExportKey({
+    decryptLockerFromRecoveryLockbox({
       encryptedLocker,
       recoveryExportKey: invalidKey,
       recoveryLockbox: {

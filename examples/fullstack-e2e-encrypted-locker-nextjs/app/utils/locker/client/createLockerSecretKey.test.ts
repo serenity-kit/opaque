@@ -1,5 +1,5 @@
 import sodium from "libsodium-wrappers";
-import { createLockerSecretKey } from "./encryptedLocker";
+import { createLockerSecretKey } from "./createLockerSecretKey";
 
 // sodium.to_base64(sodium.randombytes_buf(32))
 const exportKey = "iX3NooF-7W5dXzJWEso-ilpcYE-v_vj1Uam3rpDvKBQ";
