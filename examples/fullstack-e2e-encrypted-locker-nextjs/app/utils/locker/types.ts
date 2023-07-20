@@ -10,6 +10,7 @@ export type PublicAdditionalData =
   | string
   | number
   | boolean
+  | null
   | { [x: string]: PublicAdditionalData }
   | Array<PublicAdditionalData>;
 

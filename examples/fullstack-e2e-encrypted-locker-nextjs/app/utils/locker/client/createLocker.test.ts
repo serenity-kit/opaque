@@ -44,6 +44,35 @@ it("should encrypt locker data", () => {
   ).toBe(true);
 });
 
+it("should encrypt locker data with publicAdditionalData as null", () => {
+  const locker = createLocker({
+    data,
+    publicAdditionalData: null,
+    exportKey,
+    sessionKey,
+  });
+
+  expect(typeof locker.ciphertext).toBe("string");
+  expect(typeof locker.nonce).toBe("string");
+  expect(typeof locker.tag).toBe("string");
+
+  const tagContent = canonicalize({
+    ciphertext: locker.ciphertext,
+    nonce: locker.nonce,
+    publicAdditionalDataCiphertext: locker.publicAdditionalDataCiphertext,
+    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
+  });
+  if (!tagContent) throw new Error("tagContent is undefined");
+
+  expect(
+    sodium.crypto_auth_verify(
+      sodium.from_base64(locker.tag),
+      tagContent,
+      sodium.from_base64(sessionKey)
+    )
+  ).toBe(true);
+});
+
 it("should throw an error for invalid sessionKey", () => {
   expect(() =>
     createLocker({

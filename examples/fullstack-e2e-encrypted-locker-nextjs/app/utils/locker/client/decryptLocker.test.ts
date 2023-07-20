@@ -36,6 +36,23 @@ it("should decrypt locker as string by default", () => {
   expect(decryptedLocker.publicAdditionalData).toEqual(publicAdditionalData);
 });
 
+it("should decrypt locker with publicAdditionalData as null", () => {
+  const newLocker = createLocker({
+    data,
+    publicAdditionalData: null,
+    exportKey,
+    sessionKey,
+  });
+  const decryptedLocker = decryptLocker({
+    locker: newLocker,
+    sessionKey,
+    exportKey,
+  });
+
+  expect(decryptedLocker.data).toEqual(data);
+  expect(decryptedLocker.publicAdditionalData).toBeNull();
+});
+
 it("should decrypt locker as string if output string is provided", () => {
   const decryptedLocker = decryptLocker({
     locker,
