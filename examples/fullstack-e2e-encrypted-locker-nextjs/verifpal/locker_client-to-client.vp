@@ -1,0 +1,43 @@
+attacker[active]
+
+principal Alice_session1[
+	knows private locker_content
+	knows private export_key
+	knows public salt
+	locker_key = HKDF(salt, export_key, nil)
+	ciphertext = ENC(locker_key, locker_content)
+	tag = MAC(locker_key, ciphertext)
+]
+
+Alice_session1 -> Alice_session2: ciphertext, tag
+
+principal Alice_session2[
+	knows private export_key
+	locker_key2 = HKDF(salt, export_key, nil)
+	_ = ASSERT(tag, MAC(locker_key2, ciphertext))?
+	locker_content2 = DEC(locker_key2, ciphertext)
+]
+
+principal Alice_session1[
+	knows private recovery_export_key
+	export_publickey = G^export_key
+	recovery_export_publickey = G^recovery_export_key
+	recovery_lockbox = PKE_ENC(recovery_export_publickey, locker_key)
+]
+
+Alice_session1 -> Alice_recovery: ciphertext, tag, recovery_lockbox
+
+principal Alice_recovery[
+	knows private recovery_export_key
+	locker_key3 = PKE_DEC(recovery_export_key, recovery_lockbox)
+	_ = ASSERT(tag, MAC(locker_key3, ciphertext))?
+	locker_content_recovery = DEC(locker_key3, ciphertext)
+]
+
+queries[
+	confidentiality? export_key
+	confidentiality? locker_key
+	confidentiality? locker_content
+	authentication? Alice_session1 -> Alice_session2: ciphertext
+	authentication? Alice_session1 -> Alice_recovery: ciphertext
+]
