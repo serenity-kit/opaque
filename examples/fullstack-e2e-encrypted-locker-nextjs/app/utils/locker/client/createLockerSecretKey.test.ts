@@ -14,11 +14,11 @@ it("should throw an error for an invalid exportKey", () => {
 });
 
 it("should create a locker for valid keys", () => {
-  const locker = createLockerSecretKey({
+  const lockerSecretKey = createLockerSecretKey({
     exportKey: exportKey,
   });
 
-  expect(sodium.to_base64(locker.lockerSecretKey)).toBe(
+  expect(sodium.to_base64(lockerSecretKey)).toBe(
     "KuVfjVEND4MzldyZqLf8-AyCp23fNuyD3RNEsXuFaBw"
   );
 });

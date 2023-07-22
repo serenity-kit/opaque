@@ -1,15 +1,10 @@
-import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import { createLockerForClient } from "../server/createLockerForClient";
 import { Locker, RecoveryLockbox } from "../types";
 import { createLocker } from "./createLocker";
 import { createRecoveryLockbox } from "./createRecoveryLockbox";
 import { decryptLockerFromRecoveryLockbox } from "./decryptLockerFromRecoveryLockbox";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });
-const publicAdditionalData = {
-  createdAt: new Date("2023-10-31").toISOString(),
-};
 // sodium.to_base64(sodium.randombytes_buf(32))
 const exportKey = "iX3NooF-7W5dXzJWEso-ilpcYE-v_vj1Uam3rpDvKBQ";
 const recoveryExportKey = "J3aJn5inymm39WL11Yb0qewnAHL3hB_CMB6V2VV_GQg";
@@ -22,22 +17,14 @@ let recoveryLockbox: RecoveryLockbox;
 
 beforeAll(async () => {
   await sodium.ready;
-  const createRecoveryLockboxResult = createRecoveryLockbox({
+  recoveryLockbox = createRecoveryLockbox({
     exportKey,
     recoveryExportKey,
   });
-  recoveryLockbox = createRecoveryLockboxResult.recoveryLockbox;
-  const originalLocker = createLocker({
+  locker = createLocker({
     data,
-    publicAdditionalData,
     exportKey,
     sessionKey,
-  });
-  locker = createLockerForClient({
-    ciphertext: originalLocker.ciphertext,
-    nonce: originalLocker.nonce,
-    publicAdditionalData,
-    sessionKey: recoverySessionKey,
   });
 });
 
@@ -46,11 +33,9 @@ it("should decrypt locker as string by default", () => {
     locker,
     recoveryExportKey,
     recoveryLockbox,
-    recoverySessionKey,
   });
 
-  expect(decryptedLocker.data).toEqual(data);
-  expect(decryptedLocker.publicAdditionalData).toEqual(publicAdditionalData);
+  expect(decryptedLocker).toEqual(data);
 });
 
 it("should decrypt locker as string if output string is provided", () => {
@@ -58,18 +43,15 @@ it("should decrypt locker as string if output string is provided", () => {
     locker,
     recoveryExportKey,
     recoveryLockbox,
-    recoverySessionKey,
     outputFormat: "string",
   });
 
-  expect(decryptedLocker.data).toEqual(data);
-  expect(decryptedLocker.publicAdditionalData).toEqual(publicAdditionalData);
+  expect(decryptedLocker).toEqual(data);
 });
 
 it("should decrypt locker as Uint8Array", () => {
   const otherLocker = createLocker({
     data: new Uint8Array([0, 42, 0, 99]),
-    publicAdditionalData,
     exportKey,
     sessionKey: recoverySessionKey,
   });
@@ -77,101 +59,23 @@ it("should decrypt locker as Uint8Array", () => {
     locker: otherLocker,
     recoveryExportKey,
     recoveryLockbox,
-    recoverySessionKey,
     outputFormat: "uint8array",
   });
 
-  expect(decryptedLocker.data).toEqual(new Uint8Array([0, 42, 0, 99]));
-});
-
-it("should throw an error for an invalid publicAdditionalData", () => {
-  const invalidPublicAdditionalDataCiphertext = sodium.crypto_secretbox_easy(
-    JSON.stringify({ wrong: "additional data" }),
-    sodium.from_base64(locker.publicAdditionalDataNonce),
-    sodium.from_base64(sessionKey)
-  );
-
-  const tagContent = {
-    ciphertext: locker.ciphertext,
-    nonce: locker.nonce,
-    publicAdditionalDataCiphertext: sodium.to_base64(
-      invalidPublicAdditionalDataCiphertext
-    ),
-    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
-  };
-  const canonicalizedTagContent = canonicalize(tagContent);
-  if (!canonicalizedTagContent)
-    throw new Error("canonicalizedTagContent is undefined");
-  const tag = sodium.crypto_auth(
-    canonicalizedTagContent,
-    sodium.from_base64(recoverySessionKey)
-  );
-
-  expect(() =>
-    decryptLockerFromRecoveryLockbox({
-      locker: {
-        ...tagContent,
-        tag: sodium.to_base64(tag),
-      },
-      recoveryExportKey,
-      recoveryLockbox,
-      recoverySessionKey,
-    })
-  ).toThrow("wrong secret key for the given ciphertext");
+  expect(decryptedLocker).toEqual(new Uint8Array([0, 42, 0, 99]));
 });
 
 it("should throw an error for invalid data ciphertext", () => {
-  const tagContent = {
+  const brokenLocker = {
     ciphertext: "ups",
     nonce: locker.nonce,
-    publicAdditionalDataCiphertext: locker.publicAdditionalDataCiphertext,
-    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
   };
-  const canonicalizedTagContent = canonicalize(tagContent);
-  if (!canonicalizedTagContent)
-    throw new Error("canonicalizedTagContent is undefined");
-  const tag = sodium.crypto_auth(
-    canonicalizedTagContent,
-    sodium.from_base64(recoverySessionKey)
-  );
 
   expect(() =>
     decryptLockerFromRecoveryLockbox({
-      locker: {
-        ...tagContent,
-        tag: sodium.to_base64(tag),
-      },
+      locker: brokenLocker,
       recoveryExportKey,
       recoveryLockbox,
-      recoverySessionKey,
-    })
-  ).toThrow("ciphertext is too short");
-});
-
-it("should throw an error for invalid publicAdditionalData ciphertext", () => {
-  const tagContent = {
-    ciphertext: locker.ciphertext,
-    nonce: locker.nonce,
-    publicAdditionalDataCiphertext: "ups",
-    publicAdditionalDataNonce: locker.publicAdditionalDataNonce,
-  };
-  const canonicalizedTagContent = canonicalize(tagContent);
-  if (!canonicalizedTagContent)
-    throw new Error("canonicalizedTagContent is undefined");
-  const tag = sodium.crypto_auth(
-    canonicalizedTagContent,
-    sodium.from_base64(recoverySessionKey)
-  );
-
-  expect(() =>
-    decryptLockerFromRecoveryLockbox({
-      locker: {
-        ...tagContent,
-        tag: sodium.to_base64(tag),
-      },
-      recoveryExportKey,
-      recoveryLockbox,
-      recoverySessionKey,
     })
   ).toThrow("ciphertext is too short");
 });
@@ -182,20 +86,8 @@ it("should throw an error for invalid recoveryExportKey", () => {
       locker,
       recoveryExportKey: invalidKey,
       recoveryLockbox,
-      recoverySessionKey,
     })
   ).toThrow("invalid input");
-});
-
-it("should throw an error for invalid recoverySessionKey", () => {
-  expect(() =>
-    decryptLockerFromRecoveryLockbox({
-      locker,
-      recoveryExportKey,
-      recoveryLockbox,
-      recoverySessionKey: invalidKey,
-    })
-  ).toThrow("Invalid locker tag");
 });
 
 it("should throw an error for invalid ciphertext in recoveryLockbox", () => {
@@ -207,7 +99,6 @@ it("should throw an error for invalid ciphertext in recoveryLockbox", () => {
         ...recoveryLockbox,
         ciphertext: "ups",
       },
-      recoverySessionKey,
     })
   ).toThrow("invalid input");
 });

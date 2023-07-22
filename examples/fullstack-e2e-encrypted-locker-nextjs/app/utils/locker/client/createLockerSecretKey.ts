@@ -12,5 +12,5 @@ export const createLockerSecretKey = ({
     exportKeyAsUint8Array
   );
 
-  return { lockerSecretKey };
+  return lockerSecretKey;
 };

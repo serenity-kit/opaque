@@ -23,7 +23,7 @@ it("should throw an error for an invalid recoveryExportKey", () => {
 });
 
 it("should create a locker for valid keys", () => {
-  const { recoveryLockbox } = createRecoveryLockbox({
+  const recoveryLockbox = createRecoveryLockbox({
     exportKey: exportKey,
     recoveryExportKey: recoveryExportKey,
   });

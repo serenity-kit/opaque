@@ -1,59 +1,35 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
-import { CreateLockerParams, Locker } from "../types";
+import { CreateLockerParams, LockerWithServerVerificationMac } from "../types";
 import { createLockerSecretKey } from "./createLockerSecretKey";
 
 export const createLocker = ({
   data,
-  publicAdditionalData,
   exportKey,
   sessionKey,
-}: CreateLockerParams): Locker => {
+}: CreateLockerParams): LockerWithServerVerificationMac => {
   const nonce = sodium.randombytes_buf(
     sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
   );
-  const { lockerSecretKey } = createLockerSecretKey({ exportKey });
+  const lockerSecretKey = createLockerSecretKey({ exportKey });
 
-  const publicAdditionalDataString = canonicalize(publicAdditionalData);
-  if (!publicAdditionalDataString) {
-    throw new Error("publicAdditionalData can't be serialized");
-  }
-  const ciphertext = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
-    data,
-    publicAdditionalDataString,
-    null,
-    nonce,
-    lockerSecretKey
-  );
+  const ciphertext = sodium.crypto_secretbox_easy(data, nonce, lockerSecretKey);
 
-  const publicAdditionalDataNonce = sodium.randombytes_buf(
-    sodium.crypto_secretbox_NONCEBYTES
-  );
-  const publicAdditionalDataCiphertext = sodium.crypto_secretbox_easy(
-    JSON.stringify(publicAdditionalData),
-    publicAdditionalDataNonce,
-    sodium.from_base64(sessionKey)
-  );
-
-  const tagContent = canonicalize({
+  const serverVerificationMacContent = canonicalize({
     ciphertext: sodium.to_base64(ciphertext),
     nonce: sodium.to_base64(nonce),
-    publicAdditionalDataCiphertext: sodium.to_base64(
-      publicAdditionalDataCiphertext
-    ),
-    publicAdditionalDataNonce: sodium.to_base64(publicAdditionalDataNonce),
   });
 
-  if (!tagContent) throw new Error("tagContent is undefined");
-  const tag = sodium.crypto_auth(tagContent, sodium.from_base64(sessionKey));
+  if (!serverVerificationMacContent)
+    throw new Error("serverVerificationMacContent is undefined");
+  const serverVerificationMac = sodium.crypto_auth(
+    serverVerificationMacContent,
+    sodium.from_base64(sessionKey)
+  );
 
   return {
     ciphertext: sodium.to_base64(ciphertext),
     nonce: sodium.to_base64(nonce),
-    publicAdditionalDataCiphertext: sodium.to_base64(
-      publicAdditionalDataCiphertext
-    ),
-    publicAdditionalDataNonce: sodium.to_base64(publicAdditionalDataNonce),
-    tag: sodium.to_base64(tag),
+    serverVerificationMac: sodium.to_base64(serverVerificationMac),
   };
 };
