@@ -1,18 +1,18 @@
 import * as opaque from "@serenity-kit/opaque";
-import cors from "cors";
+import cookieParser from "cookie-parser";
 import { randomInt } from "crypto";
+import * as dotenv from "dotenv";
 import express from "express";
 import InMemoryStore, {
   readDatabaseFile,
   writeDatabaseFile,
 } from "./InMemoryStore.js";
 import RedisStore from "./RedisStore.js";
-import * as dotenv from "dotenv";
 
 dotenv.config({ path: "../../.env" });
 
 /**
- * @type {Record<string, string>}
+ * @type {Record<string, {userIdentifier: string; sessionKey: string}>}
  */
 const activeSessions = {};
 const dbFile = "./data.json";
@@ -118,7 +118,11 @@ async function setupDb() {
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+
+function generateSessionId() {
+  return randomInt(1e9, 1e10).toString();
+}
 
 /**
  * @param {import("express").Response} res
@@ -205,31 +209,39 @@ app.post("/login/finish", async (req, res) => {
     serverLoginState,
   });
 
-  activeSessions[sessionKey] = userIdentifier;
+  const sessionId = generateSessionId();
+
+  activeSessions[sessionId] = { userIdentifier, sessionKey };
 
   await db.removeLogin(userIdentifier);
 
+  res.cookie("session", sessionId, { httpOnly: true });
   res.writeHead(200);
   res.end();
 });
 
 app.post("/logout", (req, res) => {
-  const auth = req.get("authorization");
-  const userIdentifier = auth && activeSessions[auth];
-  if (!auth) return sendError(res, 401, "missing authorization header");
-  if (!userIdentifier) return sendError(res, 401, "no active session");
+  const sessionId = req.cookies.session;
+  if (!sessionId) return sendError(res, 401, "not authorized");
 
-  delete activeSessions[userIdentifier];
+  const session = activeSessions[sessionId];
+  if (!session) return sendError(res, 401, "invalid session");
+
+  delete activeSessions[sessionId];
+  res.clearCookie("session");
   res.end();
 });
 
 app.get("/private", (req, res) => {
-  const auth = req.get("authorization");
-  const user = auth && activeSessions[auth];
-  if (!auth) return sendError(res, 401, "missing authorization header");
-  if (!user) return sendError(res, 401, "no active session");
+  const sessionId = req.cookies.session;
+  if (!sessionId) return sendError(res, 401, "not authorized");
 
-  res.send({ message: `hello ${user} from opaque-authenticated world` });
+  const session = activeSessions[sessionId];
+  if (!session) return sendError(res, 401, "invalid session");
+
+  res.send({
+    message: `hello ${session.userIdentifier} from opaque-authenticated world`,
+  });
   res.end();
 });
 
