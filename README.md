@@ -176,7 +176,7 @@ Run with:
 pnpm example:server-with-password-reset:dev
 ```
 
-This example also supports the `--no-fs` and `--redis` options (see server-simple above).
+This example also supports the `DISABLE_FS`, `ENABLE_REDIS` and `REDIS_URL` env variables (see `server-simple` example above).
 
 ### client-simple-webpack
 
@@ -205,11 +205,7 @@ This is the same example app built with nextjs but includes server-side implemen
 pnpm example:fullstack-simple-nextjs:dev
 ```
 
-#### Redis
-
-This example also supports redis but it needs to be configured through env variables.
-Set `ENABLE_REDIS` to any value to use redis running on localhost and default port `6379`.
-If you want to use another redis host you can set the `REDIS_URL` variable to the redis url.
+This example can also use a redis database through the `ENABLE_REDIS` and `REDIS_URL` env variables (see `server-simple` example above).
 
 ### client-with-password-reset
 
