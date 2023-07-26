@@ -8,15 +8,31 @@ import InMemoryStore, {
 import RedisStore from "./RedisStore.js";
 import * as dotenv from "dotenv";
 
+dotenv.config({ path: "../../.env" });
+
 /**
  * @type {Record<string, string>}
  */
 const activeSessions = {};
 const dbFile = "./data.json";
-const enableJsonFilePersistence = !process.argv.includes("--no-fs");
-const enableRedis = process.argv.includes("--redis");
+const enableJsonFilePersistence = !readEnvFlag("DISABLE_FS");
+const enableRedis = readEnvFlag("ENABLE_REDIS");
 
 const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
+const REDIS_URL = process.env.REDIS_URL || DEFAULT_REDIS_URL;
+
+/**
+ * @param {string} key
+ */
+function readEnvFlag(key) {
+  const value = process.env[key];
+  if (value == null) return false;
+  try {
+    return Boolean(JSON.parse(value));
+  } catch (err) {
+    return false;
+  }
+}
 
 function getOpaqueServerSetup() {
   const serverSetup = process.env.OPAQUE_SERVER_SETUP;
@@ -72,27 +88,16 @@ async function setUpInMemoryStore() {
   db = memDb;
 }
 
-function getRedisUrl() {
-  const optIndex = process.argv.indexOf("--redis");
-  if (optIndex == -1) return DEFAULT_REDIS_URL;
-  const valIndex = optIndex + 1;
-  if (valIndex < process.argv.length) {
-    return process.argv[valIndex];
-  }
-  return DEFAULT_REDIS_URL;
-}
-
 async function setUpRedisStore() {
   try {
-    const redisUrl = getRedisUrl();
-    const redis = new RedisStore(redisUrl);
+    const redis = new RedisStore(REDIS_URL);
     redis.onError((err) => {
       console.error("Redis Error:", err instanceof Error ? err.message : err);
       process.exit(1);
     });
     await redis.connect();
     db = redis;
-    console.log("connected to redis at", redisUrl);
+    console.log("connected to redis at", REDIS_URL);
   } catch (err) {
     console.error(
       "Redis Setup Error:",
@@ -231,7 +236,6 @@ app.get("/private", (req, res) => {
 });
 
 async function main() {
-  dotenv.config({ debug: true, path: "../../.env" });
   await setupDb();
   const port = 8089;
   app.listen(port, () => {

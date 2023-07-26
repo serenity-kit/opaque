@@ -124,6 +124,11 @@ const { sessionKey } = opaque.server.finishLogin({
 
 ## Examples
 
+All server examples require configuration through environment variables to set the `OPAQUE_SERVER_SETUP` variable at a minimum.
+A `.env` file will be automatically generated in the project root when running `pnpm build` if it doesn't exist already.
+You can manually generate it by running `pnpm gen:dotenv`, but by default it will not overwrite an existing file.
+To force overwriting an existing `.env` file you can pass the `--force` flag: `pnpm gen:dotenv --force`.
+
 ### server-simple
 
 A server-side nodejs example with expressjs located in `./examples/server-simple`.
@@ -135,25 +140,25 @@ pnpm example:server:dev
 
 By default the server will use a dummy in-memory database.
 It will load data from `./data.json` and overwrite the file on change.
-You can disable the file persistence by passing the `--no-fs` flag:
+You can disable the file persistence by setting the `DISABLE_FS` env variable in the `.env` file:
 
 ```
-pnpm example:server:dev --no-fs
+DISABLE_FS=true
 ```
 
 #### Redis
 
-The server can alternatively use a redis database which can be enabled by passing the `--redis` flag:
+The server can alternatively use a redis database which can be enabled by setting the `ENABLE_REDIS` variable in the `.env` file:
 
 ```
-pnpm example:server:dev --redis
+ENABLE_REDIS=true
 ```
 
-This will try to to connect to redis on `redis://127.0.0.1:6379`.
-You can optionally pass the redis url if you want to use a different redis host/port:
+By default it will try to connect to redis on `redis://127.0.0.1:6379`.
+You can optionally set the redis url with the `REDIS_URL` variable if you want to use a different redis host/port:
 
 ```
-pnpm example:server:dev --redis redis://192.168.0.1:6379
+REDIS_URL=redis://192.168.0.1:6379
 ```
 
 You can quickly get a redis server running locally using docker, e.g:
