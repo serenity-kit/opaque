@@ -22,7 +22,7 @@
   "scripts": {
     "build": "node ./bin/build.js && pnpm gen:dotenv",
     "gen:dotenv": "node ./bin/generate-dotenv.js",
-    "example:fullstack-simple-nextjs:dev": "cd examples/fullstack-simple-nextjs && cross-env OPAQUE_SERVER_SETUP=Ki5T3U21n_UFhcGP5fR_mUstYEItKRsjEJ2UnvvrGasT3wvjdtbluS0BsiR_LtzqX8YLrCyWqQOJDf7cL0C8DRr9pGFBSx0X22ZujePyWpdq4VddBSPm0vIXepDJEBYJjRxmRNh09pLGxk_Y9bQuFWjYInqjcy_zOVsMHPHUkQw pnpm dev",
+    "example:fullstack-simple-nextjs:dev": "cd examples/fullstack-simple-nextjs && pnpm dev",
     "example:client-simple-webpack:dev": "cd examples/client-simple-webpack && pnpm dev",
     "example:client-with-password-reset:dev": "cd examples/client-with-password-reset && pnpm dev",
     "example:client-simple-vite:dev": "cd examples/client-simple-vite && pnpm dev",

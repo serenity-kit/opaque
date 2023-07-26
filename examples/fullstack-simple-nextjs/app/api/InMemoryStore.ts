@@ -68,7 +68,7 @@ export default class InMemoryStore implements Datastore {
 export async function readDatabaseFile(filePath: string) {
   const json = await readFile(filePath, "utf-8");
   const data = JSON.parse(json);
-  const db = new InMemoryStore(data.serverSetup, data.users, data.logins);
+  const db = new InMemoryStore(data.users, data.logins);
   return db;
 }
 

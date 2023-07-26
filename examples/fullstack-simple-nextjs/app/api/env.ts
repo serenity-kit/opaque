@@ -1,3 +1,7 @@
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: "../../.env" });
+
 export function requireEnv(key: string) {
   const value = process.env[key];
   if (value == null) throw new Error(`missing value for env variable "${key}"`);
