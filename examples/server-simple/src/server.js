@@ -11,10 +11,6 @@ import cookieParser from "cookie-parser";
 
 dotenv.config({ path: "../../.env" });
 
-/**
- * @type {Record<string, {userIdentifier: string; sessionKey: string}>}
- */
-const activeSessions = {};
 const dbFile = "./data.json";
 const enableJsonFilePersistence = !readEnvFlag("DISABLE_FS");
 const enableRedis = readEnvFlag("ENABLE_REDIS");
@@ -213,9 +209,7 @@ app.post("/login/finish", async (req, res) => {
   });
 
   const sessionId = generateSessionId();
-
-  activeSessions[sessionId] = { userIdentifier, sessionKey };
-
+  await db.setSession(sessionId, { userIdentifier, sessionKey });
   await db.removeLogin(userIdentifier);
 
   res.cookie("session", sessionId, { httpOnly: true });
@@ -223,23 +217,24 @@ app.post("/login/finish", async (req, res) => {
   res.end();
 });
 
-app.post("/logout", (req, res) => {
+app.post("/logout", async (req, res) => {
   const sessionId = req.cookies.session;
   if (!sessionId) return sendError(res, 401, "not authorized");
 
-  const session = activeSessions[sessionId];
+  const session = await db.getSession(sessionId);
   if (!session) return sendError(res, 401, "invalid session");
 
-  delete activeSessions[sessionId];
+  await db.clearSession(sessionId);
+
   res.clearCookie("session");
   res.end();
 });
 
-app.get("/private", (req, res) => {
+app.get("/private", async (req, res) => {
   const sessionId = req.cookies.session;
   if (!sessionId) return sendError(res, 401, "not authorized");
 
-  const session = activeSessions[sessionId];
+  const session = await db.getSession(sessionId);
   if (!session) return sendError(res, 401, "invalid session");
 
   res.send({

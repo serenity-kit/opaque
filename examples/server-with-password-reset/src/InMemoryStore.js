@@ -57,6 +57,8 @@ export default class InMemoryStore {
     this.resetCodes = {};
     /** @type {(() => void)[]} */
     this.listeners = [];
+    /** @type {Record<string,SessionData>} */
+    this.sessions = {};
   }
 
   /**
@@ -209,6 +211,28 @@ export default class InMemoryStore {
       await this.removeResetCode(user);
     }
     return null;
+  }
+
+  /**
+   * @param {string} id
+   */
+  async getSession(id) {
+    return this.sessions[id];
+  }
+
+  /**
+   * @param {string} id
+   * @param {SessionData} session
+   */
+  async setSession(id, session) {
+    this.sessions[id] = session;
+  }
+
+  /**
+   * @param {string} id
+   */
+  async clearSession(id) {
+    delete this.sessions[id];
   }
 }
 

@@ -10,4 +10,7 @@ interface DatastoreWithPasswordReset {
   getResetCode(name: string): Promise<string | null>;
   setResetCode(name: string, code: string): Promise<void>;
   removeResetCode(name: string): Promise<void>;
+  getSession(id: string): Promise<SessionData>;
+  setSession(id: string, session: SessionData);
+  clearSession(id: string): Promise<void>;
 }

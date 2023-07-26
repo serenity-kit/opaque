@@ -106,4 +106,30 @@ export default class RedisStore {
   async removeResetCode(name) {
     await this.client.del(`reset:${name}`);
   }
+
+  /**
+   * @param {string} id
+   */
+  async getSession(id) {
+    const { userIdentifier, sessionKey } = await this.client.hGetAll(
+      `session:${id}`
+    );
+    if (!userIdentifier || !sessionKey) throw new TypeError();
+    return { userIdentifier, sessionKey };
+  }
+
+  /**
+   * @param {string} id
+   * @param {SessionData} session
+   */
+  async setSession(id, session) {
+    await this.client.hSet(`session:${id}`, /** @type {any} */ (session));
+  }
+
+  /**
+   * @param {string} id
+   */
+  async clearSession(id) {
+    await this.client.del(`session:${id}`);
+  }
 }
