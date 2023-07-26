@@ -22,17 +22,6 @@ export default class RedisStore {
     return this.client.connect();
   }
 
-  getServerSetup() {
-    return this.client.get("serverSetup");
-  }
-
-  /**
-   * @param {string} serverSetup
-   */
-  async setServerSetup(serverSetup) {
-    await this.client.set("serverSetup", serverSetup);
-  }
-
   /**
    * @param {string} name
    */

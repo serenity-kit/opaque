@@ -7,12 +7,10 @@ import { writeFile } from "fs/promises";
 export default class InMemoryStore {
   /**
    * @constructor
-   * @param {string} serverSetup
    * @param {Record<string, string>} users
    * @param {Record<string, {value: string; timestamp: number}>} logins
    */
-  constructor(serverSetup, users, logins) {
-    this.serverSetup = serverSetup;
+  constructor(users, logins) {
     this.users = users;
     this.logins = logins;
     /** @type {(() => void)[]} */
@@ -38,17 +36,13 @@ export default class InMemoryStore {
     }
   }
 
-  /**
-   * @param {string} serverSetup
-   */
-  static empty(serverSetup) {
-    return new InMemoryStore(serverSetup, {}, {});
+  static empty() {
+    return new InMemoryStore({}, {});
   }
 
   stringify() {
     return JSON.stringify(
       {
-        serverSetup: this.serverSetup,
         logins: this.logins,
         users: this.users,
       },
@@ -123,7 +117,7 @@ export default class InMemoryStore {
 export function readDatabaseFile(filePath) {
   const json = readFileSync(filePath, "utf-8");
   const data = JSON.parse(json);
-  const db = new InMemoryStore(data.serverSetup, data.users, data.logins);
+  const db = new InMemoryStore(data.users, data.logins);
   return db;
 }
 

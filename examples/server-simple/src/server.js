@@ -6,6 +6,8 @@ import InMemoryStore, {
   writeDatabaseFile,
 } from "./InMemoryStore.js";
 import RedisStore from "./RedisStore.js";
+import * as dotenv from "dotenv";
+import * as path from "path";
 
 /**
  * @type {Record<string, string>}
@@ -17,13 +19,22 @@ const enableRedis = process.argv.includes("--redis");
 
 const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 
+function getOpaqueServerSetup() {
+  const serverSetup = process.env.OPAQUE_SERVER_SETUP;
+  if (serverSetup == null) {
+    console.error(process.env);
+    throw new Error("OPAQUE_SERVER_SETUP env variable is not set");
+  }
+  return serverSetup;
+}
+
 /**
  * @param {string} filePath
  */
 async function initInMemoryStore(filePath) {
   await opaque.ready;
   if (!enableJsonFilePersistence) {
-    return InMemoryStore.empty(opaque.server.createSetup());
+    return InMemoryStore.empty();
   }
   try {
     const db = readDatabaseFile(filePath);
@@ -40,7 +51,7 @@ async function initInMemoryStore(filePath) {
         err
       );
     }
-    const db = InMemoryStore.empty(opaque.server.createSetup());
+    const db = InMemoryStore.empty();
     return db;
   }
 }
@@ -50,14 +61,8 @@ async function initInMemoryStore(filePath) {
  */
 let db;
 
-/**
- * @type {string}
- */
-let serverSetup;
-
 async function setUpInMemoryStore() {
   const memDb = await initInMemoryStore(dbFile);
-  serverSetup = memDb.serverSetup;
 
   if (enableJsonFilePersistence) {
     writeDatabaseFile(dbFile, memDb);
@@ -87,12 +92,6 @@ async function setUpRedisStore() {
       process.exit(1);
     });
     await redis.connect();
-    let _serverSetup = await redis.getServerSetup();
-    if (_serverSetup == null) {
-      _serverSetup = opaque.server.createSetup();
-      redis.setServerSetup(_serverSetup);
-    }
-    serverSetup = _serverSetup;
     db = redis;
     console.log("connected to redis at", redisUrl);
   } catch (err) {
@@ -140,7 +139,7 @@ app.post("/register/start", async (req, res) => {
   }
 
   const { registrationResponse } = opaque.server.createRegistrationResponse({
-    serverSetup,
+    serverSetup: getOpaqueServerSetup(),
     userIdentifier,
     registrationRequest,
   });
@@ -177,7 +176,7 @@ app.post("/login/start", async (req, res) => {
   }
 
   const { serverLoginState, loginResponse } = opaque.server.startLogin({
-    serverSetup,
+    serverSetup: getOpaqueServerSetup(),
     userIdentifier,
     registrationRecord,
     startLoginRequest,
@@ -233,6 +232,7 @@ app.get("/private", (req, res) => {
 });
 
 async function main() {
+  dotenv.config({ debug: true, path: "../../.env" });
   await setupDb();
   const port = 8089;
   app.listen(port, () => {
