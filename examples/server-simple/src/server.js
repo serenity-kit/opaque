@@ -7,7 +7,6 @@ import InMemoryStore, {
 } from "./InMemoryStore.js";
 import RedisStore from "./RedisStore.js";
 import * as dotenv from "dotenv";
-import * as path from "path";
 
 /**
  * @type {Record<string, string>}

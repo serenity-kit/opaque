@@ -41,10 +41,8 @@ function pruneResetCodes(codes) {
 export default class InMemoryStore {
   /**
    * @constructor
-   * @param {string} serverSetup
    */
-  constructor(serverSetup) {
-    this.serverSetup = serverSetup;
+  constructor() {
     /**
      * @type {Record<string,string>}
      */
@@ -69,11 +67,11 @@ export default class InMemoryStore {
    * resetCodes?: Record<string, ResetCode>
    * }} params
    */
-  static init({ serverSetup, ...data }) {
-    const db = new InMemoryStore(serverSetup);
-    db.users = data.users || {};
-    db.logins = data.logins || {};
-    db.resetCodes = data.resetCodes || {};
+  static init(params) {
+    const db = new InMemoryStore();
+    db.users = params.users || {};
+    db.logins = params.logins || {};
+    db.resetCodes = params.resetCodes || {};
     return db;
   }
 
@@ -97,17 +95,13 @@ export default class InMemoryStore {
     }
   }
 
-  /**
-   * @param {string} serverSetup
-   */
-  static empty(serverSetup) {
-    return new InMemoryStore(serverSetup);
+  static empty() {
+    return new InMemoryStore();
   }
 
   stringify() {
     return JSON.stringify(
       {
-        serverSetup: this.serverSetup,
         logins: this.logins,
         users: this.users,
         resetCodes: pruneResetCodes(this.resetCodes),
