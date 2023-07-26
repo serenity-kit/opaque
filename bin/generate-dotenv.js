@@ -23,7 +23,14 @@ async function main() {
   await opaque.ready;
   const serverSetup = opaque.server.createSetup();
 
-  const dotEnv = `OPAQUE_SERVER_SETUP=${serverSetup}\n`;
+  const dotEnv = `OPAQUE_SERVER_SETUP=${serverSetup}
+
+# enable redis for fullstack nextjs example
+# ENABLE_REDIS=1
+
+# use a custom redis url
+# REDIS_URL=redis://192.168.0.1:6379
+`;
 
   console.log("writing opaque .env file");
 

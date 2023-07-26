@@ -133,6 +133,35 @@ You can start the server with
 pnpm example:server:dev
 ```
 
+By default the server will use a dummy in-memory database.
+It will load data from `./data.json` and overwrite the file on change.
+You can disable the file persistence by passing the `--no-fs` flag:
+
+```
+pnpm example:server:dev --no-fs
+```
+
+#### Redis
+
+The server can alternatively use a redis database which can be enabled by passing the `--redis` flag:
+
+```
+pnpm example:server:dev --redis
+```
+
+This will try to to connect to redis on `redis://127.0.0.1:6379`.
+You can optionally pass the redis url if you want to use a different redis host/port:
+
+```
+pnpm example:server:dev --redis redis://192.168.0.1:6379
+```
+
+You can quickly get a redis server running locally using docker, e.g:
+
+```
+ docker run --name redis-opaque -d -p 6379:6379 redis
+```
+
 ### server-with-password-reset
 
 This is the same as the server-simple example but with added password reset endpoints.
@@ -141,6 +170,8 @@ Run with:
 ```
 pnpm example:server-with-password-reset:dev
 ```
+
+This example also supports the `--no-fs` and `--redis` options (see server-simple above).
 
 ### client-simple-webpack
 
@@ -168,6 +199,12 @@ This is the same example app built with nextjs but includes server-side implemen
 ```
 pnpm example:fullstack-simple-nextjs:dev
 ```
+
+#### Redis
+
+This example also supports redis but it needs to be configured through env variables.
+Set `ENABLE_REDIS` to any value to use redis running on localhost and default port `6379`.
+If you want to use another redis host you can set the `REDIS_URL` variable to the redis url.
 
 ### client-with-password-reset
 
