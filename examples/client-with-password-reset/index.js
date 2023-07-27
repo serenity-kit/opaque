@@ -1,6 +1,6 @@
 import * as opaque from "@serenity-kit/opaque";
 
-const host = "http://localhost:8089";
+const host = "/api";
 
 const passwordResetConfirm = requireFormElement("password_reset_confirm");
 const passwordResetForm = requireFormElement("password_reset_form");

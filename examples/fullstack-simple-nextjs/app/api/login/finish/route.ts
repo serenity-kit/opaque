@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     );
 
   const db = await database;
-  const serverLoginState = userIdentifier && db.getLogin(userIdentifier);
+  const serverLoginState = await db.getLogin(userIdentifier);
 
   if (!serverLoginState)
     return NextResponse.json({ error: "login not started" }, { status: 400 });

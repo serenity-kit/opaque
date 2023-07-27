@@ -1,6 +1,6 @@
 import * as opaque from "@serenity-kit/opaque";
 
-const host = "http://localhost:8089";
+const host = "/api";
 
 const form = requireFormElement("form");
 const runFullFlowDemoButton = requireElement("run_full_flow_demo");

@@ -1,6 +1,7 @@
 import * as opaque from "@serenity-kit/opaque";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
+import { SERVER_SETUP } from "../../env";
 
 export async function POST(request: NextRequest) {
   const { userIdentifier, startLoginRequest } = await request.json();
@@ -17,19 +18,20 @@ export async function POST(request: NextRequest) {
     );
 
   const db = await database;
-  const registrationRecord = userIdentifier && db.getUser(userIdentifier);
+  const registrationRecord = await db.getUser(userIdentifier);
 
   if (!registrationRecord)
     return NextResponse.json({ error: "user not registered" }, { status: 400 });
 
-  if (db.hasLogin(userIdentifier))
+  const hasLogin = await db.hasLogin(userIdentifier);
+  if (hasLogin)
     return NextResponse.json(
       { error: "login already started" },
       { status: 400 }
     );
 
   const { serverLoginState, loginResponse } = opaque.server.startLogin({
-    serverSetup: db.getServerSetup(),
+    serverSetup: SERVER_SETUP,
     userIdentifier,
     registrationRecord,
     startLoginRequest,
