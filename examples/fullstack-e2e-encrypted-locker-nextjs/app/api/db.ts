@@ -3,11 +3,20 @@ import { readFile, writeFile } from "fs/promises";
 
 type LoginState = { value: string; timestamp: number };
 
+type SessionEntry = { userIdentifier: string; sessionKey: string };
+
+type LockerEntry = {
+  ciphertext: string;
+  nonce: string;
+};
+
 class Database {
   constructor(
     private serverSetup: string,
     private users: Record<string, string> = {},
     private logins: Record<string, LoginState> = {},
+    private lockers: Record<string, LockerEntry> = {},
+    private sessions: Record<string, SessionEntry> = {},
     private listeners: (() => Promise<void>)[] = []
   ) {}
   addListener(listener: () => Promise<void>) {
@@ -23,7 +32,7 @@ class Database {
     return Promise.all(this.listeners.map((f) => f()));
   }
   static empty(serverSetup: string) {
-    return new Database(serverSetup, {}, {});
+    return new Database(serverSetup);
   }
   stringify() {
     return JSON.stringify(
@@ -64,15 +73,33 @@ class Database {
     delete this.logins[name];
     await this._notifyListeners();
   }
+  async setLocker(name: string, entry: LockerEntry) {
+    this.lockers[name] = entry;
+    await this._notifyListeners();
+  }
+  async getLocker(name: string): Promise<LockerEntry | null> {
+    return this.lockers[name];
+  }
   getServerSetup() {
     return this.serverSetup;
+  }
+  async setSession(id: string, entry: SessionEntry) {
+    this.sessions[id] = entry;
+  }
+  async getSession(id: string): Promise<SessionEntry | null> {
+    return this.sessions[id];
   }
 }
 
 async function readDatabaseFile(filePath: string) {
   const json = await readFile(filePath, "utf-8");
   const data = JSON.parse(json);
-  const db = new Database(data.serverSetup, data.users, data.logins);
+  const db = new Database(
+    data.serverSetup,
+    data.users,
+    data.logins,
+    data.lockers ?? {}
+  );
   return db;
 }
 
