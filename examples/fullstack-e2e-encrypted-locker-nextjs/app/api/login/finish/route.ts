@@ -2,6 +2,7 @@ import * as opaque from "@serenity-kit/opaque";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
 import { randomInt } from "crypto";
+import { cookies } from "next/dist/client/components/headers";
 
 export async function POST(request: NextRequest) {
   const { userIdentifier, finishLoginRequest } = await request.json();
@@ -30,6 +31,11 @@ export async function POST(request: NextRequest) {
   });
 
   await db.removeLogin(userIdentifier);
+
+  const sessionCookie = cookies().get("session");
+  if (sessionCookie) {
+    await db.removeSession(sessionCookie.value);
+  }
 
   const sessionId = generateSessionId();
   await db.setSession(sessionId, { userIdentifier, sessionKey });

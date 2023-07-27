@@ -2,6 +2,9 @@
 
 import * as opaque from "@serenity-kit/opaque";
 import { useState } from "react";
+import { Locker } from "./utils/locker";
+import { createLocker } from "./utils/locker/client/createLocker";
+import { decryptLocker } from "./utils/locker/client/decryptLocker";
 
 async function request(method: string, path: string, body: any = undefined) {
   console.log(`${method} ${path}`, body);
@@ -66,60 +69,128 @@ async function login(userIdentifier: string, password: string) {
   if (!loginResult) {
     return null;
   }
-  const { sessionKey, finishLoginRequest } = loginResult;
+  const { sessionKey, finishLoginRequest, exportKey } = loginResult;
   const res = await request("POST", "/api/login/finish", {
     userIdentifier,
     finishLoginRequest,
   });
-  return res.ok ? sessionKey : null;
+  return res.ok ? { sessionKey, exportKey } : null;
 }
 
-async function handleSubmit(
-  action: string,
-  username: string,
-  password: string
-) {
-  try {
-    if (action === "login") {
-      const sessionKey = await login(username, password);
-      if (sessionKey) {
-        alert(
-          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
-        );
-      } else {
-        alert(`User "${username}" login failed`);
-      }
-    } else if (action === "register") {
-      const ok = await register(username, password);
-      if (ok) {
-        alert(`User "${username}" registered successfully`);
-      } else {
-        alert(`Failed to register user "${username}"`);
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    alert(err);
-  }
+function isValidLockerResponse(data: unknown): data is Locker {
+  return (
+    data != null &&
+    typeof data === "object" &&
+    "ciphertext" in data &&
+    "nonce" in data &&
+    typeof data.ciphertext === "string" &&
+    typeof data.nonce === "string"
+  );
 }
+
+async function fetchLocker(): Promise<Locker | null> {
+  const res = await fetch("/api/locker");
+  if (res.status === 404) {
+    return null;
+  }
+  if (res.status !== 200) throw new Error("unexpected locker response");
+  const json: unknown = await res.json();
+  if (!isValidLockerResponse(json)) {
+    throw new TypeError("malformed locker object");
+  }
+  return json;
+}
+
+function LockerForm({
+  secret,
+  onSubmit,
+  onChange,
+}: {
+  secret: string;
+  onSubmit?: () => void;
+  onChange?: (secret: string) => void;
+}) {
+  return (
+    <div className="px-12 space-y-4">
+      <h2 className="text-xl font-semibold">Locker</h2>
+
+      <form
+        className="flex flex-col items-start space-y-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit?.();
+        }}
+      >
+        <textarea
+          className="w-full max-w-xl border border-gray-300 p-2 rounded"
+          value={secret}
+          onChange={(e) => {
+            onChange?.(e.target.value);
+          }}
+        />
+        <Button>Save</Button>
+      </form>
+    </div>
+  );
+}
+
+type LoginState = { sessionKey: string; exportKey: string } | null;
 
 export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
+  const [loginState, setLoginState] = useState<LoginState>(null);
+  const [lockerSecret, setLockerSecret] = useState<string>("");
 
   return (
     <>
       <form
         id="form"
         className="p-12 space-y-4 max-w-xl"
-        onSubmit={(
+        onSubmit={async (
           e: React.FormEvent<HTMLFormElement> & {
             nativeEvent: { submitter: HTMLButtonElement };
           }
         ) => {
           e.preventDefault();
           const action = e.nativeEvent.submitter.value;
-          handleSubmit(action, username, password);
+          try {
+            if (action === "login") {
+              const loginResult = await login(username, password);
+              if (loginResult) {
+                alert(
+                  `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`
+                );
+                const locker = await fetchLocker();
+                if (locker != null) {
+                  const secret = decryptLocker({
+                    locker,
+                    exportKey: loginResult.exportKey,
+                  });
+                  if (typeof secret !== "string") throw new TypeError();
+                  console.log("decrypted locker:", secret);
+                  setLockerSecret(secret);
+                } else {
+                  console.log("no locker content found");
+                }
+                setLoginState(loginResult);
+              } else {
+                alert(`User "${username}" login failed`);
+                setLoginState(null);
+              }
+            } else if (action === "register") {
+              const ok = await register(username, password);
+              if (ok) {
+                alert(`User "${username}" registered successfully`);
+              } else {
+                alert(`Failed to register user "${username}"`);
+              }
+            }
+          } catch (err) {
+            console.error(err);
+            alert(err);
+          }
         }}
       >
         <h1 className="text-xl font-semibold">Login/Register</h1>
@@ -161,6 +232,27 @@ export default function Home() {
           </div>
         </div>
       </form>
+
+      {loginState != null && (
+        <LockerForm
+          secret={lockerSecret}
+          onChange={(secret) => {
+            setLockerSecret(secret);
+          }}
+          onSubmit={async () => {
+            console.log(loginState);
+            const locker = createLocker({
+              data: lockerSecret,
+              exportKey: loginState.exportKey,
+              sessionKey: loginState.sessionKey,
+            });
+            console.log(locker);
+            const res = await request("POST", "/api/locker", locker);
+
+            //TODO send to server
+          }}
+        />
+      )}
 
       <div className="p-12 space-y-4 max-w-xl">
         <p className="text-gray-500 text-sm">

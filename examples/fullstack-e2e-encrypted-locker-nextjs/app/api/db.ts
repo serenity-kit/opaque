@@ -40,6 +40,8 @@ class Database {
         serverSetup: this.serverSetup,
         logins: this.logins,
         users: this.users,
+        sessions: this.sessions,
+        lockers: this.lockers,
       },
       null,
       2
@@ -85,9 +87,13 @@ class Database {
   }
   async setSession(id: string, entry: SessionEntry) {
     this.sessions[id] = entry;
+    this._notifyListeners();
   }
   async getSession(id: string): Promise<SessionEntry | null> {
     return this.sessions[id];
+  }
+  async removeSession(id: string) {
+    delete this.sessions[id];
   }
 }
 
@@ -98,7 +104,8 @@ async function readDatabaseFile(filePath: string) {
     data.serverSetup,
     data.users,
     data.logins,
-    data.lockers ?? {}
+    data.lockers ?? {},
+    data.sessions ?? {}
   );
   return db;
 }

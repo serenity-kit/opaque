@@ -11,7 +11,7 @@ export const decryptLocker = ({
     sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
     42,
     "locker",
-    exportKeyAsUint8Array
+    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES)
   );
 
   const contentAsUint8Array = sodium.crypto_secretbox_open_easy(

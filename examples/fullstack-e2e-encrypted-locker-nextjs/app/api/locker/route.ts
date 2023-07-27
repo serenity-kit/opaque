@@ -23,7 +23,10 @@ export async function POST(req: NextRequest) {
   const sessionCookie = cookies().get("session");
 
   if (!sessionCookie) {
-    return NextResponse.json({ error: "invalid session" }, { status: 401 });
+    return NextResponse.json(
+      { error: "missing session cookie" },
+      { status: 401 }
+    );
   }
 
   const db = await database;
@@ -58,7 +61,10 @@ export async function GET(req: NextRequest) {
   const sessionCookie = cookies().get("session");
 
   if (!sessionCookie) {
-    return NextResponse.json({ error: "invalid session" }, { status: 401 });
+    return NextResponse.json(
+      { error: "missing session cookie" },
+      { status: 401 }
+    );
   }
 
   const db = await database;

@@ -14,7 +14,7 @@ export const isValidLocker = ({ locker, sessionKey }: IsValidLockerParams) => {
     return sodium.crypto_auth_verify(
       sodium.from_base64(serverVerificationMac),
       serverVerificationMacContent,
-      sodium.from_base64(sessionKey)
+      sodium.from_base64(sessionKey).subarray(0, sodium.crypto_auth_KEYBYTES)
     );
   } catch (err) {
     return false;

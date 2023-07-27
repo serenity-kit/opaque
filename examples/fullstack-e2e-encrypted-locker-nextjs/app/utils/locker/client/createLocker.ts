@@ -24,7 +24,7 @@ export const createLocker = ({
     throw new Error("serverVerificationMacContent is undefined");
   const serverVerificationMac = sodium.crypto_auth(
     serverVerificationMacContent,
-    sodium.from_base64(sessionKey)
+    sodium.from_base64(sessionKey).subarray(0, sodium.crypto_auth_KEYBYTES)
   );
 
   return {
