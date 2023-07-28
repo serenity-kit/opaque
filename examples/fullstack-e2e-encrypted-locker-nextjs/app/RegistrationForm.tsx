@@ -4,15 +4,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CredentialsForm from "./CredentialsForm";
 import { login, register } from "./utils/auth";
+import { useState } from "react";
 
 export default function RegistrationForm() {
   const router = useRouter();
+  const [showError, setShowError] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   return (
     <div className="space-y-8">
       <h1 className="text-xl font-semibold">Register</h1>
       <CredentialsForm
         label="Register"
+        invalid={showError}
+        disabled={disabled}
+        onChange={() => setShowError(false)}
         onSubmit={async ({ username, password }) => {
+          setShowError(false);
+          setDisabled(true);
           try {
             await register(username, password);
             console.log(`User "${username}" registered successfully`);
@@ -22,12 +30,16 @@ export default function RegistrationForm() {
                 `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`
               );
               router.push("/private");
+              return;
             } else {
               console.log(`User "${username}" login failed`);
+              setShowError(true);
             }
           } catch (err) {
+            setShowError(true);
             alert(err);
           }
+          setDisabled(false);
         }}
       />
       <p className="text-sm">
