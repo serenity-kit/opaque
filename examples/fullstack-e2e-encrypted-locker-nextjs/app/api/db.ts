@@ -94,6 +94,7 @@ class Database {
   }
   async removeSession(id: string) {
     delete this.sessions[id];
+    this._notifyListeners();
   }
 }
 
