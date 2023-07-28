@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import LoginForm from "./LoginForm";
 import { cookies } from "next/headers";
 import database from "./api/db";
+import Demoflow from "./Demoflow";
 
 // function isValidLockerResponse(data: unknown): data is Locker {
 //   return (
@@ -87,98 +88,10 @@ export default async function Home() {
   // const [lockerSecret, setLockerSecret] = useState<string>("");
 
   return (
-    <div className="p-12 max-w-xl text-gray-900 space-y-4">
+    <div className="p-12 max-w-xl text-gray-900 flex flex-col space-y-16">
       <LoginForm />
-
-      {/* <form
-        id="form"
-        className="p-12 space-y-4 max-w-xl"
-        onSubmit={async (
-          e: React.FormEvent<HTMLFormElement> & {
-            nativeEvent: { submitter: HTMLButtonElement };
-          }
-        ) => {
-          e.preventDefault();
-          const action = e.nativeEvent.submitter.value;
-          try {
-            if (action === "login") {
-              const loginResult = await login(username, password);
-              if (loginResult) {
-                alert(
-                  `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`
-                );
-                const locker = await fetchLocker();
-                if (locker != null) {
-                  const secret = decryptLocker({
-                    locker,
-                    exportKey: loginResult.exportKey,
-                  });
-                  if (typeof secret !== "string") throw new TypeError();
-                  console.log("decrypted locker:", secret);
-                  setLockerSecret(secret);
-                } else {
-                  setLockerSecret("");
-                  console.log("no locker content found");
-                }
-                setLoginState(loginResult);
-              } else {
-                alert(`User "${username}" login failed`);
-                setLoginState(null);
-              }
-            } else if (action === "register") {
-              const ok = await register(username, password);
-              if (ok) {
-                alert(`User "${username}" registered successfully`);
-              } else {
-                alert(`Failed to register user "${username}"`);
-              }
-            }
-          } catch (err) {
-            console.error(err);
-            alert(err);
-          }
-        }}
-      >
-        <h1 className="text-xl font-semibold">Login/Register</h1>
-
-        <div className="space-y-2 flex flex-col">
-          <input
-            required
-            className="border border-slate-300 p-2 rounded"
-            name="username"
-            placeholder="Username"
-            type="text"
-            autoComplete="off"
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-            }}
-          />
-
-          <input
-            required
-            className="border border-slate-300 p-2 rounded"
-            name="password"
-            placeholder="Password"
-            type="password"
-            autoComplete="off"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-            }}
-          />
-
-          <div className="space-x-2">
-            <Button name="action" value="login">
-              Login
-            </Button>
-            <Button name="action" value="register">
-              Register
-            </Button>
-          </div>
-        </div>
-      </form>
-
+      <hr />
+      {/*
       {loginState != null && (
         <LockerForm
           secret={lockerSecret}
@@ -196,21 +109,9 @@ export default async function Home() {
             const res = await request("POST", "/api/locker", locker);
           }}
         />
-      )}
+      )}*/}
 
-      <div className="p-12 space-y-4 max-w-xl">
-        <p className="text-gray-500 text-sm">
-          Run full flow in-memory demo (check console.log output).
-        </p>
-        <Button
-          name="login"
-          onClick={() => {
-            runFullFlowDemo();
-          }}
-        >
-          Demo
-        </Button>
-      </div> */}
+      <Demoflow />
     </div>
   );
 }
