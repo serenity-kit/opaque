@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import CredentialsForm from "./CredentialsForm";
-import { login, register } from "./utils/auth";
+import CredentialsForm from "../CredentialsForm";
+import {
+  login,
+  register,
+  storeLoginKeys,
+  usePrivateRedirect,
+} from "../utils/auth";
 import { useState } from "react";
 
 export default function RegistrationForm() {
-  const router = useRouter();
   const [showError, setShowError] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const redirectPrivate = usePrivateRedirect();
   return (
     <div className="space-y-8">
       <h1 className="text-xl font-semibold">Register</h1>
@@ -29,7 +34,8 @@ export default function RegistrationForm() {
               console.log(
                 `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`
               );
-              router.push("/private");
+              storeLoginKeys(loginResult);
+              redirectPrivate();
               return;
             } else {
               console.log(`User "${username}" login failed`);

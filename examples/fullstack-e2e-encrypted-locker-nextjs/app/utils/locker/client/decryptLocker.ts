@@ -10,7 +10,7 @@ export const decryptLocker = ({
   const lockerSecretKey = sodium.crypto_kdf_derive_from_key(
     sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
     42,
-    "locker",
+    "locker__",
     exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES)
   );
 

@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CredentialsForm from "./CredentialsForm";
-import { login } from "./utils/auth";
+import { login, storeLoginKeys, usePrivateRedirect } from "./utils/auth";
 import { useState } from "react";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [showError, setShowError] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const redirectPrivate = usePrivateRedirect();
   return (
     <div className="space-y-8">
       <h1 className="text-xl font-semibold">Login</h1>
@@ -27,11 +27,8 @@ export default function LoginForm() {
               console.log(
                 `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`
               );
-              router.replace("/private");
-              // we are refreshing because there is a bug in the router which makes
-              // it use a previously cached response even though the page should be dynamic
-              // https://github.com/vercel/next.js/issues/49417#issuecomment-1546618485
-              router.refresh();
+              storeLoginKeys(loginResult);
+              redirectPrivate();
               return;
             } else {
               setShowError(true);
