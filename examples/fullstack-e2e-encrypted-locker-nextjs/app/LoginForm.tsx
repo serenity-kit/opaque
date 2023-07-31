@@ -28,6 +28,10 @@ export default function LoginForm() {
                 `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`
               );
               router.replace("/private");
+              // we are refreshing because there is a bug in the router which makes
+              // it use a previously cached response even though the page should be dynamic
+              // https://github.com/vercel/next.js/issues/49417#issuecomment-1546618485
+              router.refresh();
               return;
             } else {
               setShowError(true);

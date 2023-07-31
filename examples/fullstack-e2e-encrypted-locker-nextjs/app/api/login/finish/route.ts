@@ -1,8 +1,8 @@
 import * as opaque from "@serenity-kit/opaque";
-import { NextRequest, NextResponse } from "next/server";
-import database from "../../db";
 import { randomInt } from "crypto";
 import { cookies } from "next/dist/client/components/headers";
+import { NextRequest, NextResponse } from "next/server";
+import database from "../../db";
 
 export async function POST(request: NextRequest) {
   const { userIdentifier, finishLoginRequest } = await request.json();
