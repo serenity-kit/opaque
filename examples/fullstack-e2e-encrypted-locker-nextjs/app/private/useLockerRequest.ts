@@ -1,17 +1,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import FetchRequest from "./FetchRequest";
 import { Locker } from "../utils/locker";
-
-function isValidLockerResponse(data: unknown): data is Locker {
-  return (
-    data != null &&
-    typeof data === "object" &&
-    "ciphertext" in data &&
-    "nonce" in data &&
-    typeof data.ciphertext === "string" &&
-    typeof data.nonce === "string"
-  );
-}
+import isLockerObject from "../utils/isLockerObject";
 
 async function fetchLocker(): Promise<Locker | null> {
   const res = await fetch("/api/locker", { cache: "no-store" });
@@ -20,8 +10,8 @@ async function fetchLocker(): Promise<Locker | null> {
   }
   if (res.status !== 200) throw new Error("unexpected locker response");
   const json: unknown = await res.json();
-  if (!isValidLockerResponse(json)) {
-    throw new TypeError("malformed locker object");
+  if (!isLockerObject(json)) {
+    throw new Error("invalid locker object response");
   }
   return json;
 }

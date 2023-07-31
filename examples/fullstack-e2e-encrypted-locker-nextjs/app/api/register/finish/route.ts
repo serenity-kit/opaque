@@ -1,4 +1,3 @@
-import * as opaque from "@serenity-kit/opaque";
 import { NextResponse } from "next/server";
 import database from "../../db";
 
