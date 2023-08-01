@@ -2,6 +2,8 @@ import * as redis from "redis";
 import { Datastore, LockerEntry, SessionEntry } from "./Datastore";
 import isLockerObject from "../utils/isLockerObject";
 
+const SECONDS_PER_DAY = 24 /*hours*/ * 60 /*minutes*/ * 60; /*seconds*/
+
 export default class RedisStore implements Datastore {
   private readonly client: ReturnType<typeof redis.createClient>;
   constructor(url: string) {
@@ -54,8 +56,14 @@ export default class RedisStore implements Datastore {
     return { userIdentifier, sessionKey };
   }
 
-  async setSession(id: string, session: SessionEntry) {
-    await this.client.hSet(`session:${id}`, session);
+  async setSession(
+    id: string,
+    session: SessionEntry,
+    lifetimeInDays: number = 14
+  ) {
+    const expireInSeconds = lifetimeInDays * SECONDS_PER_DAY;
+    await this.client.hSet(`session:${id}`, /** @type {any} */ session);
+    await this.client.expire(`session:${id}`, expireInSeconds);
   }
 
   async removeSession(id: string) {

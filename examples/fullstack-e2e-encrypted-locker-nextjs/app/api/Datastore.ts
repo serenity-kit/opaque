@@ -13,7 +13,11 @@ export interface Datastore {
   setLogin(name: string, value: string): Promise<void>;
   hasLogin(name: string): Promise<boolean>;
   removeLogin(name: string): Promise<void>;
-  setSession(id: string, entry: SessionEntry): Promise<void>;
+  setSession(
+    id: string,
+    entry: SessionEntry,
+    lifetimeInDays?: number
+  ): Promise<void>;
   getSession(id: string): Promise<SessionEntry | null>;
   removeSession(id: string): Promise<void>;
   setLocker(name: string, entry: LockerEntry): Promise<void>;

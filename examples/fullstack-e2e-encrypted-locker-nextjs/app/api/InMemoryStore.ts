@@ -1,6 +1,9 @@
 import { readFile, writeFile } from "fs/promises";
 import { Datastore, LockerEntry, SessionEntry } from "./Datastore";
 
+const MILLISECONDS_PER_DAY =
+  24 /*hours*/ * 60 /*minutes*/ * 60 /*seconds*/ * 1000; /*milliseconds*/
+
 type LoginState = { value: string; timestamp: number };
 
 export default class InMemoryStore implements Datastore {
@@ -8,7 +11,7 @@ export default class InMemoryStore implements Datastore {
     private users: Record<string, string> = {},
     private logins: Record<string, LoginState> = {},
     private lockers: Record<string, LockerEntry> = {},
-    private sessions: Record<string, SessionEntry> = {},
+    private sessions: Record<string, SessionEntry & { expiresAt: number }> = {},
     private listeners: (() => Promise<void>)[] = []
   ) {}
   addListener(listener: () => Promise<void>) {
@@ -74,12 +77,25 @@ export default class InMemoryStore implements Datastore {
   async getLocker(name: string): Promise<LockerEntry | null> {
     return this.lockers[name];
   }
-  async setSession(id: string, entry: SessionEntry) {
-    this.sessions[id] = entry;
+  async setSession(
+    id: string,
+    entry: SessionEntry,
+    lifetimeInDays: number = 14
+  ) {
+    const expiresAt =
+      new Date().getTime() + lifetimeInDays * MILLISECONDS_PER_DAY;
+    this.sessions[id] = { ...entry, expiresAt };
     this._notifyListeners();
   }
   async getSession(id: string): Promise<SessionEntry | null> {
-    return this.sessions[id];
+    const session = this.sessions[id];
+    if (session == null) return null;
+    const { expiresAt, ...sessionData } = session;
+    if (expiresAt < new Date().getTime()) {
+      await this.removeSession(id);
+      return null;
+    }
+    return sessionData;
   }
   async removeSession(id: string) {
     delete this.sessions[id];
