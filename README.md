@@ -124,6 +124,11 @@ const { sessionKey } = opaque.server.finishLogin({
 
 ## Examples
 
+All server examples require configuration through environment variables to set the `OPAQUE_SERVER_SETUP` variable at a minimum.
+A `.env` file will be automatically generated in the project root when running `pnpm build` if it doesn't exist already.
+You can manually generate it by running `pnpm gen:dotenv`, but by default it will not overwrite an existing file.
+To force overwriting an existing `.env` file you can pass the `--force` flag: `pnpm gen:dotenv --force`.
+
 ### server-simple
 
 A server-side nodejs example with expressjs located in `./examples/server-simple`.
@@ -131,6 +136,35 @@ You can start the server with
 
 ```
 pnpm example:server:dev
+```
+
+By default the server will use a dummy in-memory database.
+It will load data from `./data.json` and overwrite the file on change.
+You can disable the file persistence by setting the `DISABLE_FS` env variable in the `.env` file:
+
+```
+DISABLE_FS=true
+```
+
+#### Redis
+
+The server can alternatively use a redis database which can be enabled by setting the `ENABLE_REDIS` variable in the `.env` file:
+
+```
+ENABLE_REDIS=true
+```
+
+By default it will try to connect to redis on `redis://127.0.0.1:6379`.
+You can optionally set the redis url with the `REDIS_URL` variable if you want to use a different redis host/port:
+
+```
+REDIS_URL=redis://192.168.0.1:6379
+```
+
+You can quickly get a redis server running locally using docker, e.g:
+
+```
+ docker run --name redis-opaque -d -p 6379:6379 redis
 ```
 
 ### server-with-password-reset
@@ -141,6 +175,8 @@ Run with:
 ```
 pnpm example:server-with-password-reset:dev
 ```
+
+This example also supports the `DISABLE_FS`, `ENABLE_REDIS` and `REDIS_URL` env variables (see `server-simple` example above).
 
 ### client-simple-webpack
 
@@ -168,6 +204,8 @@ This is the same example app built with nextjs but includes server-side implemen
 ```
 pnpm example:fullstack-simple-nextjs:dev
 ```
+
+This example can also use a redis database through the `ENABLE_REDIS` and `REDIS_URL` env variables (see `server-simple` example above).
 
 ### client-with-password-reset
 

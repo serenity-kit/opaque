@@ -9,4 +9,12 @@ module.exports = {
   },
   mode: "development",
   plugins: [new CopyWebpackPlugin({ patterns: ["index.html"] })],
+  devServer: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8089",
+        pathRewrite: { "^/api": "" },
+      },
+    },
+  },
 };
