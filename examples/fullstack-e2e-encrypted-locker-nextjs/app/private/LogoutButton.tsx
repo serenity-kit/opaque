@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { removeLoginKeys } from "../utils/auth";
+import { logout, removeLoginKeys } from "../utils/auth";
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -10,7 +10,7 @@ export default function LogoutButton() {
       className="text-blue-500"
       onClick={async () => {
         try {
-          await fetch("/api/logout", { method: "POST" });
+          await logout();
         } finally {
           removeLoginKeys();
           router.replace("/");
