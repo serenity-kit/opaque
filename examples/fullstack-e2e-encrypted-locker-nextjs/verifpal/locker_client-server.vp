@@ -1,0 +1,40 @@
+attacker[active]
+
+principal Alice_session1[
+	knows private locker_content
+	knows private locker_key
+	ciphertext = ENC(locker_key, locker_content)
+	tag = MAC(locker_key, ciphertext)
+	knows private session1_key
+	server_tag = MAC(session1_key, CONCAT(ciphertext, tag))
+]
+
+Alice_session1 -> Server: ciphertext, tag, server_tag
+
+principal Server[
+	knows private session1_key
+	_ = ASSERT(server_tag, MAC(session1_key, CONCAT(ciphertext, tag)))?
+]
+
+principal Alice_session1[
+	knows private export_key
+	knows private recovery_export_key
+	export_publickey = G^export_key
+	recovery_export_publickey = G^recovery_export_key
+	recovery_lockbox = PKE_ENC(recovery_export_publickey, locker_key)
+	server_recovery_lockbox_tag = MAC(session1_key, recovery_lockbox)
+]
+
+Alice_session1 -> Server: recovery_lockbox, server_recovery_lockbox_tag
+
+principal Server[
+	_ = ASSERT(server_recovery_lockbox_tag, MAC(session1_key, recovery_lockbox))?
+]
+
+queries[
+	confidentiality? locker_key
+	confidentiality? locker_content
+	authentication? Alice_session1 -> Server: ciphertext
+	authentication? Alice_session1 -> Server: tag
+	authentication? Alice_session1 -> Server: recovery_lockbox
+]
