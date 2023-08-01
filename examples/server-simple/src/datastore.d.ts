@@ -11,7 +11,7 @@ interface Datastore {
   setLogin(name: string, value: string): Promise<void>;
   hasLogin(name: string): Promise<boolean>;
   removeLogin(name: string): Promise<void>;
-  getSession(id: string): Promise<SessionData>;
-  setSession(id: string, session: SessionData);
+  getSession(id: string): Promise<SessionData | null>;
+  setSession(id: string, session: SessionData, lifetimeInDays: number);
   clearSession(id: string): Promise<void>;
 }

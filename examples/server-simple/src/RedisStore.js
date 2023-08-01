@@ -89,9 +89,13 @@ export default class RedisStore {
   /**
    * @param {string} id
    * @param {SessionData} session
+   * @param {number} lifetimeInDays
    */
-  async setSession(id, session) {
+  async setSession(id, session, lifetimeInDays = 14) {
+    const expireInSeconds =
+      lifetimeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60; /*seconds*/
     await this.client.hSet(`session:${id}`, /** @type {any} */ (session));
+    await this.client.expire(`session:${id}`, expireInSeconds);
   }
 
   /**

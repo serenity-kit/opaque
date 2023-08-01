@@ -15,7 +15,7 @@ export default class InMemoryStore {
     this.logins = logins;
     /** @type {(() => void)[]} */
     this.listeners = [];
-    /** @type {Record<string,SessionData>} */
+    /** @type {Record<string,SessionData & {expiresAt: number}>} */
     this.sessions = {};
   }
 
@@ -116,15 +116,30 @@ export default class InMemoryStore {
    * @param {string} id
    */
   async getSession(id) {
-    return this.sessions[id];
+    const session = this.sessions[id];
+    if (session == null) return null;
+    const { expiresAt, ...sessionData } = session;
+    if (expiresAt < new Date().getTime()) {
+      await this.clearSession(id);
+      return null;
+    }
+    return sessionData;
   }
 
   /**
    * @param {string} id
    * @param {SessionData} session
+   * @param {number} lifetimeInDays
    */
-  async setSession(id, session) {
-    this.sessions[id] = session;
+  async setSession(id, session, lifetimeInDays = 14) {
+    const expiresAt =
+      new Date().getTime() +
+      lifetimeInDays *
+        24 /*hours*/ *
+        60 /*minutes*/ *
+        60 /*seconds*/ *
+        1000; /*milliseconds*/
+    this.sessions[id] = { ...session, expiresAt };
   }
 
   /**
