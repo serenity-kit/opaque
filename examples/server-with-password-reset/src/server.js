@@ -69,7 +69,7 @@ async function initInMemoryStore(filePath) {
 }
 
 /**
- * @type {DatastoreWithPasswordReset}
+ * @type {ServerWithPasswordReset.Datastore}
  */
 let db;
 

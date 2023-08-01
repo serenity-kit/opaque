@@ -1,7 +1,9 @@
 import * as redis from "redis";
 
+const SECONDS_PER_DAY = 24 /*hours*/ * 60 /*minutes*/ * 60; /*seconds*/
+
 /**
- * @implements Datastore
+ * @implements {ServerSimple.Datastore}
  */
 export default class RedisStore {
   /**
@@ -88,12 +90,11 @@ export default class RedisStore {
 
   /**
    * @param {string} id
-   * @param {SessionData} session
+   * @param {ServerSimple.SessionData} session
    * @param {number} lifetimeInDays
    */
   async setSession(id, session, lifetimeInDays = 14) {
-    const expireInSeconds =
-      lifetimeInDays * 24 /*hours*/ * 60 /*minutes*/ * 60; /*seconds*/
+    const expireInSeconds = lifetimeInDays * SECONDS_PER_DAY;
     await this.client.hSet(`session:${id}`, /** @type {any} */ (session));
     await this.client.expire(`session:${id}`, expireInSeconds);
   }
