@@ -23,6 +23,7 @@
     "build": "node ./bin/build.js && pnpm gen:dotenv",
     "gen:dotenv": "node ./bin/generate-dotenv.js",
     "example:fullstack-simple-nextjs:dev": "cd examples/fullstack-simple-nextjs && pnpm dev",
+    "example:fullstack-e2e-locker-nextjs:dev": "cd examples/fullstack-e2e-encrypted-locker-nextjs && pnpm dev",
     "example:client-simple-webpack:dev": "cd examples/client-simple-webpack && pnpm dev",
     "example:client-with-password-reset:dev": "cd examples/client-with-password-reset && pnpm dev",
     "example:client-simple-vite:dev": "cd examples/client-simple-vite && pnpm dev",

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import Button from "../Button";
-import { requireExportKey, requireSessionKey } from "../utils/auth";
+import { logout, requireExportKey, requireSessionKey } from "../utils/auth";
 import { createLocker } from "../utils/locker/client/createLocker";
 import { decryptLocker } from "../utils/locker/client/decryptLocker";
 import useLockerRequestState from "./useLockerRequest";
@@ -40,14 +41,29 @@ function LockerForm({
   );
 }
 
+function useRequireExportKeyOrRedirect() {
+  const router = useRouter();
+  const requireOrRedirect = useCallback(() => {
+    try {
+      return requireExportKey();
+    } catch (err) {
+      logout().finally(() => router.replace("/"));
+    }
+  }, [router]);
+  return requireOrRedirect;
+}
+
 export default function Locker() {
   const lockerState = useLockerRequestState();
   const [secret, setSecret] = useState("");
 
+  const requireExportKeyOrRedirect = useRequireExportKeyOrRedirect();
+
   useEffect(() => {
     if (lockerState.isLoading) return;
     if (lockerState.data) {
-      const exportKey = requireExportKey();
+      const exportKey = requireExportKeyOrRedirect();
+      if (!exportKey) return;
       console.log("decrypting locker payload", exportKey, lockerState.data);
       const secret = decryptLocker({ locker: lockerState.data, exportKey });
       if (typeof secret !== "string") throw new TypeError();
@@ -55,7 +71,7 @@ export default function Locker() {
     } else {
       setSecret("");
     }
-  }, [lockerState]);
+  }, [lockerState, requireExportKeyOrRedirect]);
 
   if (lockerState.isLoading) return null;
 

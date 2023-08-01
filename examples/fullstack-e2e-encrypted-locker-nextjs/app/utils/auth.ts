@@ -77,6 +77,10 @@ export async function login(userIdentifier: string, password: string) {
   return res.ok ? { sessionKey, exportKey } : null;
 }
 
+export async function logout() {
+  await fetch("/api/logout", { method: "POST" });
+}
+
 const OPAQUE_SESSION_KEY = "opaque:sessionKey";
 const OPAQUE_EXPORT_KEY = "opaque:exportKey";
 
