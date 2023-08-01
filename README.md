@@ -163,8 +163,9 @@ REDIS_URL=redis://192.168.0.1:6379
 
 You can quickly get a redis server running locally using docker, e.g:
 
-```
- docker run --name redis-opaque -d -p 6379:6379 redis
+```sh
+docker rm -f redis-opaque
+docker run --name redis-opaque -p 6379:6379 redis
 ```
 
 ### server-with-password-reset
