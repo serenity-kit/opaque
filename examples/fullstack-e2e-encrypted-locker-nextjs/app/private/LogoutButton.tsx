@@ -9,9 +9,12 @@ export default function LogoutButton() {
     <button
       className="text-blue-500"
       onClick={async () => {
-        await fetch("/api/logout", { method: "POST" });
-        removeLoginKeys();
-        router.replace("/");
+        try {
+          await fetch("/api/logout", { method: "POST" });
+        } finally {
+          removeLoginKeys();
+          router.replace("/");
+        }
       }}
     >
       Logout
