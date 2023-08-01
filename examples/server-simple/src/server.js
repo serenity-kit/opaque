@@ -69,7 +69,7 @@ async function initInMemoryStore(filePath) {
 }
 
 /**
- * @type {Datastore}
+ * @type {ServerSimple.Datastore}
  */
 let db;
 
