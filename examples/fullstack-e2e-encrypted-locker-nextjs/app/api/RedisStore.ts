@@ -1,6 +1,8 @@
 import * as redis from "redis";
-import { Datastore, LockerEntry, SessionEntry } from "./Datastore";
 import isLockerObject from "../utils/isLockerObject";
+import isRecoveryLockboxObject from "../utils/isRecoveryLockboxObject";
+import { Locker, RecoveryLockbox } from "../utils/locker";
+import { Datastore, SessionEntry } from "./Datastore";
 
 const SECONDS_PER_DAY = 24 /*hours*/ * 60 /*minutes*/ * 60; /*seconds*/
 
@@ -70,7 +72,7 @@ export default class RedisStore implements Datastore {
     await this.client.del(`session:${id}`);
   }
 
-  async setLocker(name: string, entry: LockerEntry) {
+  async setLocker(name: string, entry: Locker) {
     await this.client.hSet(`locker:${name}`, entry);
   }
 
@@ -82,5 +84,23 @@ export default class RedisStore implements Datastore {
       return null;
     }
     return entry;
+  }
+
+  async setRecoveryLockbox(name: string, entry: RecoveryLockbox) {
+    await this.client.hSet(`recovery:${name}`, entry);
+  }
+
+  async getRecoveryLockbox(name: string) {
+    const entry = await this.client.hGetAll(`recovery:${name}`);
+    if (!isRecoveryLockboxObject(entry)) {
+      // this should only happen if the entry doesn't exist
+      // so we can just return null here instead of raising an error
+      return null;
+    }
+    return entry;
+  }
+
+  async removeRecoveryLockbox(name: string) {
+    await this.client.del(`recovery:${name}`);
   }
 }
