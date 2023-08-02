@@ -18,7 +18,7 @@ function LockerForm({
   onChange?: (secret: string) => void;
 }) {
   return (
-    <div className="space-y-4 w-full">
+    <div className="space-y-4 w-full h-40">
       <h2 className="text-xl font-semibold">Locker</h2>
 
       <form
@@ -73,7 +73,12 @@ export default function Locker() {
     }
   }, [lockerState, requireExportKeyOrRedirect]);
 
-  if (lockerState.isLoading) return null;
+  if (lockerState.isLoading)
+    return (
+      <div className="animate-pulse text-2xl text-gray-300 flex flex-col space-y-4 justify-center items-center h-40 bg-gray-50 w-full">
+        loading locker &hellip;
+      </div>
+    );
 
   if (lockerState.error) {
     return (
