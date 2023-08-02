@@ -18,7 +18,7 @@ it("should throw an error for an invalid exportKey", () => {
 
 it("should throw an error for an invalid recoveryExportKey", () => {
   expect(() =>
-    createRecoveryLockbox({ exportKey: invalidKey, recoveryExportKey })
+    createRecoveryLockbox({ exportKey, recoveryExportKey: invalidKey })
   ).toThrow();
 });
 
