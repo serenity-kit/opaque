@@ -45,6 +45,11 @@ export default function LoginForm() {
           Register
         </Link>
       </p>
+      <p>
+        <Link className="text-sm underline text-gray-500" href="/recovery">
+          Recover Locker
+        </Link>
+      </p>
     </div>
   );
 }
