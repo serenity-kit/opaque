@@ -35,6 +35,8 @@
     "publish:ristretto": "cd build/ristretto && pnpm publish",
     "publish:p256": "cd build/p256 && pnpm publish",
     "publish:all": "pnpm publish:ristretto && pnpm publish:p256",
-    "typecheck": "tsc --noEmit && cd examples/fullstack-simple-nextjs && tsc --noEmit"
+    "typecheck": "tsc --noEmit && pnpm typecheck:fullstack-simple-nextjs && pnpm typecheck:fullstack-e2e-encrypted-locker-nextjs",
+    "typecheck:fullstack-simple-nextjs": "cd examples/fullstack-simple-nextjs && tsc --noEmit",
+    "typecheck:fullstack-e2e-encrypted-locker-nextjs": "cd examples/fullstack-e2e-encrypted-locker-nextjs && tsc --noEmit"
   }
 }
