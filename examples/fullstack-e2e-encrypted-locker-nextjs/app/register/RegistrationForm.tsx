@@ -1,15 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import CredentialsForm from "../CredentialsForm";
-import {
-  login,
-  register,
-  storeLoginKeys,
-  usePrivateRedirect,
-} from "../utils/auth";
 import { useState } from "react";
+import CredentialsForm from "../CredentialsForm";
+import { storeLoginKeys, usePrivateRedirect } from "../utils/auth";
+import { login, register } from "../utils/client";
 
 export default function RegistrationForm() {
   const [showError, setShowError] = useState(false);

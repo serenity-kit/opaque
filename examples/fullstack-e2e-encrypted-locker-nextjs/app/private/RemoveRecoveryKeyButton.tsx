@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Button from "../Button";
-import { request } from "../utils/auth";
+import { deleteRecovery } from "../utils/client";
 
 export default function RemoveRecoveryKeyButton() {
   const router = useRouter();
@@ -11,7 +11,7 @@ export default function RemoveRecoveryKeyButton() {
       size="small"
       variant="muted"
       onClick={async () => {
-        await request("DELETE", "/api/recovery");
+        await deleteRecovery();
         alert("Recovery Key was deleted");
         router.refresh();
       }}

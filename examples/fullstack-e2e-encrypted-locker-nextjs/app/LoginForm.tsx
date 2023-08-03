@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import CredentialsForm from "./CredentialsForm";
-import { login, storeLoginKeys, usePrivateRedirect } from "./utils/auth";
 import { useState } from "react";
+import CredentialsForm from "./CredentialsForm";
+import { storeLoginKeys, usePrivateRedirect } from "./utils/auth";
+import { login } from "./utils/client";
 
 export default function LoginForm() {
   const [showError, setShowError] = useState(false);
@@ -40,7 +40,7 @@ export default function LoginForm() {
         }}
       />
       <p className="text-sm">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link href="/register" className="text-blue-500">
           Register
         </Link>

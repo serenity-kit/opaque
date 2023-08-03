@@ -1,11 +1,9 @@
 import { cookies } from "next/headers";
-import database from "../api/db";
-import React from "react";
 import { redirect } from "next/navigation";
-import LogoutButton from "./LogoutButton";
-import Locker from "./Locker";
-import Button from "../Button";
+import database from "../api/db";
 import CreateRecoveryKeyButton from "./CreateRecoveryKeyButton";
+import Locker from "./Locker";
+import LogoutButton from "./LogoutButton";
 import RemoveRecoveryKeyButton from "./RemoveRecoveryKeyButton";
 
 export default async function PrivateHome() {

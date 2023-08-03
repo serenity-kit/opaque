@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import Button from "../Button";
-import { logout, requireExportKey, requireSessionKey } from "../utils/auth";
+import { requireExportKey, requireSessionKey } from "../utils/auth";
+import { logout } from "../utils/client";
 import { createLocker } from "../utils/locker/client/createLocker";
 import { decryptLocker } from "../utils/locker/client/decryptLocker";
 import useLockerRequestState from "./useLockerRequest";
