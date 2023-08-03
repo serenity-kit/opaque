@@ -1,8 +1,8 @@
+import { LockerWithServerVerificationMac } from "@/app/utils/locker";
+import { isValidLocker } from "@/app/utils/locker/server/isValidLocker";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../db";
-import { cookies } from "next/dist/client/components/headers";
-import { isValidLocker } from "@/app/utils/locker/server/isValidLocker";
-import { LockerWithServerVerificationMac } from "@/app/utils/locker";
+import withUserSession from "../withUserSession";
 
 function isValidLockerPayload(
   data: unknown
@@ -20,65 +20,41 @@ function isValidLockerPayload(
 }
 
 export async function POST(req: NextRequest) {
-  const sessionCookie = cookies().get("session");
-
-  if (!sessionCookie) {
-    return NextResponse.json(
-      { error: "missing session cookie" },
-      { status: 401 }
-    );
-  }
-
   const db = await database;
-  const session = await db.getSession(sessionCookie.value);
 
-  if (!session) {
-    return NextResponse.json({ error: "invalid session" }, { status: 401 });
-  }
+  return withUserSession(db, async (session) => {
+    const payload: unknown = await req.json();
 
-  const payload: unknown = await req.json();
+    if (!isValidLockerPayload(payload)) {
+      return NextResponse.json(
+        { error: "invalid locker payload" },
+        { status: 400 }
+      );
+    }
 
-  if (!isValidLockerPayload(payload)) {
-    return NextResponse.json(
-      { error: "invalid locker payload" },
-      { status: 400 }
-    );
-  }
+    if (!isValidLocker({ locker: payload, sessionKey: session.sessionKey })) {
+      return NextResponse.json({ error: "invalid locker" }, { status: 401 });
+    }
 
-  if (!isValidLocker({ locker: payload, sessionKey: session.sessionKey })) {
-    return NextResponse.json({ error: "invalid locker" }, { status: 401 });
-  }
+    await db.setLocker(session.userIdentifier, {
+      ciphertext: payload.ciphertext,
+      nonce: payload.nonce,
+    });
 
-  await db.setLocker(session.userIdentifier, {
-    ciphertext: payload.ciphertext,
-    nonce: payload.nonce,
+    return NextResponse.json({ ok: true });
   });
-
-  return NextResponse.json({ ok: true });
 }
 
 export async function GET(req: NextRequest) {
-  const sessionCookie = cookies().get("session");
-
-  if (!sessionCookie) {
-    return NextResponse.json(
-      { error: "missing session cookie" },
-      { status: 401 }
-    );
-  }
-
   const db = await database;
-  const session = await db.getSession(sessionCookie.value);
 
-  if (!session) {
-    return NextResponse.json({ error: "invalid session" }, { status: 401 });
-  }
+  return withUserSession(db, async (session) => {
+    const locker = await db.getLocker(session.userIdentifier);
 
-  const locker = await db.getLocker(session.userIdentifier);
+    if (!locker) {
+      return NextResponse.json({ error: "no locker data" }, { status: 404 });
+    }
 
-  if (!locker) {
-    return NextResponse.json({ error: "no locker data" }, { status: 404 });
-  }
-
-  return NextResponse.json(locker);
+    return NextResponse.json(locker);
+  });
 }

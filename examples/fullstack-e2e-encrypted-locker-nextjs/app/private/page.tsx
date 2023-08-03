@@ -6,6 +6,7 @@ import LogoutButton from "./LogoutButton";
 import Locker from "./Locker";
 import Button from "../Button";
 import CreateRecoveryKeyButton from "./CreateRecoveryKeyButton";
+import RemoveRecoveryKeyButton from "./RemoveRecoveryKeyButton";
 
 export default async function PrivateHome() {
   const sessionCookie = cookies().get("session");
@@ -39,9 +40,7 @@ export default async function PrivateHome() {
       {hasRecovery && (
         <div className="flex space-x-2 items-center">
           <p className="text-gray-500 text-sm">Recovery Key was created</p>
-          <Button size="small" variant="muted">
-            Remove Recovery Key
-          </Button>
+          <RemoveRecoveryKeyButton />
         </div>
       )}
 

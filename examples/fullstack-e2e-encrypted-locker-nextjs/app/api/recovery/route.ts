@@ -1,3 +1,12 @@
-export async function GET() {
-  //TODO
+import { NextResponse } from "next/server";
+import database from "../db";
+import withUserSession from "../withUserSession";
+
+export async function DELETE() {
+  const db = await database;
+
+  return withUserSession(db, async (session) => {
+    await db.removeRecoveryLockbox(session.userIdentifier);
+    return NextResponse.json({ success: true });
+  });
 }

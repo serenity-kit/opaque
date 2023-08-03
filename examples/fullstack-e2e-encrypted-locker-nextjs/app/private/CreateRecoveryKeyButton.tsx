@@ -4,8 +4,10 @@ import * as opaque from "@serenity-kit/opaque";
 import Button from "../Button";
 import { request, requireExportKey } from "../utils/auth";
 import { createRecoveryLockbox } from "../utils/locker/client/createRecoveryLockbox";
+import { useRouter } from "next/navigation";
 
 export default function CreateRecoveryKeyButton() {
+  const router = useRouter();
   return (
     <Button
       size="small"
@@ -13,6 +15,7 @@ export default function CreateRecoveryKeyButton() {
       onClick={async () => {
         const recoveryKey = generateRecoveryKey();
         await registerRecovery(recoveryKey);
+        router.refresh();
         alert("Your recovery key: " + recoveryKey);
       }}
     >
