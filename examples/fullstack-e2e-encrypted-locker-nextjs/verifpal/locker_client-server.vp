@@ -17,9 +17,7 @@ principal Server[
 ]
 
 principal Alice_session1[
-	knows private export_key
 	knows private recovery_export_key
-	export_publickey = G^export_key
 	recovery_export_publickey = G^recovery_export_key
 	recovery_lockbox = PKE_ENC(recovery_export_publickey, locker_key)
 	server_recovery_lockbox_tag = MAC(session1_key, recovery_lockbox)
@@ -34,6 +32,7 @@ principal Server[
 queries[
 	confidentiality? locker_key
 	confidentiality? locker_content
+	confidentiality? recovery_export_key
 	authentication? Alice_session1 -> Server: ciphertext
 	authentication? Alice_session1 -> Server: tag
 	authentication? Alice_session1 -> Server: recovery_lockbox
