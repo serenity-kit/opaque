@@ -19,7 +19,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
 
-    await db.setRecoveryLockbox(session.userIdentifier, recoveryLockbox);
+    await db.setRecovery(session.userIdentifier, {
+      registrationRecord,
+      recoveryLockbox,
+    });
 
     return NextResponse.json({ success: true });
   });

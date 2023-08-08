@@ -6,7 +6,7 @@ export async function DELETE() {
   const db = await database;
 
   return withUserSession(db, async (session) => {
-    await db.removeRecoveryLockbox(session.userIdentifier);
+    await db.removeRecovery(session.userIdentifier);
     return NextResponse.json({ success: true });
   });
 }

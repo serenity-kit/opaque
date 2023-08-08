@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "fs/promises";
-import { Datastore, SessionEntry } from "./Datastore";
+import { Datastore, RecoveryEntry, SessionEntry } from "./Datastore";
 import { Locker, RecoveryLockbox } from "../utils/locker";
 
 const MILLISECONDS_PER_DAY =
@@ -12,8 +12,11 @@ type Schema = {
   logins: Record<string, LoginState>;
   lockers: Record<string, Locker>;
   sessions: Record<string, SessionEntry & { expiresAt: number }>;
-  recovery: Record<string, RecoveryLockbox>;
+  recovery: Record<string, RecoveryEntry>;
 };
+
+const LOGIN_CONTEXT_USER = "user";
+const LOGIN_CONTEXT_RECOVERY = "recovery";
 
 export default class InMemoryStore implements Datastore {
   private data: Schema;
@@ -54,12 +57,13 @@ export default class InMemoryStore implements Datastore {
   async hasUser(name: string) {
     return this.data.users[name] != null;
   }
-  async getLogin(name: string) {
-    const hasLogin = await this.hasLogin(name);
-    return hasLogin ? this.data.logins[name].value : null;
+  async getLogin(name: string, context: string = LOGIN_CONTEXT_USER) {
+    const key = `${context}:${name}`;
+    const hasLogin = await this.hasLogin(key);
+    return hasLogin ? this.data.logins[key].value : null;
   }
-  async hasLogin(name: string) {
-    const login = this.data.logins[name];
+  async hasLogin(name: string, context: string = LOGIN_CONTEXT_USER) {
+    const login = this.data.logins[`${context}:${name}`];
     if (login == null) return false;
     const now = new Date().getTime();
     const elapsed = now - login.timestamp;
@@ -69,12 +73,19 @@ export default class InMemoryStore implements Datastore {
     this.data.users[name] = value;
     await this._notifyListeners();
   }
-  async setLogin(name: string, value: string) {
-    this.data.logins[name] = { value, timestamp: new Date().getTime() };
+  async setLogin(
+    name: string,
+    value: string,
+    context: string = LOGIN_CONTEXT_USER
+  ) {
+    this.data.logins[`${context}:${name}`] = {
+      value,
+      timestamp: new Date().getTime(),
+    };
     await this._notifyListeners();
   }
-  async removeLogin(name: string) {
-    delete this.data.logins[name];
+  async removeLogin(name: string, context: string = LOGIN_CONTEXT_USER) {
+    delete this.data.logins[`${context}:${name}`];
     await this._notifyListeners();
   }
   async setLocker(name: string, entry: Locker) {
@@ -84,14 +95,14 @@ export default class InMemoryStore implements Datastore {
   async getLocker(name: string): Promise<Locker | null> {
     return this.data.lockers[name];
   }
-  async setRecoveryLockbox(name: string, entry: RecoveryLockbox) {
+  async setRecovery(name: string, entry: RecoveryEntry) {
     this.data.recovery[name] = entry;
     await this._notifyListeners();
   }
-  async getRecoveryLockbox(name: string): Promise<RecoveryLockbox | null> {
+  async getRecovery(name: string): Promise<RecoveryEntry | null> {
     return this.data.recovery[name];
   }
-  async removeRecoveryLockbox(name: string) {
+  async removeRecovery(name: string) {
     delete this.data.recovery[name];
     await this._notifyListeners();
   }
@@ -118,6 +129,18 @@ export default class InMemoryStore implements Datastore {
   async removeSession(id: string) {
     delete this.data.sessions[id];
     this._notifyListeners();
+  }
+  getRecoveryLogin(name: string): Promise<string | null> {
+    return this.getLogin(name, LOGIN_CONTEXT_RECOVERY);
+  }
+  setRecoveryLogin(name: string, value: string): Promise<void> {
+    return this.setLogin(name, value, LOGIN_CONTEXT_RECOVERY);
+  }
+  hasRecoveryLogin(name: string): Promise<boolean> {
+    return this.hasLogin(name, LOGIN_CONTEXT_RECOVERY);
+  }
+  removeRecoveryLogin(name: string): Promise<void> {
+    return this.removeLogin(name, LOGIN_CONTEXT_RECOVERY);
   }
 }
 

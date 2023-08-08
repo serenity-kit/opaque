@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const db = await database;
 
   return withUserSession(db, async (session) => {
-    const recovery = await db.getRecoveryLockbox(session.userIdentifier);
+    const recovery = await db.getRecovery(session.userIdentifier);
     if (recovery != null) {
       return NextResponse.json(
         { error: "recovery lockbox already exists" },

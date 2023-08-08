@@ -18,8 +18,7 @@ export default async function PrivateHome() {
     redirect("/");
   }
 
-  const hasRecovery =
-    null != (await db.getRecoveryLockbox(session.userIdentifier));
+  const hasRecovery = null != (await db.getRecovery(session.userIdentifier));
 
   return (
     <div className="p-12 flex flex-col items-start space-y-8 w-full">
