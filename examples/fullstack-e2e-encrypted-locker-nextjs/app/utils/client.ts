@@ -1,5 +1,7 @@
 import * as opaque from "@serenity-kit/opaque";
 import { createRecoveryLockbox } from "./locker/client/createRecoveryLockbox";
+import isLockerObject from "./isLockerObject";
+import isRecoveryLockboxObject from "./isRecoveryLockboxObject";
 
 export async function request(
   method: string,
@@ -121,4 +123,37 @@ export async function registerRecovery({
   });
   console.log("finish successful", res.ok);
   return res.ok;
+}
+
+export async function loginRecovery(userIdentifier: string, password: string) {
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  const { loginResponse } = await request("POST", "/api/recovery/login/start", {
+    userIdentifier,
+    startLoginRequest,
+  }).then((res) => res.json());
+
+  console.log({ loginResponse });
+
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
+    password,
+  });
+  console.log({ loginResult });
+  if (!loginResult) {
+    return null;
+  }
+  const { finishLoginRequest, exportKey: recoveryExportKey } = loginResult;
+  const res = await request("POST", "/api/recovery/login/finish", {
+    userIdentifier,
+    finishLoginRequest,
+  });
+  const { locker, recoveryLockbox } = await res.json();
+  if (!isLockerObject(locker) || !isRecoveryLockboxObject(recoveryLockbox)) {
+    throw new Error("unexpected response data");
+  }
+  return res.ok ? { recoveryExportKey, locker, recoveryLockbox } : null;
 }

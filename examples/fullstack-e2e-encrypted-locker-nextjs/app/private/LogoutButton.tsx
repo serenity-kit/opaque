@@ -8,7 +8,7 @@ export default function LogoutButton() {
   const router = useRouter();
   return (
     <button
-      className="text-blue-500"
+      className="text-blue-500 hover:underline"
       onClick={async () => {
         try {
           await logout();

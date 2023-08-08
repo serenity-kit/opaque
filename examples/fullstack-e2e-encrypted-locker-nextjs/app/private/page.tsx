@@ -19,6 +19,7 @@ export default async function PrivateHome() {
   }
 
   const hasRecovery = null != (await db.getRecovery(session.userIdentifier));
+  const hasLocker = null != (await db.getLocker(session.userIdentifier));
 
   return (
     <div className="p-12 flex flex-col items-start space-y-8 w-full">
@@ -36,15 +37,24 @@ export default async function PrivateHome() {
 
       {hasRecovery && (
         <div className="flex space-x-2 items-center">
-          <p className="text-gray-500 text-sm">Recovery Key was created</p>
+          <p className="text-gray-500 text-sm">Recovery Key is set</p>
           <RemoveRecoveryKeyButton />
         </div>
       )}
 
       {!hasRecovery && (
         <div className="flex space-x-2 items-center">
-          <p className="text-gray-500 text-sm">No Recovery Key</p>
-          <CreateRecoveryKeyButton />
+          {!hasLocker && (
+            <div className="text-gray-500">
+              Save a locker secret to create a recovery key.
+            </div>
+          )}
+          {hasLocker && (
+            <>
+              <p className="text-gray-500 text-sm">No Recovery Key set</p>
+              <CreateRecoveryKeyButton />
+            </>
+          )}
         </div>
       )}
     </div>

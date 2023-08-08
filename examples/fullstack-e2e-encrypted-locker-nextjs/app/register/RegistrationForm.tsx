@@ -45,7 +45,7 @@ export default function RegistrationForm() {
       />
       <p className="text-sm">
         Already have an account?{" "}
-        <Link href="/" className="text-blue-500">
+        <Link href="/" className="text-blue-500 hover:underline">
           Login
         </Link>
       </p>

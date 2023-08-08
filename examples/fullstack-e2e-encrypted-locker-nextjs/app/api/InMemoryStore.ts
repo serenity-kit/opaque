@@ -15,7 +15,7 @@ type Schema = {
   recovery: Record<string, RecoveryEntry>;
 };
 
-const LOGIN_CONTEXT_USER = "user";
+const LOGIN_CONTEXT_SESSION = "session";
 const LOGIN_CONTEXT_RECOVERY = "recovery";
 
 export default class InMemoryStore implements Datastore {
@@ -57,12 +57,11 @@ export default class InMemoryStore implements Datastore {
   async hasUser(name: string) {
     return this.data.users[name] != null;
   }
-  async getLogin(name: string, context: string = LOGIN_CONTEXT_USER) {
-    const key = `${context}:${name}`;
-    const hasLogin = await this.hasLogin(key);
-    return hasLogin ? this.data.logins[key].value : null;
+  async getLogin(name: string, context: string = LOGIN_CONTEXT_SESSION) {
+    const hasLogin = await this.hasLogin(name, context);
+    return hasLogin ? this.data.logins[`${context}:${name}`].value : null;
   }
-  async hasLogin(name: string, context: string = LOGIN_CONTEXT_USER) {
+  async hasLogin(name: string, context: string = LOGIN_CONTEXT_SESSION) {
     const login = this.data.logins[`${context}:${name}`];
     if (login == null) return false;
     const now = new Date().getTime();
@@ -76,7 +75,7 @@ export default class InMemoryStore implements Datastore {
   async setLogin(
     name: string,
     value: string,
-    context: string = LOGIN_CONTEXT_USER
+    context: string = LOGIN_CONTEXT_SESSION
   ) {
     this.data.logins[`${context}:${name}`] = {
       value,
@@ -84,7 +83,7 @@ export default class InMemoryStore implements Datastore {
     };
     await this._notifyListeners();
   }
-  async removeLogin(name: string, context: string = LOGIN_CONTEXT_USER) {
+  async removeLogin(name: string, context: string = LOGIN_CONTEXT_SESSION) {
     delete this.data.logins[`${context}:${name}`];
     await this._notifyListeners();
   }

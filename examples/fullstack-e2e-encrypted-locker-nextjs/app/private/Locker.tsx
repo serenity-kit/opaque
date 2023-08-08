@@ -30,6 +30,7 @@ function LockerForm({
         }}
       >
         <textarea
+          rows={5}
           className="w-full max-w-xl border border-gray-300 p-2 rounded"
           value={secret}
           onChange={(e) => {
@@ -57,8 +58,8 @@ function useRequireExportKeyOrRedirect() {
 export default function Locker() {
   const lockerState = useLockerRequestState();
   const [secret, setSecret] = useState("");
-
   const requireExportKeyOrRedirect = useRequireExportKeyOrRedirect();
+  const router = useRouter();
 
   useEffect(() => {
     if (lockerState.isLoading) return;
@@ -112,6 +113,7 @@ export default function Locker() {
         });
         if (res.ok) {
           alert("Locker updated");
+          router.refresh();
         } else {
           alert("Something went wrong");
         }

@@ -41,12 +41,15 @@ export default function LoginForm() {
       />
       <p className="text-sm">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-blue-500">
+        <Link href="/register" className="text-blue-500 hover:underline">
           Register
         </Link>
       </p>
       <p>
-        <Link className="text-sm underline text-gray-500" href="/recovery">
+        <Link
+          className="text-sm text-gray-500 hover:underline"
+          href="/recovery"
+        >
           Recover Locker
         </Link>
       </p>

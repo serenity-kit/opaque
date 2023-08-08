@@ -7,7 +7,9 @@ export const decryptLockerFromRecoveryLockbox = ({
   recoveryLockbox,
   outputFormat = "string",
 }: DecryptLockerFromRecoveryLockboxParams) => {
-  const recoveryExportKeyAsUint8Array = sodium.from_base64(recoveryExportKey);
+  const recoveryExportKeyAsUint8Array = sodium
+    .from_base64(recoveryExportKey)
+    .subarray(0, sodium.crypto_kdf_KEYBYTES);
   const recoveryKeyPair = sodium.crypto_box_seed_keypair(
     recoveryExportKeyAsUint8Array
   );
