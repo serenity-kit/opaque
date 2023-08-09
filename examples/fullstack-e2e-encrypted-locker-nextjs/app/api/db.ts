@@ -5,23 +5,28 @@ import InMemoryStore, {
   writeDatabaseFile,
 } from "./InMemoryStore";
 import RedisStore from "./RedisStore";
-import { REDIS_URL, ENABLE_REDIS } from "./env";
+import { REDIS_URL, ENABLE_REDIS, DB_FILE } from "./env";
 
 async function setupInMemoryStore(): Promise<Datastore> {
-  console.log("initializing InMemoryStore");
-  const file = "data.json";
+  const file = DB_FILE;
+  console.log(`initializing InMemoryStore with file "${file}"`);
   const db = await readDatabaseFile(file).catch((err) => {
     if ("code" in err && err.code == "ENOENT") {
-      console.log("No database file found, initializing empty database.");
+      console.log(
+        `No database file "${file}" found, initializing with empty store.`
+      );
     } else {
       console.error(
-        "ERROR: failed to read database file, initializing empty database."
+        `ERROR: failed to read database file "${file}", initializing with empty store.`
       );
       console.error(err);
     }
     return InMemoryStore.empty();
   });
-  db.addListener(() => writeDatabaseFile(file, db));
+  db.addListener(() => {
+    console.debug(`writing InMemoryStore data to file "${file}"`);
+    return writeDatabaseFile(file, db);
+  });
   return db;
 }
 

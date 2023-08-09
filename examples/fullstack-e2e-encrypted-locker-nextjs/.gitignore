@@ -35,3 +35,5 @@ yarn-error.log*
 next-env.d.ts
 
 /data.json
+/data.e2e.json
+/test-results/

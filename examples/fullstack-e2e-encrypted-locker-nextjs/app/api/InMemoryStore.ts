@@ -113,7 +113,7 @@ export default class InMemoryStore implements Datastore {
     const expiresAt =
       new Date().getTime() + lifetimeInDays * MILLISECONDS_PER_DAY;
     this.data.sessions[id] = { ...entry, expiresAt };
-    this._notifyListeners();
+    await this._notifyListeners();
   }
   async getSession(id: string): Promise<SessionEntry | null> {
     const session = this.data.sessions[id];
@@ -127,7 +127,7 @@ export default class InMemoryStore implements Datastore {
   }
   async removeSession(id: string) {
     delete this.data.sessions[id];
-    this._notifyListeners();
+    await this._notifyListeners();
   }
   getRecoveryLogin(name: string): Promise<string | null> {
     return this.getLogin(name, LOGIN_CONTEXT_RECOVERY);
