@@ -20,7 +20,6 @@ jobs:
       - name: Build opaque
         run: pnpm build
       - name: install Playwright browsers
-        working-directory: examples/client-simple-webpack
         run: npx playwright install --with-deps
 
       - name: run client-simple-webpack tests
