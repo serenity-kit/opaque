@@ -16,6 +16,7 @@ export default function CredentialsForm({
   onSubmit,
   onChange,
   placeholders,
+  error,
 }: {
   label: string;
   invalid?: boolean;
@@ -23,6 +24,7 @@ export default function CredentialsForm({
   onSubmit: (credentials: Credentials) => void;
   onChange?: () => void;
   placeholders?: Partial<{ username: string; password: string }>;
+  error?: React.ReactNode;
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -74,6 +76,7 @@ export default function CredentialsForm({
 
         <div className="space-x-2">
           <Button disabled={disabled}>{label}</Button>
+          {error}
         </div>
       </div>
     </form>

@@ -17,6 +17,11 @@ export default function LoginForm() {
         invalid={showError}
         disabled={disabled}
         label="Login"
+        error={
+          showError && (
+            <span className="text-red-500 text-sm">Login failed</span>
+          )
+        }
         onChange={() => setShowError(false)}
         onSubmit={async ({ username, password }) => {
           setShowError(false);
