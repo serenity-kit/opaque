@@ -54,7 +54,7 @@ export default class RedisStore implements Datastore {
     const { userIdentifier, sessionKey } = await this.client.hGetAll(
       `session:${id}`
     );
-    if (!userIdentifier || !sessionKey) throw new TypeError();
+    if (!userIdentifier || !sessionKey) return null;
     return { userIdentifier, sessionKey };
   }
 

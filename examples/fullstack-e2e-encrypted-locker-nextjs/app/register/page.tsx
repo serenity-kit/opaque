@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import RegistrationForm from "./RegistrationForm";
 import database from "../api/db";
+import { Suspense } from "react";
 
 export default async function RegistrationPage() {
   const sessionCookie = cookies().get("session");

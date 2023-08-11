@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import CredentialsForm from "./CredentialsForm";
 import { storeLoginKeys, usePrivateRedirect } from "./utils/auth";
 import { login } from "./utils/client";
+import dynamic from "next/dynamic";
+
+// we are importing the form dynamically with disabled ssr to prevent
+// server-side rendering of the form so that our e2e tests will not
+// submit the form before the JS event handlers are attached
+const CredentialsForm = dynamic(() => import("./CredentialsForm"), {
+  ssr: false,
+});
 
 export default function LoginForm() {
   const [showError, setShowError] = useState(false);
