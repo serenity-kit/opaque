@@ -83,6 +83,9 @@ test("full registration & login flow", () => {
 
   expect(registrationExportKey).toEqual(loginExportKey);
   expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
+  expect(loginServerStaticPublicKey).toEqual(
+    opaque.server.getPublicKey(serverSetup)
+  );
 
   const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
     serverLoginState,
@@ -771,6 +774,28 @@ describe("server.finishLogin", () => {
       opaque.server.finishLogin({ serverLoginState: "a", finishLoginRequest });
     }).toThrow(
       'base64 decoding failed at "serverLoginState"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+});
+
+describe("server.getPublicKey", () => {
+  test("empty string", () => {
+    expect(() => opaque.server.getPublicKey("")).toThrow(
+      'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
+    );
+  });
+  test("invalid encoding", () => {
+    expect(() => opaque.server.getPublicKey("a")).toThrow(
+      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.'
+    );
+  });
+  test("incomplete server setup string", () => {
+    expect(() =>
+      opaque.server.getPublicKey(
+        "pdT3ISgoWCP1G1lOTpU6uopNEMabryz4N3d1R-dRmF2jmigPsYk-aOL4J0cpPpqBXzEc900G7dZgIxjjzkItIbfzzo9cSh92xq7XZjuvlSs21BDddsKC5TmvRP8QT-wCucEXnwDy2aDLJmzZl-tRHb2Mz5my_vGZeO3KeNS_wA"
+      )
+    ).toThrow(
+      'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
     );
   });
 });

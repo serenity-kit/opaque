@@ -100,6 +100,13 @@ fn decode_server_setup(data: String) -> JsResult<ServerSetup<DefaultCipherSuite>
     })
 }
 
+#[wasm_bindgen(js_name = getServerPublicKey)]
+pub fn get_server_public_key(data: String) -> Result<String, JsError> {
+    let server_setup = decode_server_setup(data)?;
+    let pub_key = server_setup.keypair().public().serialize();
+    Ok(BASE64.encode(pub_key))
+}
+
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 pub struct CustomIdentifiers {
     #[tsify(optional)]

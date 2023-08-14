@@ -25,7 +25,8 @@ const packageJson = function (name) {
   "main": "cjs/index.js",
   "browser": "esm/index.js",
   "bin": {
-    "create-server-setup": "./create-server-setup.js"
+    "create-server-setup": "./create-server-setup.js",
+    "get-server-public-key": "./get-server-public-key.js"
   },
   "repository": "github:serenity-kit/opaque"
 }`);
@@ -35,6 +36,24 @@ const createServerSetupBin = new sh.ShellString(`#!/usr/bin/env node
 const opaque = require('.')
 opaque.ready.then(() => {
     console.log(opaque.server.createSetup())
+})
+`);
+
+const getServerPublicKeyBin = new sh.ShellString(`#!/usr/bin/env node
+const opaque = require('.')
+opaque.ready.then(() => {
+    if (process.argv.length < 3) {
+      console.error("ERROR: missing argument <SERVER_SETUP>")
+      process.exit(1)
+    }
+    try {
+      console.log(opaque.server.getPublicKey(process.argv[2]))
+    } catch (err) {
+      console.error("ERROR! Failed to extract public key.")
+      console.error(err.message + "\\n")
+      console.error("Did you supply a valid SERVER_SETUP string?")
+      process.exit(1)
+    }
 })
 `);
 
@@ -94,6 +113,10 @@ function main() {
   // write create-server-setup bin script
   createServerSetupBin.to("build/ristretto/create-server-setup.js");
   createServerSetupBin.to("build/p256/create-server-setup.js");
+
+  // write get-server-public-key bin script
+  getServerPublicKeyBin.to("build/ristretto/get-server-public-key.js");
+  getServerPublicKeyBin.to("build/p256/get-server-public-key.js");
 
   // copy docs
   sh.cp("README.md", "build/ristretto/README.md");
