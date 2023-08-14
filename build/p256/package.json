@@ -17,7 +17,8 @@
   "main": "cjs/index.js",
   "browser": "esm/index.js",
   "bin": {
-    "create-server-setup": "./create-server-setup.js"
+    "create-server-setup": "./create-server-setup.js",
+    "get-server-public-key": "./get-server-public-key.js"
   },
   "repository": "github:serenity-kit/opaque"
 }

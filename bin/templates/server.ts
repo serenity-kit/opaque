@@ -8,6 +8,7 @@ export {
   startServerLogin as startLogin,
   finishServerLogin as finishLogin,
   createServerRegistrationResponse as createRegistrationResponse,
+  getServerPublicKey as getPublicKey,
 } from "./opaque";
 
 export type {
