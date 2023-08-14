@@ -7,10 +7,14 @@ export const createRecoveryLockbox = ({
   recoveryExportKey,
 }: CreateRecoveryLockboxParams) => {
   const exportKeyAsUint8Array = sodium.from_base64(exportKey);
-  const recoveryExportKeyAsUint8Array = sodium.from_base64(recoveryExportKey);
+  const recoveryExportKeyAsUint8Array = sodium
+    .from_base64(recoveryExportKey)
+    .subarray(0, sodium.crypto_kdf_KEYBYTES);
   const lockerSecretKey = createLockerSecretKey({ exportKey });
 
-  const keyPair = sodium.crypto_box_seed_keypair(exportKeyAsUint8Array);
+  const keyPair = sodium.crypto_box_seed_keypair(
+    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES)
+  );
   const recoveryKeyPair = sodium.crypto_box_seed_keypair(
     recoveryExportKeyAsUint8Array
   );

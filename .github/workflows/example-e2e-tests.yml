@@ -20,8 +20,8 @@ jobs:
       - name: Build opaque
         run: pnpm build
       - name: install Playwright browsers
-        working-directory: examples/client-simple-webpack
         run: npx playwright install --with-deps
+
       - name: run client-simple-webpack tests
         working-directory: examples/client-simple-webpack
         run: npx playwright test
@@ -31,6 +31,7 @@ jobs:
           name: playwright-report
           path: examples/client-simple-webpack/playwright-report/
           retention-days: 30
+
       - name: run client-with-password-reset tests
         working-directory: examples/client-with-password-reset
         run: npx playwright test
@@ -39,4 +40,14 @@ jobs:
         with:
           name: playwright-report
           path: examples/client-with-password-reset/playwright-report/
+          retention-days: 30
+
+      - name: run fullstack-e2e-encrypted-locker-nextjs tests
+        working-directory: examples/fullstack-e2e-encrypted-locker-nextjs
+        run: npx playwright test
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: examples/fullstack-e2e-encrypted-locker-nextjs/playwright-report/
           retention-days: 30

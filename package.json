@@ -7,6 +7,7 @@
     "@babel/core": "^7.21.4",
     "@babel/preset-env": "^7.21.4",
     "@babel/preset-typescript": "^7.21.4",
+    "@playwright/test": "^1.37.0",
     "@rollup/plugin-wasm": "^6.1.3",
     "@types/jest": "^29.5.2",
     "@types/node": "20.2.5",
@@ -35,6 +36,8 @@
     "publish:ristretto": "cd build/ristretto && pnpm publish",
     "publish:p256": "cd build/p256 && pnpm publish",
     "publish:all": "pnpm publish:ristretto && pnpm publish:p256",
-    "typecheck": "tsc --noEmit && cd examples/fullstack-simple-nextjs && tsc --noEmit"
+    "typecheck": "tsc --noEmit && pnpm typecheck:fullstack-simple-nextjs && pnpm typecheck:fullstack-e2e-encrypted-locker-nextjs",
+    "typecheck:fullstack-simple-nextjs": "cd examples/fullstack-simple-nextjs && tsc --noEmit",
+    "typecheck:fullstack-e2e-encrypted-locker-nextjs": "cd examples/fullstack-e2e-encrypted-locker-nextjs && tsc --noEmit"
   }
 }

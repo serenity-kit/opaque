@@ -1,10 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import CredentialsForm from "./CredentialsForm";
-import { login, storeLoginKeys, usePrivateRedirect } from "./utils/auth";
 import { useState } from "react";
+import { storeLoginKeys, usePrivateRedirect } from "./utils/auth";
+import { login } from "./utils/client";
+import dynamic from "next/dynamic";
+
+// we are importing the form dynamically with disabled ssr to prevent
+// server-side rendering of the form so that our e2e tests will not
+// submit the form before the JS event handlers are attached
+const CredentialsForm = dynamic(() => import("./CredentialsForm"), {
+  ssr: false,
+});
 
 export default function LoginForm() {
   const [showError, setShowError] = useState(false);
@@ -17,6 +24,11 @@ export default function LoginForm() {
         invalid={showError}
         disabled={disabled}
         label="Login"
+        error={
+          showError && (
+            <span className="text-red-500 text-sm">Login failed</span>
+          )
+        }
         onChange={() => setShowError(false)}
         onSubmit={async ({ username, password }) => {
           setShowError(false);
@@ -40,9 +52,17 @@ export default function LoginForm() {
         }}
       />
       <p className="text-sm">
-        Don't have an account?{" "}
-        <Link href="/register" className="text-blue-500">
+        Don&apos;t have an account?{" "}
+        <Link href="/register" className="text-blue-500 hover:underline">
           Register
+        </Link>
+      </p>
+      <p>
+        <Link
+          className="text-sm text-gray-500 hover:underline"
+          href="/recovery"
+        >
+          Recover Locker
         </Link>
       </p>
     </div>

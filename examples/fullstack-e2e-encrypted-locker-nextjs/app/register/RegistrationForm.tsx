@@ -1,15 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import CredentialsForm from "../CredentialsForm";
-import {
-  login,
-  register,
-  storeLoginKeys,
-  usePrivateRedirect,
-} from "../utils/auth";
 import { useState } from "react";
+import { storeLoginKeys, usePrivateRedirect } from "../utils/auth";
+import { login, register } from "../utils/client";
+
+// we are importing the form dynamically with disabled ssr to prevent
+// server-side rendering of the form so that our e2e tests will not
+// submit the form before the JS event handlers are attached
+const CredentialsForm = dynamic(() => import("../CredentialsForm"), {
+  ssr: false,
+});
 
 export default function RegistrationForm() {
   const [showError, setShowError] = useState(false);
@@ -50,7 +52,7 @@ export default function RegistrationForm() {
       />
       <p className="text-sm">
         Already have an account?{" "}
-        <Link href="/" className="text-blue-500">
+        <Link href="/" className="text-blue-500 hover:underline">
           Login
         </Link>
       </p>

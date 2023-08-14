@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import RegistrationForm from "./RegistrationForm";
 import database from "../api/db";
+import RegistrationForm from "./RegistrationForm";
 
 export default async function RegistrationPage() {
   const sessionCookie = cookies().get("session");

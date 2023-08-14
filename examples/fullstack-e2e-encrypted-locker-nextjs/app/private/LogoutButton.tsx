@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { logout, removeLoginKeys } from "../utils/auth";
+import { removeLoginKeys } from "../utils/auth";
+import { logout } from "../utils/client";
 
 export default function LogoutButton() {
   const router = useRouter();
   return (
     <button
-      className="text-blue-500"
+      className="text-blue-500 hover:underline"
       onClick={async () => {
         try {
           await logout();
