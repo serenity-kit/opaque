@@ -1,5 +1,5 @@
 {
-  "name": "opaque-example",
+  "name": "opaque-client-simple-webpack-example",
   "version": "0.1.0",
   "main": "index.js",
   "scripts": {
