@@ -83,6 +83,9 @@ test("full registration & login flow", () => {
 
   expect(registrationExportKey).toEqual(loginExportKey);
   expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
+  expect(loginServerStaticPublicKey).toEqual(
+    opaque.server.getPublicKey(serverSetup)
+  );
 
   const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
     serverLoginState,
