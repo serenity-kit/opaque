@@ -10,6 +10,10 @@ A JavaScript implementation of the [OPAQUE protocol](https://datatracker.ietf.or
 - Security against pre-computation attacks upon server compromise
 - Foundation for encrypted backups and end-to-end encryption apps
 
+## Documentation
+
+In depth documentation can be found at [https://opaque-documentation.netlify.app/](https://opaque-documentation.netlify.app/).
+
 ## Install
 
 ```sh
@@ -220,13 +224,64 @@ pnpm example:client-with-password-reset:dev
 
 ## Advanced usage
 
+### ExportKey
+
+After the initial registration flow as well as ever login flow, the client has access to a private key only available to the client. This is the `exportKey`. The key is not available to the server and it is stable. Meaning if you log in multiple times your `exportKey` will stay the same.
+
+#### Example usage
+
+**Registration**
+
+```ts
+// client
+const { exportKey, registrationRecord } = opaque.client.finishRegistration({
+  clientRegistrationState,
+  registrationResponse,
+  password,
+});
+```
+
+**Login**
+
+```ts
+// client
+const loginResult = opaque.client.finishLogin({
+  clientLoginState,
+  loginResponse,
+  password,
+});
+if (!loginResult) {
+  throw new Error("Login failed");
+}
+const { exportKey, finishLoginRequest, sessionKey } = loginResult;
+```
+
 ### Server Static Public Key
 
 The result of `opaque.client.finishRegistration` and `opaque.client.finishLogin` also contains a property `serverStaticPublicKey`. It can be used to verify the authenticity of the server.
 
 It's recommended to verify the server static public key in the application layer e.g. hard-code it into the application code and verify it's correctness.
 
-#### Example Registration
+#### Example usage
+
+**Server**
+
+The `serverStaticPublicKey` can be extracted using the following CLI command:
+
+```sh
+npx @serenity-kit/opaque get-server-public-key "<server setup string>"
+```
+
+Alternatively the functionality is exposed via
+
+```ts
+const serverSetupString = opaque.server.createSetup();
+opaque.server.getPublicKey(serverSetupString);
+```
+
+**Client**
+
+Registration
 
 ```ts
 // client
@@ -237,7 +292,7 @@ const { serverStaticPublicKey } = opaque.client.finishRegistration({
 });
 ```
 
-#### Example Login
+Login
 
 ```ts
 // client
@@ -324,6 +379,10 @@ const { finishLoginRequest, sessionKey } = loginResult;
 The default implementation uses [ristretto255](https://ristretto.group/) for the OPRF and the group mode.
 
 If you would like to use the [P-256](https://docs.rs/p256/latest/p256/) curve instead, you can use the [@serenity-kit/opaque-p256](https://www.npmjs.com/package/@serenity-kit/opaque) package. The API is identical.
+
+### ReactNative
+
+There is also a React Native version of this library available at [https://github.com/serenity-kit/react-native-opaque](https://github.com/serenity-kit/react-native-opaque).
 
 ## Acknowledgement
 
