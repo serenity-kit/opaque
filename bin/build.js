@@ -84,7 +84,7 @@ function tsc(entry) {
   // Our inputs are only ts files because we need to re-export types.
   // The target option is not that important because the result will be used as entry point for rollup.
   sh.exec(
-    `pnpm tsc ${entry} --declaration --module es2020 --target es2020 --moduleResolution nodenext --removeComments`,
+    `pnpm tsc ${entry} --declaration --module NodeNext --target es2020 --moduleResolution nodenext --removeComments`,
   );
 }
 
