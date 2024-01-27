@@ -10,13 +10,13 @@ export async function POST(request: NextRequest) {
   if (!userIdentifier)
     return NextResponse.json(
       { error: "missing userIdentifier" },
-      { status: 400 }
+      { status: 400 },
     );
 
   if (!finishLoginRequest)
     return NextResponse.json(
       { error: "missing finishLoginRequest" },
-      { status: 400 }
+      { status: 400 },
     );
 
   const db = await database;

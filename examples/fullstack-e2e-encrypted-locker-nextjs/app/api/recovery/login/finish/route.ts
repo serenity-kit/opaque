@@ -8,13 +8,13 @@ export async function POST(request: NextRequest) {
   if (!userIdentifier)
     return NextResponse.json(
       { error: "missing userIdentifier" },
-      { status: 400 }
+      { status: 400 },
     );
 
   if (!finishLoginRequest)
     return NextResponse.json(
       { error: "missing finishLoginRequest" },
-      { status: 400 }
+      { status: 400 },
     );
 
   const db = await database;
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   if (!serverLoginState)
     return NextResponse.json(
       { error: "recovery login not started" },
-      { status: 400 }
+      { status: 400 },
     );
 
   const { sessionKey } = opaque.server.finishLogin({
@@ -47,6 +47,6 @@ export async function POST(request: NextRequest) {
     { recoveryLockbox: recovery.recoveryLockbox, locker },
     {
       status: 200,
-    }
+    },
   );
 }

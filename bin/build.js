@@ -60,13 +60,13 @@ opaque.ready.then(() => {
 function build_wbg() {
   sh.exec("cargo build --target=wasm32-unknown-unknown --release");
   sh.exec(
-    "wasm-bindgen --out-dir=build/wbg_ristretto --target=web --omit-default-module-path target/wasm32-unknown-unknown/release/opaque.wasm"
+    "wasm-bindgen --out-dir=build/wbg_ristretto --target=web --omit-default-module-path target/wasm32-unknown-unknown/release/opaque.wasm",
   );
   sh.exec(
-    "cargo build --target=wasm32-unknown-unknown --release --features p256"
+    "cargo build --target=wasm32-unknown-unknown --release --features p256",
   );
   sh.exec(
-    "wasm-bindgen --out-dir=build/wbg_p256 --target=web --omit-default-module-path target/wasm32-unknown-unknown/release/opaque.wasm"
+    "wasm-bindgen --out-dir=build/wbg_p256 --target=web --omit-default-module-path target/wasm32-unknown-unknown/release/opaque.wasm",
   );
 }
 
@@ -84,7 +84,7 @@ function tsc(entry) {
   // Our inputs are only ts files because we need to re-export types.
   // The target option is not that important because the result will be used as entry point for rollup.
   sh.exec(
-    `pnpm tsc ${entry} --declaration --module es2020 --target es2020 --moduleResolution nodenext --removeComments`
+    `pnpm tsc ${entry} --declaration --module es2020 --target es2020 --moduleResolution nodenext --removeComments`,
   );
 }
 

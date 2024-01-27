@@ -13,11 +13,11 @@ async function setupInMemoryStore(): Promise<Datastore> {
   const db = await readDatabaseFile(file).catch((err) => {
     if ("code" in err && err.code == "ENOENT") {
       console.log(
-        `No database file "${file}" found, initializing with empty store.`
+        `No database file "${file}" found, initializing with empty store.`,
       );
     } else {
       console.error(
-        `ERROR: failed to read database file "${file}", initializing with empty store.`
+        `ERROR: failed to read database file "${file}", initializing with empty store.`,
       );
       console.error(err);
     }
@@ -43,7 +43,7 @@ async function setupRedis(): Promise<Datastore> {
   } catch (err) {
     console.error(
       "Redis Setup Error:",
-      err instanceof Error ? err.message : err
+      err instanceof Error ? err.message : err,
     );
     process.exit(1);
   }

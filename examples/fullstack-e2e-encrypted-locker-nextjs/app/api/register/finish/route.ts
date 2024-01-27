@@ -6,12 +6,12 @@ export async function POST(request: Request) {
   if (!userIdentifier)
     return NextResponse.json(
       { error: "missing userIdentifier" },
-      { status: 400 }
+      { status: 400 },
     );
   if (!registrationRecord)
     return NextResponse.json(
       { error: "missing registrationRecord" },
-      { status: 400 }
+      { status: 400 },
     );
   const db = await database;
   await db.setUser(userIdentifier, registrationRecord);

@@ -52,7 +52,7 @@ export default class InMemoryStore {
         users: this.users,
       },
       null,
-      2
+      2,
     );
   }
 

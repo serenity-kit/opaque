@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     if (recovery != null) {
       return NextResponse.json(
         { error: "recovery lockbox already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!registrationRequest)
       return NextResponse.json(
         { error: "missing registrationRequest" },
-        { status: 400 }
+        { status: 400 },
       );
 
     const { registrationResponse } = opaque.server.createRegistrationResponse({

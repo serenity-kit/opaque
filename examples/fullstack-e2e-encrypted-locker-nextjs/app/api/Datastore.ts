@@ -18,7 +18,7 @@ export interface Datastore {
   setSession(
     id: string,
     entry: SessionEntry,
-    lifetimeInDays?: number
+    lifetimeInDays?: number,
   ): Promise<void>;
   getSession(id: string): Promise<SessionEntry | null>;
   removeSession(id: string): Promise<void>;

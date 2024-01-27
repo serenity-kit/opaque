@@ -19,6 +19,6 @@ it("should create a locker for valid keys", () => {
   });
 
   expect(sodium.to_base64(lockerSecretKey)).toBe(
-    "D6vDDBnREzeo6270ksFamANbgyEmwmw1-2kx6bQBHaI"
+    "D6vDDBnREzeo6270ksFamANbgyEmwmw1-2kx6bQBHaI",
   );
 });

@@ -24,7 +24,7 @@ async function registerUser(page: Page, name: string, password: string) {
   await fillForm(page, name, password);
 
   const dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Register" }).click()
+    page.getByRole("button", { name: "Register" }).click(),
   );
   expect(dialog.message()).toBe(`User "${name}" registered successfully`);
   await dialog.dismiss();
@@ -36,13 +36,13 @@ test("full registration & login flow", async ({ page }) => {
   await registerUser(page, "jane_doe", "hunter42");
 
   let dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Login" }).click()
+    page.getByRole("button", { name: "Login" }).click(),
   );
   expect(dialog.message()).toContain('User "jane_doe" logged in successfully');
   await dialog.dismiss();
 
   dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Login" }).click()
+    page.getByRole("button", { name: "Login" }).click(),
   );
   expect(dialog.message()).toContain('User "jane_doe" logged in successfully');
   await dialog.dismiss();
@@ -57,7 +57,7 @@ test("forgot password with unknown user", async ({ page }) => {
   await username.fill("unknown");
 
   const dialog = await waitForDialog(page, () =>
-    container.getByText("Request Password Reset").click()
+    container.getByText("Request Password Reset").click(),
   );
   expect(dialog.message()).toContain("Error: user not found");
   await dialog.dismiss();
@@ -79,7 +79,7 @@ test("forgot password with invalid reset code", async ({ page }) => {
   await page.getByPlaceholder("New Password").fill("foobar");
 
   const dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Reset Password" }).click()
+    page.getByRole("button", { name: "Reset Password" }).click(),
   );
   expect(dialog.message()).toContain("Error: reset code is invalid or expired");
   await dialog.dismiss();
@@ -101,17 +101,17 @@ test("forgot password happy path", async ({ page }) => {
   await page.getByPlaceholder("New Password").fill("foobar");
 
   let dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Reset Password" }).click()
+    page.getByRole("button", { name: "Reset Password" }).click(),
   );
   expect(dialog.message()).toContain(
-    `Password reset for "john_doe" successful`
+    `Password reset for "john_doe" successful`,
   );
   await dialog.dismiss();
 
   await fillForm(page, "john_doe", "foobar");
 
   dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Login" }).click()
+    page.getByRole("button", { name: "Login" }).click(),
   );
   expect(dialog.message()).toContain('User "john_doe" logged in successfully');
   await dialog.dismiss();

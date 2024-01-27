@@ -52,7 +52,7 @@ export default class RedisStore implements Datastore {
 
   async getSession(id: string) {
     const { userIdentifier, sessionKey } = await this.client.hGetAll(
-      `session:${id}`
+      `session:${id}`,
     );
     if (!userIdentifier || !sessionKey) return null;
     return { userIdentifier, sessionKey };
@@ -61,7 +61,7 @@ export default class RedisStore implements Datastore {
   async setSession(
     id: string,
     session: SessionEntry,
-    lifetimeInDays: number = 14
+    lifetimeInDays: number = 14,
   ) {
     const expireInSeconds = lifetimeInDays * SECONDS_PER_DAY;
     await this.client.hSet(`session:${id}`, /** @type {any} */ session);
@@ -90,7 +90,7 @@ export default class RedisStore implements Datastore {
     await this.client.hSet(`recovery:${name}`, entry.recoveryLockbox);
     await this.client.set(
       `recovery:registration:${name}`,
-      entry.registrationRecord
+      entry.registrationRecord,
     );
   }
 
@@ -102,7 +102,7 @@ export default class RedisStore implements Datastore {
       return null;
     }
     const registrationRecord = await this.client.get(
-      `recovery:registration:${name}`
+      `recovery:registration:${name}`,
     );
     if (registrationRecord == null) {
       return null;

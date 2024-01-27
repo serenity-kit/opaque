@@ -84,7 +84,7 @@ test("full registration & login flow", () => {
   expect(registrationExportKey).toEqual(loginExportKey);
   expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
   expect(loginServerStaticPublicKey).toEqual(
-    opaque.server.getPublicKey(serverSetup)
+    opaque.server.getPublicKey(serverSetup),
   );
 
   const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
@@ -100,7 +100,7 @@ test("full registration & login with bad password", () => {
 
   const { serverSetup, registrationRecord } = setupAndRegister(
     userIdentifier,
-    "hunter42"
+    "hunter42",
   );
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
     password: "hunter42",
@@ -130,7 +130,7 @@ test("full registration & login flow with mismatched custom client identifier on
   const { serverSetup, registrationRecord } = setupAndRegister(
     userIdentifier,
     password,
-    { client }
+    { client },
   );
 
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
@@ -166,7 +166,7 @@ test("full registration & login attempt with mismatched server identifier", () =
   const { serverSetup, registrationRecord } = setupAndRegister(
     userIdentifier,
     password,
-    { server: "server-ident" }
+    { server: "server-ident" },
   );
 
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
@@ -201,13 +201,13 @@ describe("client.startRegistration", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startRegistration();
     }).toThrow(
-      "invalid type: unit value, expected struct StartClientRegistrationParams"
+      "invalid type: unit value, expected struct StartClientRegistrationParams",
     );
     expect(() => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startRegistration(123);
     }).toThrow(
-      "invalid type: floating point `123`, expected struct StartClientRegistrationParams"
+      "invalid type: floating point `123`, expected struct StartClientRegistrationParams",
     );
   });
   test("incomplete params object", () => {
@@ -222,36 +222,36 @@ describe("client.finishRegistration", () => {
   test("invalid argument type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishRegistration()
+      opaque.client.finishRegistration(),
     ).toThrow(
-      "invalid type: unit value, expected struct FinishClientRegistrationParams"
+      "invalid type: unit value, expected struct FinishClientRegistrationParams",
     );
 
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishRegistration(123)
+      opaque.client.finishRegistration(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct FinishClientRegistrationParams"
+      "invalid type: floating point `123`, expected struct FinishClientRegistrationParams",
     );
   });
   test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishRegistration({})
+      opaque.client.finishRegistration({}),
     ).toThrow("Error: missing field `password`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.client.finishRegistration({
         password: "hunter2",
         clientRegistrationState: "",
-      })
+      }),
     ).toThrow("Error: missing field `registrationResponse`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.client.finishRegistration({
         password: "hunter2",
         registrationResponse: "",
-      })
+      }),
     ).toThrow("Error: missing field `clientRegistrationState`");
   });
 
@@ -266,7 +266,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState,
       });
     }).toThrow(
-      'opaque protocol error at "deserialize registrationResponse"; Internal error encountered'
+      'opaque protocol error at "deserialize registrationResponse"; Internal error encountered',
     );
   });
 
@@ -281,7 +281,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState,
       });
     }).toThrow(
-      'base64 decoding failed at "registrationResponse"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "registrationResponse"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 
@@ -301,7 +301,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState: "",
       });
     }).toThrow(
-      'opaque protocol error at "deserialize clientRegistrationState"; Internal error encountered'
+      'opaque protocol error at "deserialize clientRegistrationState"; Internal error encountered',
     );
   });
 
@@ -321,7 +321,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState: "a",
       });
     }).toThrow(
-      'base64 decoding failed at "clientRegistrationState"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "clientRegistrationState"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 });
@@ -332,13 +332,13 @@ describe("client.startLogin", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startLogin();
     }).toThrow(
-      "invalid type: unit value, expected struct StartClientLoginParams"
+      "invalid type: unit value, expected struct StartClientLoginParams",
     );
     expect(() => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startLogin(123);
     }).toThrow(
-      "invalid type: floating point `123`, expected struct StartClientLoginParams"
+      "invalid type: floating point `123`, expected struct StartClientLoginParams",
     );
   });
   test("incomplete params object", () => {
@@ -353,31 +353,31 @@ describe("client.finishLogin", () => {
   test("invalid argument type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishLogin()
+      opaque.client.finishLogin(),
     ).toThrow(
-      "invalid type: unit value, expected struct FinishClientLoginParams"
+      "invalid type: unit value, expected struct FinishClientLoginParams",
     );
 
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishLogin(123)
+      opaque.client.finishLogin(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct FinishClientLoginParams"
+      "invalid type: floating point `123`, expected struct FinishClientLoginParams",
     );
   });
 
   test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishLogin({})
+      opaque.client.finishLogin({}),
     ).toThrow("missing field `clientLoginState`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishLogin({ clientLoginState: "" })
+      opaque.client.finishLogin({ clientLoginState: "" }),
     ).toThrow("missing field `loginResponse`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.client.finishLogin({ clientLoginState: "", loginResponse: "" })
+      opaque.client.finishLogin({ clientLoginState: "", loginResponse: "" }),
     ).toThrow("missing field `password`");
   });
 
@@ -387,9 +387,9 @@ describe("client.finishLogin", () => {
         clientLoginState: "",
         loginResponse: "",
         password: "hunter2",
-      })
+      }),
     ).toThrow(
-      'opaque protocol error at "deserialize clientLoginState"; Internal error encountered'
+      'opaque protocol error at "deserialize clientLoginState"; Internal error encountered',
     );
   });
 
@@ -399,9 +399,9 @@ describe("client.finishLogin", () => {
         clientLoginState: "a",
         loginResponse: "",
         password: "hunter2",
-      })
+      }),
     ).toThrow(
-      'base64 decoding failed at "clientLoginState"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "clientLoginState"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 
@@ -416,7 +416,7 @@ describe("client.finishLogin", () => {
         password: "hunter2",
       });
     }).toThrow(
-      'opaque protocol error at "deserialize loginResponse"; Internal error encountered'
+      'opaque protocol error at "deserialize loginResponse"; Internal error encountered',
     );
   });
 
@@ -431,7 +431,7 @@ describe("client.finishLogin", () => {
         password: "hunter2",
       });
     }).toThrow(
-      'base64 decoding failed at "loginResponse"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "loginResponse"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 });
@@ -440,39 +440,39 @@ describe("server.createRegistrationResponse", () => {
   test("invalid params type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.createRegistrationResponse()
+      opaque.server.createRegistrationResponse(),
     ).toThrow(
-      "invalid type: unit value, expected struct CreateServerRegistrationResponseParams"
+      "invalid type: unit value, expected struct CreateServerRegistrationResponseParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.createRegistrationResponse(123)
+      opaque.server.createRegistrationResponse(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct CreateServerRegistrationResponseParams"
+      "invalid type: floating point `123`, expected struct CreateServerRegistrationResponseParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.createRegistrationResponse("test")
+      opaque.server.createRegistrationResponse("test"),
     ).toThrow(
-      'invalid type: string "test", expected struct CreateServerRegistrationResponseParams'
+      'invalid type: string "test", expected struct CreateServerRegistrationResponseParams',
     );
   });
 
   test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.createRegistrationResponse({})
+      opaque.server.createRegistrationResponse({}),
     ).toThrow("missing field `serverSetup`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.createRegistrationResponse({ serverSetup: "" })
+      opaque.server.createRegistrationResponse({ serverSetup: "" }),
     ).toThrow("missing field `userIdentifier`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.server.createRegistrationResponse({
         serverSetup: "",
         userIdentifier: "",
-      })
+      }),
     ).toThrow("missing field `registrationRequest`");
   });
 
@@ -487,7 +487,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest,
       });
     }).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
+      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
     );
   });
 
@@ -502,7 +502,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest,
       });
     }).toThrow(
-      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 
@@ -515,7 +515,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest: "",
       });
     }).toThrow(
-      'opaque protocol error at "deserialize registrationRequest"; Internal error encountered'
+      'opaque protocol error at "deserialize registrationRequest"; Internal error encountered',
     );
   });
 
@@ -528,7 +528,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest: "a",
       });
     }).toThrow(
-      'base64 decoding failed at "registrationRequest"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "registrationRequest"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 });
@@ -537,40 +537,40 @@ describe("server.startLogin", () => {
   test("invalid params type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.startLogin()
+      opaque.server.startLogin(),
     ).toThrow(
-      "invalid type: unit value, expected struct StartServerLoginParams"
+      "invalid type: unit value, expected struct StartServerLoginParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.startLogin(123)
+      opaque.server.startLogin(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct StartServerLoginParams"
+      "invalid type: floating point `123`, expected struct StartServerLoginParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.startLogin("test")
+      opaque.server.startLogin("test"),
     ).toThrow(
-      'invalid type: string "test", expected struct StartServerLoginParams'
+      'invalid type: string "test", expected struct StartServerLoginParams',
     );
   });
 
   test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.startLogin({})
+      opaque.server.startLogin({}),
     ).toThrow("missing field `serverSetup`");
 
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.startLogin({ serverSetup: "" })
+      opaque.server.startLogin({ serverSetup: "" }),
     ).toThrow("missing field `startLoginRequest`");
     expect(() =>
       // @ts-expect-error intentional test of invalid input
       opaque.server.startLogin({
         serverSetup: "",
         startLoginRequest: "",
-      })
+      }),
     ).toThrow("missing field `userIdentifier`");
   });
 
@@ -581,9 +581,9 @@ describe("server.startLogin", () => {
         serverSetup: "",
         startLoginRequest: "",
         userIdentifier: "",
-      })
+      }),
     ).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
+      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
     );
   });
 
@@ -594,9 +594,9 @@ describe("server.startLogin", () => {
         serverSetup: "a",
         startLoginRequest: "",
         userIdentifier: "",
-      })
+      }),
     ).toThrow(
-      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 
@@ -607,9 +607,9 @@ describe("server.startLogin", () => {
         serverSetup: opaque.server.createSetup(),
         startLoginRequest: "",
         userIdentifier: "",
-      })
+      }),
     ).toThrow(
-      'opaque protocol error at "deserialize startLoginRequest"; Internal error encountered'
+      'opaque protocol error at "deserialize startLoginRequest"; Internal error encountered',
     );
   });
 
@@ -620,9 +620,9 @@ describe("server.startLogin", () => {
         serverSetup: opaque.server.createSetup(),
         startLoginRequest: "a",
         userIdentifier: "",
-      })
+      }),
     ).toThrow(
-      'base64 decoding failed at "startLoginRequest"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "startLoginRequest"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 
@@ -651,33 +651,33 @@ describe("server.finishLogin", () => {
   test("invalid params type", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.finishLogin()
+      opaque.server.finishLogin(),
     ).toThrow(
-      "invalid type: unit value, expected struct FinishServerLoginParams"
+      "invalid type: unit value, expected struct FinishServerLoginParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.finishLogin(123)
+      opaque.server.finishLogin(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct FinishServerLoginParams"
+      "invalid type: floating point `123`, expected struct FinishServerLoginParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.finishLogin("test")
+      opaque.server.finishLogin("test"),
     ).toThrow(
-      'invalid type: string "test", expected struct FinishServerLoginParams'
+      'invalid type: string "test", expected struct FinishServerLoginParams',
     );
   });
 
   test("incomplete params object", () => {
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.finishLogin({ finishLoginRequest: "" })
+      opaque.server.finishLogin({ finishLoginRequest: "" }),
     ).toThrow("missing field `serverLoginState`");
 
     expect(() =>
       // @ts-expect-error intentional test of invalid input
-      opaque.server.finishLogin({ serverLoginState: "" })
+      opaque.server.finishLogin({ serverLoginState: "" }),
     ).toThrow("missing field `finishLoginRequest`");
   });
 
@@ -694,7 +694,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState, finishLoginRequest: "" });
     }).toThrow(
-      'opaque protocol error at "deserialize finishLoginRequest"; Internal error encountered'
+      'opaque protocol error at "deserialize finishLoginRequest"; Internal error encountered',
     );
   });
 
@@ -711,7 +711,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState, finishLoginRequest: "a" });
     }).toThrow(
-      'base64 decoding failed at "finishLoginRequest"; Encoded text cannot have a 6-bit remainder'
+      'base64 decoding failed at "finishLoginRequest"; Encoded text cannot have a 6-bit remainder',
     );
   });
 
@@ -720,7 +720,7 @@ describe("server.finishLogin", () => {
     const password = "hunter2";
     const { serverSetup, registrationRecord } = setupAndRegister(
       username,
-      password
+      password,
     );
     const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
       password,
@@ -742,7 +742,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState: "", finishLoginRequest });
     }).toThrow(
-      'opaque protocol error at "deserialize serverLoginState"; Internal error encountered'
+      'opaque protocol error at "deserialize serverLoginState"; Internal error encountered',
     );
   });
 
@@ -751,7 +751,7 @@ describe("server.finishLogin", () => {
     const password = "hunter2";
     const { serverSetup, registrationRecord } = setupAndRegister(
       username,
-      password
+      password,
     );
     const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
       password,
@@ -773,7 +773,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState: "a", finishLoginRequest });
     }).toThrow(
-      'base64 decoding failed at "serverLoginState"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "serverLoginState"; Encoded text cannot have a 6-bit remainder.',
     );
   });
 });
@@ -781,21 +781,21 @@ describe("server.finishLogin", () => {
 describe("server.getPublicKey", () => {
   test("empty string", () => {
     expect(() => opaque.server.getPublicKey("")).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
+      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
     );
   });
   test("invalid encoding", () => {
     expect(() => opaque.server.getPublicKey("a")).toThrow(
-      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.'
+      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.',
     );
   });
   test("incomplete server setup string", () => {
     expect(() =>
       opaque.server.getPublicKey(
-        "pdT3ISgoWCP1G1lOTpU6uopNEMabryz4N3d1R-dRmF2jmigPsYk-aOL4J0cpPpqBXzEc900G7dZgIxjjzkItIbfzzo9cSh92xq7XZjuvlSs21BDddsKC5TmvRP8QT-wCucEXnwDy2aDLJmzZl-tRHb2Mz5my_vGZeO3KeNS_wA"
-      )
+        "pdT3ISgoWCP1G1lOTpU6uopNEMabryz4N3d1R-dRmF2jmigPsYk-aOL4J0cpPpqBXzEc900G7dZgIxjjzkItIbfzzo9cSh92xq7XZjuvlSs21BDddsKC5TmvRP8QT-wCucEXnwDy2aDLJmzZl-tRHb2Mz5my_vGZeO3KeNS_wA",
+      ),
     ).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered'
+      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
     );
   });
 });

@@ -34,8 +34,8 @@ it("should encrypt locker data", () => {
     sodium.crypto_auth_verify(
       sodium.from_base64(locker.serverVerificationMac),
       serverVerificationMacContent,
-      sodium.from_base64(sessionKey)
-    )
+      sodium.from_base64(sessionKey),
+    ),
   ).toBe(true);
 });
 
@@ -61,8 +61,8 @@ it("should encrypt locker data with publicAdditionalData as null", () => {
     sodium.crypto_auth_verify(
       sodium.from_base64(locker.serverVerificationMac),
       serverVerificationMacContent,
-      sodium.from_base64(sessionKey)
-    )
+      sodium.from_base64(sessionKey),
+    ),
   ).toBe(true);
 });
 
@@ -72,7 +72,7 @@ it("should throw an error for invalid sessionKey", () => {
       data,
       exportKey,
       sessionKey: invalidKey,
-    })
+    }),
   ).toThrow("invalid input");
 });
 
@@ -82,7 +82,7 @@ it("should throw an error for invalid lockerSecretKey", () => {
       data,
       exportKey: sodium.to_base64(new Uint8Array([0, 0, 0, 0])),
       sessionKey,
-    })
+    }),
   ).toThrow("invalid key length");
 });
 
@@ -93,6 +93,6 @@ it("should throw an error for invalid data", () => {
       data: new Date(),
       exportKey,
       sessionKey,
-    })
+    }),
   ).toThrow("unsupported input type for message");
 });

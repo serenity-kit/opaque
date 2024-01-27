@@ -4,13 +4,13 @@ import { Datastore, SessionEntry } from "./Datastore";
 
 export default async function withUserSession(
   db: Datastore,
-  callback: (session: SessionEntry) => Promise<NextResponse> | NextResponse
+  callback: (session: SessionEntry) => Promise<NextResponse> | NextResponse,
 ) {
   const sessionCookie = cookies().get("session");
   if (!sessionCookie) {
     return NextResponse.json(
       { error: "missing session cookie" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 

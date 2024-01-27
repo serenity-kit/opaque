@@ -11,13 +11,13 @@ export const decryptLocker = ({
     sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
     42,
     "locker__",
-    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES)
+    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES),
   );
 
   const contentAsUint8Array = sodium.crypto_secretbox_open_easy(
     sodium.from_base64(locker.ciphertext),
     sodium.from_base64(locker.nonce),
-    lockerSecretKey
+    lockerSecretKey,
   );
   if (outputFormat === "uint8array") {
     return contentAsUint8Array;

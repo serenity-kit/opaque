@@ -55,12 +55,12 @@ async function initInMemoryStore(filePath) {
   } catch (err) {
     if (err instanceof Error && "code" in err && err.code === "ENOENT") {
       console.log(
-        `no database file "${filePath}" found, initializing empty database`
+        `no database file "${filePath}" found, initializing empty database`,
       );
     } else {
       console.error(
         `failed to open database file "${filePath}", initializing empty database`,
-        err
+        err,
       );
     }
     const db = InMemoryStore.empty();
@@ -98,7 +98,7 @@ async function setUpRedisStore() {
   } catch (err) {
     console.error(
       "Redis Setup Error:",
-      err instanceof Error ? err.message : err
+      err instanceof Error ? err.message : err,
     );
     process.exit(1);
   }

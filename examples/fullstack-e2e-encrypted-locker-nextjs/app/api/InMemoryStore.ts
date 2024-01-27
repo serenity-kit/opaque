@@ -22,7 +22,7 @@ export default class InMemoryStore implements Datastore {
   private data: Schema;
   constructor(
     data: Partial<Schema> = {},
-    private listeners: (() => Promise<void>)[] = []
+    private listeners: (() => Promise<void>)[] = [],
   ) {
     this.data = {
       users: {},
@@ -75,7 +75,7 @@ export default class InMemoryStore implements Datastore {
   async setLogin(
     name: string,
     value: string,
-    context: string = LOGIN_CONTEXT_SESSION
+    context: string = LOGIN_CONTEXT_SESSION,
   ) {
     this.data.logins[`${context}:${name}`] = {
       value,
@@ -108,7 +108,7 @@ export default class InMemoryStore implements Datastore {
   async setSession(
     id: string,
     entry: SessionEntry,
-    lifetimeInDays: number = 14
+    lifetimeInDays: number = 14,
   ) {
     const expiresAt =
       new Date().getTime() + lifetimeInDays * MILLISECONDS_PER_DAY;

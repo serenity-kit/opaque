@@ -9,7 +9,7 @@ export const createAuthorizationToken = ({
     sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
     subkeyId, // publicly available subkey_id
     "session",
-    sessionKeyAsUint8Array
+    sessionKeyAsUint8Array,
   );
 
   return sodium.to_base64(authorizationToken);

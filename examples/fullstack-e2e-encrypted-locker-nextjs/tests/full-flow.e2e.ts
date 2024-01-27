@@ -58,7 +58,7 @@ test("cannot register same user ID more than once", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Register" })).toBeVisible();
   await fillForm(page, userName, "test");
   const dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Register" }).click()
+    page.getByRole("button", { name: "Register" }).click(),
   );
   expect(dialog.message()).toContain("user already registered");
 });
@@ -69,13 +69,13 @@ test("locker recovery", async ({ page }) => {
   await registerUser(page, userName, "test");
   await expect(page.getByRole("heading", { name: "Locker" })).toBeVisible();
   await expect(
-    page.getByText("Save a locker secret to create a recovery key.")
+    page.getByText("Save a locker secret to create a recovery key."),
   ).toBeVisible();
 
   // save locker secret
   await page.locator("textarea").fill("secret test code=1337");
   let dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Save" }).click()
+    page.getByRole("button", { name: "Save" }).click(),
   );
   expect(dialog.message()).toContain("Locker updated");
   await dialog.dismiss();
@@ -85,7 +85,7 @@ test("locker recovery", async ({ page }) => {
 
   // create recovery key
   dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Create Recovery Key" }).click()
+    page.getByRole("button", { name: "Create Recovery Key" }).click(),
   );
   const msg = dialog.message();
   const prefix = "Your recovery key: ";
@@ -99,7 +99,7 @@ test("locker recovery", async ({ page }) => {
   // update locker secret
   await page.locator("textarea").fill("secret test code=1337 answer=42");
   dialog = await waitForDialog(page, () =>
-    page.getByRole("button", { name: "Save" }).click()
+    page.getByRole("button", { name: "Save" }).click(),
   );
   expect(dialog.message()).toContain("Locker updated");
   await dialog.dismiss();
@@ -111,7 +111,7 @@ test("locker recovery", async ({ page }) => {
   // navigate to recovery
   await page.getByRole("link", { name: "Recover Locker" }).click();
   await expect(
-    page.getByRole("heading", { name: "Recover Locker" })
+    page.getByRole("heading", { name: "Recover Locker" }),
   ).toBeVisible();
 
   // fill recovery form

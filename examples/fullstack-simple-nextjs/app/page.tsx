@@ -27,7 +27,7 @@ async function register(userIdentifier: string, password: string) {
     {
       userIdentifier,
       registrationRequest,
-    }
+    },
   ).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
@@ -77,14 +77,14 @@ async function login(userIdentifier: string, password: string) {
 async function handleSubmit(
   action: string,
   username: string,
-  password: string
+  password: string,
 ) {
   try {
     if (action === "login") {
       const sessionKey = await login(username, password);
       if (sessionKey) {
         alert(
-          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
+          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`,
         );
       } else {
         alert(`User "${username}" login failed`);
@@ -115,7 +115,7 @@ export default function Home() {
         onSubmit={(
           e: React.FormEvent<HTMLFormElement> & {
             nativeEvent: { submitter: HTMLButtonElement };
-          }
+          },
         ) => {
           e.preventDefault();
           const action = e.nativeEvent.submitter.value;
@@ -203,7 +203,7 @@ function runFullFlowDemo() {
 function runFullServerClientFlow(
   serverSetup: string,
   username: string,
-  password: string
+  password: string,
 ) {
   console.log("############################################");
   console.log("#                                          #");

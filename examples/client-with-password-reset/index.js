@@ -10,7 +10,7 @@ const showPasswordResetFormButton = requireElement("show_password_reset_form");
 const runFullFlowDemoButton = requireElement("run_full_flow_demo");
 const cancelPasswordResetButton = requireElement("cancel_password_reset");
 const cancelPasswordResetConfirmButton = requireElement(
-  "cancel_password_reset_confirm"
+  "cancel_password_reset_confirm",
 );
 
 form.addEventListener("submit", handleSubmit);
@@ -23,7 +23,7 @@ passwordResetForm.addEventListener("submit", handleSubmitPasswordReset);
 cancelPasswordResetButton.addEventListener("click", cancelPasswordReset);
 passwordResetConfirm.addEventListener(
   "submit",
-  handleSubmitPasswordResetConfirm
+  handleSubmitPasswordResetConfirm,
 );
 cancelPasswordResetConfirmButton.addEventListener("click", cancelPasswordReset);
 
@@ -145,7 +145,7 @@ async function handleSubmit(e) {
       const sessionKey = await login(username, password);
       if (sessionKey) {
         alert(
-          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
+          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`,
         );
       } else {
         alert(`User "${username}" login failed`);
@@ -204,7 +204,7 @@ async function handleSubmitPasswordResetConfirm(e) {
         userIdentifier,
         resetCode,
         registrationRequest,
-      }
+      },
     ).then((res) => res.json());
 
     console.log("registrationResponse", registrationResponse);
