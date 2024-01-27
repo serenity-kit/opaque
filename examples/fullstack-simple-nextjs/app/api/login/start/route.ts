@@ -9,12 +9,12 @@ export async function POST(request: NextRequest) {
   if (!userIdentifier)
     return NextResponse.json(
       { error: "missing userIdentifier" },
-      { status: 400 }
+      { status: 400 },
     );
   if (!startLoginRequest)
     return NextResponse.json(
       { error: "missing startLoginRequest" },
-      { status: 400 }
+      { status: 400 },
     );
 
   const db = await database;
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   if (hasLogin)
     return NextResponse.json(
       { error: "login already started" },
-      { status: 400 }
+      { status: 400 },
     );
 
   const { serverLoginState, loginResponse } = opaque.server.startLogin({

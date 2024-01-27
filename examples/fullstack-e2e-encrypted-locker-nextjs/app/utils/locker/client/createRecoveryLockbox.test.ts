@@ -12,13 +12,13 @@ beforeAll(async () => {
 
 it("should throw an error for an invalid exportKey", () => {
   expect(() =>
-    createRecoveryLockbox({ exportKey: invalidKey, recoveryExportKey })
+    createRecoveryLockbox({ exportKey: invalidKey, recoveryExportKey }),
   ).toThrow();
 });
 
 it("should throw an error for an invalid recoveryExportKey", () => {
   expect(() =>
-    createRecoveryLockbox({ exportKey, recoveryExportKey: invalidKey })
+    createRecoveryLockbox({ exportKey, recoveryExportKey: invalidKey }),
   ).toThrow();
 });
 
@@ -31,9 +31,9 @@ it("should create a locker for valid keys", () => {
   expect(typeof recoveryLockbox.ciphertext).toBe("string");
   expect(typeof recoveryLockbox.nonce).toBe("string");
   expect(recoveryLockbox.creatorPublicKey).toBe(
-    "TIIhpkyZRdSI4jIS7exm6Hp-wVFIkJqrAiYwD8MLFSo"
+    "TIIhpkyZRdSI4jIS7exm6Hp-wVFIkJqrAiYwD8MLFSo",
   );
   expect(recoveryLockbox.receiverPublicKey).toBe(
-    "rTTA6RfRF8CU3d8L833m7FJcWmL_K035Z7mRaGk0Wnk"
+    "rTTA6RfRF8CU3d8L833m7FJcWmL_K035Z7mRaGk0Wnk",
   );
 });

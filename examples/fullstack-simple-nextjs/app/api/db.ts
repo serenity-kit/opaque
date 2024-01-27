@@ -15,7 +15,7 @@ async function setupInMemoryStore(): Promise<Datastore> {
       console.log("No database file found, initializing empty database.");
     } else {
       console.error(
-        "ERROR: failed to read database file, initializing empty database."
+        "ERROR: failed to read database file, initializing empty database.",
       );
       console.error(err);
     }
@@ -38,7 +38,7 @@ async function setupRedis(): Promise<Datastore> {
   } catch (err) {
     console.error(
       "Redis Setup Error:",
-      err instanceof Error ? err.message : err
+      err instanceof Error ? err.message : err,
     );
     process.exit(1);
   }

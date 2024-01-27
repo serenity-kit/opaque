@@ -7,7 +7,7 @@ export default class InMemoryStore implements Datastore {
   constructor(
     private users: Record<string, string> = {},
     private logins: Record<string, LoginState> = {},
-    private listeners: (() => Promise<void>)[] = []
+    private listeners: (() => Promise<void>)[] = [],
   ) {}
   addListener(listener: () => Promise<void>) {
     this.listeners.push(listener);
@@ -31,7 +31,7 @@ export default class InMemoryStore implements Datastore {
         users: this.users,
       },
       null,
-      2
+      2,
     );
   }
   async getUser(name: string) {

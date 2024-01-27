@@ -82,7 +82,7 @@ export default class RedisStore {
    */
   async getSession(id) {
     const { userIdentifier, sessionKey } = await this.client.hGetAll(
-      `session:${id}`
+      `session:${id}`,
     );
     if (!userIdentifier || !sessionKey) throw new TypeError();
     return { userIdentifier, sessionKey };

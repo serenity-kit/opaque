@@ -6,7 +6,7 @@ import withUserSession from "../withUserSession";
 import sodium from "libsodium-wrappers";
 
 function isValidLockerPayload(
-  data: unknown
+  data: unknown,
 ): data is LockerWithServerVerificationMac {
   return (
     data != null &&
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (!isValidLockerPayload(payload)) {
       return NextResponse.json(
         { error: "invalid locker payload" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

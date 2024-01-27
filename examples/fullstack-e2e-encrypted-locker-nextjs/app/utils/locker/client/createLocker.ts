@@ -9,7 +9,7 @@ export const createLocker = ({
   sessionKey,
 }: CreateLockerParams): LockerWithServerVerificationMac => {
   const nonce = sodium.randombytes_buf(
-    sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES
+    sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES,
   );
   const lockerSecretKey = createLockerSecretKey({ exportKey });
 
@@ -24,7 +24,7 @@ export const createLocker = ({
     throw new Error("serverVerificationMacContent is undefined");
   const serverVerificationMac = sodium.crypto_auth(
     serverVerificationMacContent,
-    sodium.from_base64(sessionKey).subarray(0, sodium.crypto_auth_KEYBYTES)
+    sodium.from_base64(sessionKey).subarray(0, sodium.crypto_auth_KEYBYTES),
   );
 
   return {

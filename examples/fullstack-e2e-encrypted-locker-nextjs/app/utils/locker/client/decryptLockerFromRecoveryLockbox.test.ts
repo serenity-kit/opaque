@@ -76,7 +76,7 @@ it("should throw an error for invalid data ciphertext", () => {
       locker: brokenLocker,
       recoveryExportKey,
       recoveryLockbox,
-    })
+    }),
   ).toThrow("ciphertext is too short");
 });
 
@@ -86,7 +86,7 @@ it("should throw an error for invalid recoveryExportKey", () => {
       locker,
       recoveryExportKey: invalidKey,
       recoveryLockbox,
-    })
+    }),
   ).toThrow("invalid input");
 });
 
@@ -99,6 +99,6 @@ it("should throw an error for invalid ciphertext in recoveryLockbox", () => {
         ...recoveryLockbox,
         ciphertext: "ups",
       },
-    })
+    }),
   ).toThrow("invalid input");
 });

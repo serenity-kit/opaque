@@ -17,7 +17,7 @@ it("should create an authorizationToken from a sessionKey", () => {
   const authorizationToken = createAuthorizationToken({ sessionKey });
 
   expect(authorizationToken).toBe(
-    "2TicYPonoBFZZ9XydRp5JxjYyKNMLDnOPWWFQcvn9JQ"
+    "2TicYPonoBFZZ9XydRp5JxjYyKNMLDnOPWWFQcvn9JQ",
   );
 });
 
@@ -28,6 +28,6 @@ it("should create an authorizationToken from a sessionKey with a custom subkeyId
   });
 
   expect(authorizationToken).toBe(
-    "ZuTIrwzwIFxwrSaATjkRLNA6Xwz5pg125xASzybQEXw"
+    "ZuTIrwzwIFxwrSaATjkRLNA6Xwz5pg125xASzybQEXw",
   );
 });

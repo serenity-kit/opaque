@@ -9,7 +9,7 @@ export const createLockerSecretKey = ({
     sodium.crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
     42, // publicly available subkey_id
     "locker__",
-    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES)
+    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES),
   );
 
   return lockerSecretKey;

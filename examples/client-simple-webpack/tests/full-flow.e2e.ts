@@ -20,7 +20,7 @@ test("full registration & login flow", async ({ page }) => {
   // first login attempt
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
-      'User "jane_doe" logged in successfully'
+      'User "jane_doe" logged in successfully',
     );
     await dialog.dismiss().catch(() => {
       throw new Error("Dialog not dismissed");
@@ -32,7 +32,7 @@ test("full registration & login flow", async ({ page }) => {
   // second login attempt
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
-      'User "jane_doe" logged in successfully'
+      'User "jane_doe" logged in successfully',
     );
     await dialog.dismiss().catch(() => {
       throw new Error("Dialog not dismissed");

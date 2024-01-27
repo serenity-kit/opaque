@@ -124,7 +124,7 @@ async function handleSubmit(e) {
       const sessionKey = await login(username, password);
       if (sessionKey) {
         alert(
-          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`
+          `User "${username}" logged in successfully; sessionKey = ${sessionKey}`,
         );
       } else {
         alert(`User "${username}" login failed`);

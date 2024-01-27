@@ -9,12 +9,12 @@ export async function POST(req: NextRequest) {
   if (!userIdentifier)
     return NextResponse.json(
       { error: "missing userIdentifier" },
-      { status: 400 }
+      { status: 400 },
     );
   if (!registrationRequest)
     return NextResponse.json(
       { error: "missing registrationRequest" },
-      { status: 400 }
+      { status: 400 },
     );
 
   const db = await database;
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   if (hasUser)
     return NextResponse.json(
       { error: "user already registered" },
-      { status: 400 }
+      { status: 400 },
     );
 
   const { registrationResponse } = opaque.server.createRegistrationResponse({

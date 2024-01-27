@@ -20,7 +20,7 @@ export default function useLockerRequestState() {
   const lockerRequest = useMemo(() => new FetchRequest(fetchLocker), []);
   const lockerState = useSyncExternalStore(
     lockerRequest.subscribe,
-    lockerRequest.getSnapshot
+    lockerRequest.getSnapshot,
   );
   return lockerState;
 }

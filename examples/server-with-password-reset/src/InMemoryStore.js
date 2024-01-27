@@ -111,7 +111,7 @@ export default class InMemoryStore {
         resetCodes: pruneResetCodes(this.resetCodes),
       },
       null,
-      2
+      2,
     );
   }
 

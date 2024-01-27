@@ -13,19 +13,19 @@ export const createRecoveryLockbox = ({
   const lockerSecretKey = createLockerSecretKey({ exportKey });
 
   const keyPair = sodium.crypto_box_seed_keypair(
-    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES)
+    exportKeyAsUint8Array.subarray(0, sodium.crypto_kdf_KEYBYTES),
   );
   const recoveryKeyPair = sodium.crypto_box_seed_keypair(
-    recoveryExportKeyAsUint8Array
+    recoveryExportKeyAsUint8Array,
   );
   const recoveryLockboxNonce = sodium.randombytes_buf(
-    sodium.crypto_box_NONCEBYTES
+    sodium.crypto_box_NONCEBYTES,
   );
   const ciphertextRecoveryLockbox = sodium.crypto_box_easy(
     lockerSecretKey,
     recoveryLockboxNonce,
     recoveryKeyPair.publicKey,
-    keyPair.privateKey
+    keyPair.privateKey,
   );
   const recoveryLockbox: RecoveryLockbox = {
     receiverPublicKey: sodium.to_base64(recoveryKeyPair.publicKey),

@@ -11,12 +11,12 @@ export async function POST(request: Request) {
     if (!isRecoveryLockboxObject(recoveryLockbox))
       return NextResponse.json(
         { error: "missing recoveryLockbox" },
-        { status: 400 }
+        { status: 400 },
       );
     if (!registrationRecord)
       return NextResponse.json(
         { error: "missing registrationRecord" },
-        { status: 400 }
+        { status: 400 },
       );
 
     await db.setRecovery(session.userIdentifier, {

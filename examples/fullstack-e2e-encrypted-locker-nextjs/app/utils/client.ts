@@ -6,7 +6,7 @@ import isRecoveryLockboxObject from "./isRecoveryLockboxObject";
 export async function request(
   method: string,
   path: string,
-  body: any = undefined
+  body: any = undefined,
 ) {
   console.log(`${method} ${path}`, body);
   const res = await fetch(`${path}`, {
@@ -31,7 +31,7 @@ export async function register(userIdentifier: string, password: string) {
     {
       userIdentifier,
       registrationRequest,
-    }
+    },
   ).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);
@@ -100,7 +100,7 @@ export async function registerRecovery({
     `/api/recovery/register/start`,
     {
       registrationRequest,
-    }
+    },
   ).then((res) => res.json());
 
   console.log("registrationResponse", registrationResponse);

@@ -65,7 +65,7 @@ it("should throw an error for invalid data ciphertext", () => {
     decryptLocker({
       locker: brokenLocker,
       exportKey,
-    })
+    }),
   ).toThrow("ciphertext is too short");
 });
 
@@ -74,6 +74,6 @@ it("should throw an error for invalid exportKey", () => {
     decryptLocker({
       locker,
       exportKey: invalidKey,
-    })
+    }),
   ).toThrow("invalid input");
 });

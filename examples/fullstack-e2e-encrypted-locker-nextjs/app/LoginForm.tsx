@@ -37,7 +37,7 @@ export default function LoginForm() {
             const loginResult = await login(username, password);
             if (loginResult) {
               console.log(
-                `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`
+                `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`,
               );
               storeLoginKeys(loginResult);
               redirectPrivate();

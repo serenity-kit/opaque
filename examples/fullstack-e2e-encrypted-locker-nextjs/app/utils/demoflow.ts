@@ -10,7 +10,7 @@ export default function runFullFlowDemo() {
 function runFullServerClientFlow(
   serverSetup: string,
   username: string,
-  password: string
+  password: string,
 ) {
   console.log("############################################");
   console.log("#                                          #");

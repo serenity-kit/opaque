@@ -1,7 +1,7 @@
 import { RecoveryLockbox } from "./locker";
 
 export default function isRecoveryLockboxObject(
-  data: unknown
+  data: unknown,
 ): data is RecoveryLockbox {
   return (
     data != null &&
