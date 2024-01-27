@@ -207,7 +207,7 @@ describe("client.startRegistration", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startRegistration(123);
     }).toThrow(
-      "invalid type: floating point `123`, expected struct StartClientRegistrationParams",
+      "invalid type: floating point `123.0`, expected struct StartClientRegistrationParams",
     );
   });
   test("incomplete params object", () => {
@@ -231,7 +231,7 @@ describe("client.finishRegistration", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.finishRegistration(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct FinishClientRegistrationParams",
+      "invalid type: floating point `123.0`, expected struct FinishClientRegistrationParams",
     );
   });
   test("incomplete params object", () => {
@@ -338,7 +338,7 @@ describe("client.startLogin", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.startLogin(123);
     }).toThrow(
-      "invalid type: floating point `123`, expected struct StartClientLoginParams",
+      "invalid type: floating point `123.0`, expected struct StartClientLoginParams",
     );
   });
   test("incomplete params object", () => {
@@ -362,7 +362,7 @@ describe("client.finishLogin", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.finishLogin(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct FinishClientLoginParams",
+      "invalid type: floating point `123.0`, expected struct FinishClientLoginParams",
     );
   });
 
@@ -448,7 +448,7 @@ describe("server.createRegistrationResponse", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.server.createRegistrationResponse(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct CreateServerRegistrationResponseParams",
+      "invalid type: floating point `123.0`, expected struct CreateServerRegistrationResponseParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
@@ -545,7 +545,7 @@ describe("server.startLogin", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.server.startLogin(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct StartServerLoginParams",
+      "invalid type: floating point `123.0`, expected struct StartServerLoginParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input
@@ -659,7 +659,7 @@ describe("server.finishLogin", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.server.finishLogin(123),
     ).toThrow(
-      "invalid type: floating point `123`, expected struct FinishServerLoginParams",
+      "invalid type: floating point `123.0`, expected struct FinishServerLoginParams",
     );
     expect(() =>
       // @ts-expect-error intentional test of invalid input

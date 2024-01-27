@@ -1,7 +1,10 @@
 [package]
 name = "opaque"
 version = "0.8.0"
-authors = ["Stefan Oestreicher <oestef@gmail.com>", "Nik Graf <nik@nikgraf.com>"]
+authors = [
+  "Stefan Oestreicher <oestef@gmail.com>",
+  "Nik Graf <nik@nikgraf.com>",
+]
 edition = "2018"
 
 [lib]
@@ -12,20 +15,23 @@ default = []
 p256 = ["dep:p256"]
 
 [dependencies]
-wasm-bindgen = { version = "0.2.84", features = ["serde-serialize"] }
+wasm-bindgen = { version = "0.2.90", features = ["serde-serialize"] }
 opaque-ke = { version = "3.0.0-pre.4", features = ["argon2"] }
 rand = { version = "0.8.5" }
-getrandom = { version = "0.2.8", features = ["js", "wasm-bindgen"] }
+getrandom = { version = "0.2.12", features = ["js", "wasm-bindgen"] }
 argon2 = "0.5"
-p256 = { version = "0.13", default-features = false, features = ["hash2curve", "voprf"], optional = true }
-base64 = "0.21.0"
-serde = { version = "1.0.159", features = ["derive"] }
-serde-wasm-bindgen = "0.5.0"
-tsify = { version = "0.4.4", features = ["js"] }
-js-sys = "0.3.61"
+p256 = { version = "0.13", default-features = false, features = [
+  "hash2curve",
+  "voprf",
+], optional = true }
+base64 = "0.21.7"
+serde = { version = "1.0.169", features = ["derive"] }
+serde-wasm-bindgen = "0.6.3"
+tsify = { version = "0.4.5", features = ["js"] }
+js-sys = "0.3.67"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.13"
+wasm-bindgen-test = "0.3.40"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
