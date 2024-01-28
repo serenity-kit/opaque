@@ -1,3 +1,4 @@
+import { RecoveryRegisterStart } from "@/app/api/schema";
 import withUserSession from "@/app/api/withUserSession";
 import * as opaque from "@serenity-kit/opaque";
 import { NextRequest, NextResponse } from "next/server";
@@ -16,13 +17,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { registrationRequest } = await req.json();
-
-    if (!registrationRequest)
+    let registrationRequest;
+    try {
+      const rawValues = await req.json();
+      const values = RecoveryRegisterStart.parse(rawValues);
+      registrationRequest = values.registrationRequest;
+    } catch (err) {
       return NextResponse.json(
-        { error: "missing registrationRequest" },
+        { error: "Invalid input values" },
         { status: 400 },
       );
+    }
 
     const { registrationResponse } = opaque.server.createRegistrationResponse({
       serverSetup: SERVER_SETUP,

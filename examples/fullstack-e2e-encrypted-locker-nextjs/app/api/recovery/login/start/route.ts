@@ -1,21 +1,22 @@
+import { LoginStartParams } from "@/app/api/schema";
 import * as opaque from "@serenity-kit/opaque";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../../db";
 import { SERVER_SETUP } from "../../../env";
 
 export async function POST(request: NextRequest) {
-  const { userIdentifier, startLoginRequest } = await request.json();
-
-  if (!userIdentifier)
+  let userIdentifier, startLoginRequest;
+  try {
+    const rawValues = await request.json();
+    const values = LoginStartParams.parse(rawValues);
+    userIdentifier = values.userIdentifier;
+    startLoginRequest = values.startLoginRequest;
+  } catch (err) {
     return NextResponse.json(
-      { error: "missing userIdentifier" },
+      { error: "Invalid input values" },
       { status: 400 },
     );
-  if (!startLoginRequest)
-    return NextResponse.json(
-      { error: "missing startLoginRequest" },
-      { status: 400 },
-    );
+  }
 
   const db = await database;
 

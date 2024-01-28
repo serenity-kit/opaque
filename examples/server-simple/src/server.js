@@ -8,6 +8,12 @@ import InMemoryStore, {
 } from "./InMemoryStore.js";
 import RedisStore from "./RedisStore.js";
 import cookieParser from "cookie-parser";
+import {
+  LoginFinishParams,
+  LoginStartParams,
+  RegisterFinishParams,
+  RegisterStartParams,
+} from "./schema.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -132,11 +138,14 @@ function sendError(res, status, error) {
 }
 
 app.post("/register/start", async (req, res) => {
-  const { userIdentifier, registrationRequest } = req.body || {};
-
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-  if (!registrationRequest)
-    return sendError(res, 400, "missing registrationRequest");
+  let userIdentifier, registrationRequest;
+  try {
+    const values = RegisterStartParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    registrationRequest = values.registrationRequest;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   const userExists = await db.hasUser(userIdentifier);
   if (userExists) {
@@ -154,10 +163,14 @@ app.post("/register/start", async (req, res) => {
 });
 
 app.post("/register/finish", async (req, res) => {
-  const { userIdentifier, registrationRecord } = req.body || {};
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-  if (!registrationRecord)
-    return sendError(res, 400, "missing registrationRecord");
+  let userIdentifier, registrationRecord;
+  try {
+    const values = RegisterFinishParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    registrationRecord = values.registrationRecord;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   await db.setUser(userIdentifier, registrationRecord);
 
@@ -166,11 +179,14 @@ app.post("/register/finish", async (req, res) => {
 });
 
 app.post("/login/start", async (req, res) => {
-  const { userIdentifier, startLoginRequest } = req.body || {};
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-
-  if (!startLoginRequest)
-    return sendError(res, 400, "missing startLoginRequest");
+  let userIdentifier, startLoginRequest;
+  try {
+    const values = LoginStartParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    startLoginRequest = values.startLoginRequest;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   const registrationRecord = await db.getUser(userIdentifier);
   if (!registrationRecord) return sendError(res, 400, "user not registered");
@@ -194,11 +210,14 @@ app.post("/login/start", async (req, res) => {
 });
 
 app.post("/login/finish", async (req, res) => {
-  const { userIdentifier, finishLoginRequest } = req.body || {};
-
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-  if (!finishLoginRequest)
-    return sendError(res, 400, "missing finishLoginRequest");
+  let userIdentifier, finishLoginRequest;
+  try {
+    const values = LoginFinishParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    finishLoginRequest = values.finishLoginRequest;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   const serverLoginState = await db.getLogin(userIdentifier);
   if (!serverLoginState) return sendError(res, 400, "login not started");

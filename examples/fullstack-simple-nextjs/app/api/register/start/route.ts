@@ -2,20 +2,21 @@ import * as opaque from "@serenity-kit/opaque";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
 import { SERVER_SETUP } from "../../env";
+import { RegisterStartParams } from "../../schema";
 
 export async function POST(req: NextRequest) {
-  const { userIdentifier, registrationRequest } = await req.json();
-
-  if (!userIdentifier)
+  let userIdentifier, registrationRequest;
+  try {
+    const rawValues = await req.json();
+    const values = RegisterStartParams.parse(rawValues);
+    userIdentifier = values.userIdentifier;
+    registrationRequest = values.registrationRequest;
+  } catch (err) {
     return NextResponse.json(
-      { error: "missing userIdentifier" },
+      { error: "Invalid input values" },
       { status: 400 },
     );
-  if (!registrationRequest)
-    return NextResponse.json(
-      { error: "missing registrationRequest" },
-      { status: 400 },
-    );
+  }
 
   const db = await database;
   const hasUser = await db.hasUser(userIdentifier);

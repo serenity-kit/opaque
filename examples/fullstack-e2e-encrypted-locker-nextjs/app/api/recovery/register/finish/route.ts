@@ -1,5 +1,5 @@
+import { RecoveryRegisterFinish } from "@/app/api/schema";
 import withUserSession from "@/app/api/withUserSession";
-import isRecoveryLockboxObject from "@/app/utils/isRecoveryLockboxObject";
 import { NextResponse } from "next/server";
 import database from "../../../db";
 
@@ -7,17 +7,18 @@ export async function POST(request: Request) {
   const db = await database;
 
   return withUserSession(db, async (session) => {
-    const { recoveryLockbox, registrationRecord } = await request.json();
-    if (!isRecoveryLockboxObject(recoveryLockbox))
+    let recoveryLockbox, registrationRecord;
+    try {
+      const rawValues = await request.json();
+      const values = RecoveryRegisterFinish.parse(rawValues);
+      recoveryLockbox = values.recoveryLockbox;
+      registrationRecord = values.registrationRecord;
+    } catch (err) {
       return NextResponse.json(
-        { error: "missing recoveryLockbox" },
+        { error: "Invalid input values" },
         { status: 400 },
       );
-    if (!registrationRecord)
-      return NextResponse.json(
-        { error: "missing registrationRecord" },
-        { status: 400 },
-      );
+    }
 
     await db.setRecovery(session.userIdentifier, {
       registrationRecord,
