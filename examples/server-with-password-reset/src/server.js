@@ -13,8 +13,9 @@ import {
   LoginStartParams,
   RegisterFinishParams,
   RegisterStartParams,
-  ResetPasswordConfirmParams,
-  ResetPasswordParams,
+  ResetPasswordConfirmFinishParams,
+  ResetPasswordConfirmStartParams,
+  ResetPasswordInitiateParams,
 } from "./schema.js";
 
 dotenv.config({ path: "../../.env" });
@@ -163,7 +164,7 @@ app.post("/register/start", async (req, res) => {
   res.end();
 });
 
-app.post("/register/finish", (req, res) => {
+app.post("/register/finish", async (req, res) => {
   let userIdentifier, registrationRecord;
   try {
     const values = RegisterFinishParams.parse(req.body);
@@ -172,7 +173,14 @@ app.post("/register/finish", (req, res) => {
   } catch (err) {
     return sendError(res, 400, "Invalid input values");
   }
-  db.setUser(userIdentifier, registrationRecord);
+
+  const existingUser = await db.getUser(userIdentifier);
+  if (!existingUser) {
+    await db.setUser(userIdentifier, registrationRecord);
+  }
+
+  // return a 200 even if the user already exists to avoid leaking
+  // the information if the user exists or not
   res.writeHead(200);
   res.end();
 });
@@ -267,10 +275,10 @@ function generateResetCode() {
   return randomInt(1e9, 1e10).toString();
 }
 
-app.post("/password/reset", async (req, res) => {
+app.post("/password-reset/initiate", async (req, res) => {
   let userIdentifier;
   try {
-    const values = ResetPasswordParams.parse(req.body);
+    const values = ResetPasswordInitiateParams.parse(req.body);
     userIdentifier = values.userIdentifier;
   } catch (err) {
     return sendError(res, 400, "Invalid input values");
@@ -292,10 +300,10 @@ app.post("/password/reset", async (req, res) => {
   res.end();
 });
 
-app.post("/password/reset/confirm", async (req, res) => {
+app.post("/password-reset/confirm-start", async (req, res) => {
   let userIdentifier, resetCode, registrationRequest;
   try {
-    const values = ResetPasswordConfirmParams.parse(req.body);
+    const values = ResetPasswordConfirmStartParams.parse(req.body);
     userIdentifier = values.userIdentifier;
     resetCode = values.resetCode;
     registrationRequest = values.registrationRequest;
@@ -308,12 +316,6 @@ app.post("/password/reset/confirm", async (req, res) => {
     return sendError(res, 404, "reset code is invalid or expired");
   }
 
-  await db.removeResetCode(userIdentifier);
-
-  if (storedResetCode !== resetCode) {
-    return sendError(res, 400, "reset code is invalid or expired");
-  }
-
   const { registrationResponse } = opaque.server.createRegistrationResponse({
     serverSetup: getOpaqueServerSetup(),
     userIdentifier,
@@ -321,6 +323,33 @@ app.post("/password/reset/confirm", async (req, res) => {
   });
 
   res.send({ registrationResponse });
+  res.end();
+});
+
+app.post("/password-reset/confirm-finish", async (req, res) => {
+  let userIdentifier, resetCode, registrationRecord;
+  try {
+    const values = ResetPasswordConfirmFinishParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    resetCode = values.resetCode;
+    registrationRecord = values.registrationRecord;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
+
+  const storedResetCode = await db.getResetCode(userIdentifier);
+  if (storedResetCode == null) {
+    return sendError(res, 404, "reset code is invalid or expired");
+  }
+
+  await db.removeResetCode(userIdentifier);
+  await db.setUser(userIdentifier, registrationRecord);
+
+  if (storedResetCode !== resetCode) {
+    return sendError(res, 400, "reset code is invalid or expired");
+  }
+
+  res.writeHead(200);
   res.end();
 });
 

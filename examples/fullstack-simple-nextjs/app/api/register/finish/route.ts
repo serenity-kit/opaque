@@ -17,6 +17,12 @@ export async function POST(request: Request) {
   }
 
   const db = await database;
-  await db.setUser(userIdentifier, registrationRecord);
+  const existingUser = await db.getUser(userIdentifier);
+  if (!existingUser) {
+    await db.setUser(userIdentifier, registrationRecord);
+  }
+
+  // return a 200 even if the user already exists to avoid leaking
+  // the information if the user exists or not
   return NextResponse.json({ success: true });
 }

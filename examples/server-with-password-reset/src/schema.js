@@ -32,12 +32,18 @@ export const RegisterFinishParams = z.object({
   registrationRecord: noProtoString,
 });
 
-export const ResetPasswordParams = z.object({
+export const ResetPasswordInitiateParams = z.object({
   userIdentifier: noProtoString,
 });
 
-export const ResetPasswordConfirmParams = z.object({
+export const ResetPasswordConfirmStartParams = z.object({
   userIdentifier: noProtoString,
   resetCode: noProtoString,
   registrationRequest: noProtoString,
+});
+
+export const ResetPasswordConfirmFinishParams = z.object({
+  userIdentifier: noProtoString,
+  resetCode: noProtoString,
+  registrationRecord: noProtoString,
 });
