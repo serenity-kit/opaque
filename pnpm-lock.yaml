@@ -162,6 +162,9 @@ importers:
       typescript:
         specifier: 5.3.3
         version: 5.3.3
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@types/libsodium-wrappers':
         specifier: ^0.7.13
@@ -217,6 +220,9 @@ importers:
       typescript:
         specifier: 5.3.3
         version: 5.3.3
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
 
   examples/server-simple:
     dependencies:
@@ -235,6 +241,9 @@ importers:
       redis:
         specifier: ^4.6.12
         version: 4.6.12
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@types/cookie-parser':
         specifier: ^1.4.6
@@ -260,6 +269,9 @@ importers:
       redis:
         specifier: ^4.6.12
         version: 4.6.12
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
     devDependencies:
       '@types/cookie-parser':
         specifier: ^1.4.6
@@ -7855,3 +7867,7 @@ packages:
   /yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  /zod@3.22.4:
+    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
+    dev: false

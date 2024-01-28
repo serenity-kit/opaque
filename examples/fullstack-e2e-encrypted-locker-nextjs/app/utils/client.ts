@@ -1,7 +1,5 @@
 import * as opaque from "@serenity-kit/opaque";
 import { createRecoveryLockbox } from "./locker/client/createRecoveryLockbox";
-import isLockerObject from "./isLockerObject";
-import isRecoveryLockboxObject from "./isRecoveryLockboxObject";
 
 export async function request(
   method: string,
@@ -152,8 +150,5 @@ export async function loginRecovery(userIdentifier: string, password: string) {
     finishLoginRequest,
   });
   const { locker, recoveryLockbox } = await res.json();
-  if (!isLockerObject(locker) || !isRecoveryLockboxObject(recoveryLockbox)) {
-    throw new Error("unexpected response data");
-  }
   return res.ok ? { recoveryExportKey, locker, recoveryLockbox } : null;
 }

@@ -8,6 +8,14 @@ import InMemoryStore, {
   writeDatabaseFile,
 } from "./InMemoryStore.js";
 import RedisStore from "./RedisStore.js";
+import {
+  LoginFinishParams,
+  LoginStartParams,
+  RegisterFinishParams,
+  RegisterStartParams,
+  ResetPasswordConfirmParams,
+  ResetPasswordParams,
+} from "./schema.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -131,11 +139,14 @@ function sendError(res, status, error) {
 }
 
 app.post("/register/start", async (req, res) => {
-  const { userIdentifier, registrationRequest } = req.body || {};
-
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-  if (!registrationRequest)
-    return sendError(res, 400, "missing registrationRequest");
+  let userIdentifier, registrationRequest;
+  try {
+    const values = RegisterStartParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    registrationRequest = values.registrationRequest;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   const userExists = await db.hasUser(userIdentifier);
   if (userExists) {
@@ -153,21 +164,28 @@ app.post("/register/start", async (req, res) => {
 });
 
 app.post("/register/finish", (req, res) => {
-  const { userIdentifier, registrationRecord } = req.body || {};
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-  if (!registrationRecord)
-    return sendError(res, 400, "missing registrationRecord");
+  let userIdentifier, registrationRecord;
+  try {
+    const values = RegisterFinishParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    registrationRecord = values.registrationRecord;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
   db.setUser(userIdentifier, registrationRecord);
   res.writeHead(200);
   res.end();
 });
 
 app.post("/login/start", async (req, res) => {
-  const { userIdentifier, startLoginRequest } = req.body || {};
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-
-  if (!startLoginRequest)
-    return sendError(res, 400, "missing startLoginRequest");
+  let userIdentifier, startLoginRequest;
+  try {
+    const values = LoginStartParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    startLoginRequest = values.startLoginRequest;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   const registrationRecord = await db.getUser(userIdentifier);
   if (!registrationRecord) return sendError(res, 400, "user not registered");
@@ -191,12 +209,14 @@ app.post("/login/start", async (req, res) => {
 });
 
 app.post("/login/finish", async (req, res) => {
-  const { userIdentifier, finishLoginRequest } = req.body || {};
-
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-  if (!finishLoginRequest)
-    return sendError(res, 400, "missing finishLoginRequest");
-
+  let userIdentifier, finishLoginRequest;
+  try {
+    const values = LoginFinishParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    finishLoginRequest = values.finishLoginRequest;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
   const serverLoginState = await db.getLogin(userIdentifier);
   if (!serverLoginState) return sendError(res, 400, "login not started");
 
@@ -248,8 +268,13 @@ function generateResetCode() {
 }
 
 app.post("/password/reset", async (req, res) => {
-  const { userIdentifier } = req.body || {};
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
+  let userIdentifier;
+  try {
+    const values = ResetPasswordParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   const hasUser = await db.hasUser(userIdentifier);
   if (!hasUser) return sendError(res, 400, "user not found");
@@ -268,13 +293,15 @@ app.post("/password/reset", async (req, res) => {
 });
 
 app.post("/password/reset/confirm", async (req, res) => {
-  const { userIdentifier, resetCode, registrationRequest } = req.body || {};
-
-  if (!userIdentifier) return sendError(res, 400, "missing userIdentifier");
-
-  if (!resetCode) return sendError(res, 400, "missing resetCode");
-  if (!registrationRequest)
-    return sendError(res, 400, "missing registrationRequest");
+  let userIdentifier, resetCode, registrationRequest;
+  try {
+    const values = ResetPasswordConfirmParams.parse(req.body);
+    userIdentifier = values.userIdentifier;
+    resetCode = values.resetCode;
+    registrationRequest = values.registrationRequest;
+  } catch (err) {
+    return sendError(res, 400, "Invalid input values");
+  }
 
   const storedResetCode = await db.getResetCode(userIdentifier);
   if (storedResetCode == null) {

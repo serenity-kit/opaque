@@ -3,21 +3,21 @@ import { randomInt } from "crypto";
 import { cookies } from "next/dist/client/components/headers";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
+import { LoginFinishParams } from "../../schema";
 
 export async function POST(request: NextRequest) {
-  const { userIdentifier, finishLoginRequest } = await request.json();
-
-  if (!userIdentifier)
+  let userIdentifier, finishLoginRequest;
+  try {
+    const rawValues = await request.json();
+    const values = LoginFinishParams.parse(rawValues);
+    userIdentifier = values.userIdentifier;
+    finishLoginRequest = values.finishLoginRequest;
+  } catch (err) {
     return NextResponse.json(
-      { error: "missing userIdentifier" },
+      { error: "Invalid input values" },
       { status: 400 },
     );
-
-  if (!finishLoginRequest)
-    return NextResponse.json(
-      { error: "missing finishLoginRequest" },
-      { status: 400 },
-    );
+  }
 
   const db = await database;
   const serverLoginState = await db.getLogin(userIdentifier);

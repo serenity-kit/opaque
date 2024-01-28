@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from "react";
-import FetchRequest from "./FetchRequest";
-import { Locker } from "../utils/locker";
 import isLockerObject from "../utils/isLockerObject";
+import { Locker } from "../utils/locker";
+import FetchRequest from "./FetchRequest";
 
 async function fetchLocker(): Promise<Locker | null> {
   const res = await fetch("/api/locker", { cache: "no-store" });
