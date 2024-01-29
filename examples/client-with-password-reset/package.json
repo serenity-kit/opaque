@@ -1,6 +1,6 @@
 {
   "name": "opaque-client-with-password-reset-example",
-  "version": "0.1.0",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",

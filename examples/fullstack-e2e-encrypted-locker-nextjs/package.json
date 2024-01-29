@@ -1,6 +1,5 @@
 {
   "name": "opaque-fullstack-example-with-encrypted-locker-incl-recovery-token",
-  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
