@@ -174,7 +174,7 @@ async function handleSubmitPasswordReset(e) {
   const userIdentifier = this.username.value;
 
   try {
-    await request("POST", "/password/reset", {
+    await request("POST", "/password-reset/initiate", {
       userIdentifier,
     });
     showPasswordResetConfirm(true);
@@ -197,9 +197,10 @@ async function handleSubmitPasswordResetConfirm(e) {
 
     const { clientRegistrationState, registrationRequest } =
       opaque.client.startRegistration({ password });
+
     const { registrationResponse } = await request(
       "POST",
-      `/password/reset/confirm`,
+      `/password-reset/confirm-start`,
       {
         userIdentifier,
         resetCode,
@@ -214,8 +215,9 @@ async function handleSubmitPasswordResetConfirm(e) {
       password,
     });
 
-    const res = await request("POST", `/register/finish`, {
+    const res = await request("POST", `/password-reset/confirm-finish`, {
       userIdentifier,
+      resetCode,
       registrationRecord,
     });
     console.log("finish successful", res.ok);

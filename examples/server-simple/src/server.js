@@ -172,8 +172,13 @@ app.post("/register/finish", async (req, res) => {
     return sendError(res, 400, "Invalid input values");
   }
 
-  await db.setUser(userIdentifier, registrationRecord);
+  const existingUser = await db.getUser(userIdentifier);
+  if (!existingUser) {
+    await db.setUser(userIdentifier, registrationRecord);
+  }
 
+  // return a 200 even if the user already exists to avoid leaking
+  // the information if the user exists or not
   res.writeHead(200);
   res.end();
 });
