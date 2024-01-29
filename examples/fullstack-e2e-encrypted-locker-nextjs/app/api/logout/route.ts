@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../db";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   const db = await database;
   const sessionCookie = cookies().get("session");
   if (sessionCookie) {

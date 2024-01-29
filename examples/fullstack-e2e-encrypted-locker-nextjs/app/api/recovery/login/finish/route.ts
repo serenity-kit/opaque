@@ -1,9 +1,17 @@
+import { checkRateLimit } from "@/app/api/rateLimiter";
 import { LoginFinishParams } from "@/app/api/schema";
 import * as opaque from "@serenity-kit/opaque";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../../db";
 
 export async function POST(request: NextRequest) {
+  if (checkRateLimit({ request })) {
+    return NextResponse.json(
+      { error: "You have exceeded 40 requests/min" },
+      { status: 429 },
+    );
+  }
+
   let userIdentifier, finishLoginRequest;
   try {
     const rawValues = await request.json();

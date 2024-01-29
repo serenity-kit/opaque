@@ -1,3 +1,4 @@
+import { checkRateLimit } from "@/app/api/rateLimiter";
 import { RecoveryRegisterStart } from "@/app/api/schema";
 import withUserSession from "@/app/api/withUserSession";
 import * as opaque from "@serenity-kit/opaque";
@@ -5,7 +6,14 @@ import { NextRequest, NextResponse } from "next/server";
 import database from "../../../db";
 import { SERVER_SETUP } from "../../../env";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
+  if (checkRateLimit({ request })) {
+    return NextResponse.json(
+      { error: "You have exceeded 40 requests/min" },
+      { status: 429 },
+    );
+  }
+
   const db = await database;
 
   return withUserSession(db, async (session) => {
@@ -19,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     let registrationRequest;
     try {
-      const rawValues = await req.json();
+      const rawValues = await request.json();
       const values = RecoveryRegisterStart.parse(rawValues);
       registrationRequest = values.registrationRequest;
     } catch (err) {

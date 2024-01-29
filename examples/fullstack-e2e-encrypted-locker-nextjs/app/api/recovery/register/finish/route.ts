@@ -1,9 +1,17 @@
+import { checkRateLimit } from "@/app/api/rateLimiter";
 import { RecoveryRegisterFinish } from "@/app/api/schema";
 import withUserSession from "@/app/api/withUserSession";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import database from "../../../db";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (checkRateLimit({ request })) {
+    return NextResponse.json(
+      { error: "You have exceeded 40 requests/min" },
+      { status: 429 },
+    );
+  }
+
   const db = await database;
 
   return withUserSession(db, async (session) => {

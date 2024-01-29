@@ -1,9 +1,10 @@
 import { LockerWithServerVerificationMac } from "@/app/utils/locker";
 import { isValidLocker } from "@/app/utils/locker/server/isValidLocker";
+import sodium from "libsodium-wrappers";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../db";
+import { checkRateLimit } from "../rateLimiter";
 import withUserSession from "../withUserSession";
-import sodium from "libsodium-wrappers";
 
 function isValidLockerPayload(
   data: unknown,
@@ -20,12 +21,19 @@ function isValidLockerPayload(
   );
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
+  if (checkRateLimit({ request })) {
+    return NextResponse.json(
+      { error: "You have exceeded 40 requests/min" },
+      { status: 429 },
+    );
+  }
+
   const db = await database;
   await sodium.ready;
 
   return withUserSession(db, async (session) => {
-    const payload: unknown = await req.json();
+    const payload: unknown = await request.json();
 
     if (!isValidLockerPayload(payload)) {
       return NextResponse.json(

@@ -17,6 +17,7 @@ import {
   ResetPasswordConfirmStartParams,
   ResetPasswordInitiateParams,
 } from "./schema.js";
+import setRateLimit from "express-rate-limit";
 
 dotenv.config({ path: "../../.env" });
 
@@ -121,9 +122,17 @@ async function setupDb() {
   }
 }
 
+const rateLimitMiddleware = setRateLimit({
+  windowMs: 60 * 1000,
+  max: 40,
+  message: "You have exceeded 40 requests/min",
+  headers: true,
+});
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(rateLimitMiddleware);
 
 function generateSessionId() {
   return randomInt(1e9, 1e10).toString();

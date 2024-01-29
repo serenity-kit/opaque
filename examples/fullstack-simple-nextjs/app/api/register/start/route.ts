@@ -2,12 +2,20 @@ import * as opaque from "@serenity-kit/opaque";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
 import { SERVER_SETUP } from "../../env";
+import { checkRateLimit } from "../../rateLimiter";
 import { RegisterStartParams } from "../../schema";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
+  if (checkRateLimit({ request })) {
+    return NextResponse.json(
+      { error: "You have exceeded 40 requests/min" },
+      { status: 429 },
+    );
+  }
+
   let userIdentifier, registrationRequest;
   try {
-    const rawValues = await req.json();
+    const rawValues = await request.json();
     const values = RegisterStartParams.parse(rawValues);
     userIdentifier = values.userIdentifier;
     registrationRequest = values.registrationRequest;
