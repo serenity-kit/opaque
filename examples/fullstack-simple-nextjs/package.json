@@ -1,6 +1,5 @@
 {
-  "name": "opaque-example",
-  "version": "0.1.0",
+  "name": "opaque-fullstack-simple-nextjs-example",
   "private": true,
   "scripts": {
     "dev": "next dev",
