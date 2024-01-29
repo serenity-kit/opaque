@@ -1,9 +1,14 @@
 const sh = require("shelljs");
+const path = require("path");
 
 // throw if a command fails
 sh.config.fatal = true;
 
-const rootPkg = JSON.parse(sh.cat("package.json").toString());
+const ristrettoPackageJson = JSON.parse(
+  sh
+    .cat(path.join(__dirname, "..", "build", "ristretto", "package.json"))
+    .toString(),
+);
 
 const packageJson = function (name) {
   return new sh.ShellString(`{
@@ -13,7 +18,7 @@ const packageJson = function (name) {
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"
   ],
-  "version": "${rootPkg.version}",
+  "version": "${ristrettoPackageJson.version}",
   "license": "MIT",
   "files": [
     "index.d.ts",
