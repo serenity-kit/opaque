@@ -1,4 +1,5 @@
 {
+  "name": "opaque-server-simple-example",
   "type": "module",
   "dependencies": {
     "@serenity-kit/opaque": "workspace:*",

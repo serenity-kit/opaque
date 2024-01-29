@@ -1,4 +1,5 @@
 {
+  "name": "opaque-server-with-password-reset-example",
   "type": "module",
   "dependencies": {
     "@serenity-kit/opaque": "workspace:*",
