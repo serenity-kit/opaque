@@ -238,6 +238,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.18.2
+      express-rate-limit:
+        specifier: ^7.1.5
+        version: 7.1.5(express@4.18.2)
       redis:
         specifier: ^4.6.12
         version: 4.6.12
@@ -266,6 +269,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.18.2
+      express-rate-limit:
+        specifier: ^7.1.5
+        version: 7.1.5(express@4.18.2)
       redis:
         specifier: ^4.6.12
         version: 4.6.12
@@ -4337,6 +4343,15 @@ packages:
       jest-message-util: 29.7.0
       jest-util: 29.7.0
     dev: true
+
+  /express-rate-limit@7.1.5(express@4.18.2):
+    resolution: {integrity: sha512-/iVogxu7ueadrepw1bS0X0kaRC/U0afwiYRSLg68Ts+p4Dc85Q5QKsOnPS/QUjPMHvOJQtBDrZgvkOzf8ejUYw==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      express: 4 || 5 || ^5.0.0-beta.1
+    dependencies:
+      express: 4.18.2
+    dev: false
 
   /express@4.18.2:
     resolution: {integrity: sha512-5/PsL6iGPdfQ/lKM1UuielYgv3BUoJfz1aUwU9vHZ+J7gyvwdQXFEBIEIaxeGf0GIcreATNyBExtalisDbuMqQ==}
