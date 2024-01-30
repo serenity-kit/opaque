@@ -5,10 +5,10 @@ const noProtoString = z
   .min(1)
   .refine(
     (value) => {
-      return !value.startsWith("__proto__");
+      return !value.includes("__proto__");
     },
     {
-      message: "String must not start with '__proto__'",
+      message: "String must not include '__proto__'",
     },
   );
 
