@@ -49,10 +49,12 @@ cd examples/client-simple-webpack
 pnpm test:e2e
 ```
 
+## Versioning
+
+Is managed via Changesets. You can bump a version running the `version` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml
+
 ## Publish
 
-To publish the packages (opaque and opaque-p256) you can run
+Is managed via the Github CI
 
-```sh
-pnpm publish
-```
+You can publish running the `publish` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml

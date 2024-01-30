@@ -5,7 +5,7 @@ on: workflow_dispatch
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  release:
+  version:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
@@ -25,7 +25,32 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: pnpm publish
+          version: pnpm changeset-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
+      - name: install wasm-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: install dependencies
+        run: pnpm install
+      - name: install dependencies
+        run: pnpm install
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset-version
+          publish: pnpm changeset-publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

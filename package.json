@@ -33,7 +33,8 @@
     "test:p256": "cross-env OPAQUE_BUILD=p256 jest",
     "test:ristretto": "jest",
     "test": "pnpm test:p256 && pnpm test:ristretto",
-    "publish": "pnpm build && pnpm changeset publish",
+    "changeset-version": "pnpm changeset version",
+    "changeset-publish": "pnpm build && pnpm changeset publish",
     "typecheck": "tsc --noEmit && pnpm typecheck:fullstack-simple-nextjs && pnpm typecheck:fullstack-e2e-encrypted-locker-nextjs",
     "typecheck:fullstack-simple-nextjs": "cd examples/fullstack-simple-nextjs && tsc --noEmit",
     "typecheck:fullstack-e2e-encrypted-locker-nextjs": "cd examples/fullstack-e2e-encrypted-locker-nextjs && tsc --noEmit"
