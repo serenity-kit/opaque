@@ -9,7 +9,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: install wasm-bindgen-cli
         run: cargo install wasm-bindgen-cli
       - name: install wasm-unknown-unknown target
