@@ -2,9 +2,7 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.8.0   | :white_check_mark: |
+The most resent version of the library is supported.
 
 ## Reporting a Vulnerability
 

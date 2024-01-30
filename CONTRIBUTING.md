@@ -54,5 +54,5 @@ pnpm test:e2e
 To publish the packages (opaque and opaque-p256) you can run
 
 ```sh
-pnpm publish:all
+pnpm publish
 ```
