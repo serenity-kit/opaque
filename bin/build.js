@@ -33,7 +33,10 @@ const packageJson = function (name) {
     "create-server-setup": "./create-server-setup.js",
     "get-server-public-key": "./get-server-public-key.js"
   },
-  "repository": "github:serenity-kit/opaque"
+  "repository": "github:serenity-kit/opaque",
+  "publishConfig": {
+    "provenance": true
+  }
 }`);
 };
 
