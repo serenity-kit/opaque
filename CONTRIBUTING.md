@@ -51,7 +51,13 @@ pnpm test:e2e
 
 ## Versioning
 
-Is managed via Changesets. You can bump a version running the `version` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml
+Is managed via Changesets and the Github CI. This means every change should also include a changeset which can be created running:
+
+```bash
+npx changeset
+```
+
+You can bump a version running the `version` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml
 
 ## Publish
 
