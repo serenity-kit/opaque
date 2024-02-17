@@ -9,6 +9,7 @@ A JavaScript implementation of the [OPAQUE protocol](https://datatracker.ietf.or
 - Never accidentally log passwords
 - Security against pre-computation attacks upon server compromise
 - Foundation for encrypted backups and end-to-end encryption apps
+- 0 NPM depedencies
 
 ## Documentation
 
@@ -382,7 +383,7 @@ If you would like to use the [P-256](https://docs.rs/p256/latest/p256/) curve in
 
 ### ReactNative
 
-There is also a React Native version of this library available at [https://github.com/serenity-kit/react-native-opaque](https://github.com/serenity-kit/react-native-opaque).
+There is also a React Native version of this library available at [https://github.com/serenity-kit/react-native-opaque](https://github.com/serenity-kit/react-native-opaque) as weel as [https://github.com/serenity-kit/react-native-opaque-p256](https://github.com/serenity-kit/react-native-opaque-p256).
 
 ## Acknowledgement
 
