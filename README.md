@@ -13,7 +13,7 @@ A JavaScript implementation of the [OPAQUE protocol](https://datatracker.ietf.or
 
 ## Documentation
 
-In depth documentation can be found at [https://opaque-documentation.netlify.app/](https://opaque-documentation.netlify.app/).
+In depth documentation can be found at [https://opaque-auth.com/](https://opaque-auth.com/).
 
 ## Install
 
