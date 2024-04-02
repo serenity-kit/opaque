@@ -9,7 +9,7 @@ A JavaScript implementation of the [OPAQUE protocol](https://datatracker.ietf.or
 - Never accidentally log passwords
 - Security against pre-computation attacks upon server compromise
 - Foundation for encrypted backups and end-to-end encryption apps
-- 0 NPM depedencies
+- Through OTF’s [Red Team Lab](https://www.opentech.fund/labs/red-team-lab/), 7ASecurity conducted a [penetration test and whitebox security review](https://7asecurity.com/reports/pentest-report-opaque.pdf)
 
 ## Documentation
 
