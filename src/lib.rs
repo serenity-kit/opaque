@@ -1,6 +1,9 @@
-use argon2::Argon2;
+use std::thread::panicking;
+
+use argon2::{Algorithm, Argon2, ParamsBuilder, Version};
 use opaque_ke::ciphersuite::CipherSuite;
-use opaque_ke::errors::ProtocolError;
+use opaque_ke::errors::{InternalError, ProtocolError};
+use opaque_ke::ksf::Ksf;
 use opaque_ke::rand::rngs::OsRng;
 use opaque_ke::{
     ClientLogin, ClientLoginFinishParameters, ClientRegistration,
@@ -10,6 +13,7 @@ use opaque_ke::{
 };
 
 use base64::{engine::general_purpose as b64, Engine as _};
+use generic_array::{ArrayLength, GenericArray};
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
@@ -36,6 +40,10 @@ enum Error {
         context: &'static str,
         error: base64::DecodeError,
     },
+    Internal {
+        context: &'static str,
+        error: InternalError,
+    },
 }
 
 fn from_base64_error(context: &'static str) -> impl Fn(base64::DecodeError) -> Error {
@@ -55,6 +63,9 @@ impl From<Error> for JsError {
             Error::Base64 { context, error } => {
                 format!("base64 decoding failed at \"{}\"; {}", context, error)
             }
+            Error::Internal { context, error } => {
+                format!("Internal error at \"{}\"; {}", context, error)
+            }
         };
         JsError::new(&msg)
     }
@@ -67,7 +78,7 @@ impl CipherSuite for DefaultCipherSuite {
     type OprfCs = opaque_ke::Ristretto255;
     type KeGroup = opaque_ke::Ristretto255;
     type KeyExchange = opaque_ke::key_exchange::tripledh::TripleDh;
-    type Ksf = Argon2<'static>;
+    type Ksf = CustomKsf;
 }
 
 #[cfg(feature = "p256")]
@@ -75,12 +86,70 @@ impl CipherSuite for DefaultCipherSuite {
     type OprfCs = p256::NistP256;
     type KeGroup = p256::NistP256;
     type KeyExchange = opaque_ke::key_exchange::tripledh::TripleDh;
-    type Ksf = Argon2<'static>;
+    type Ksf = CustomKsf;
 }
 
 const BASE64: b64::GeneralPurpose = b64::URL_SAFE_NO_PAD;
 
 type JsResult<T> = Result<T, Error>;
+
+struct CustomKsf {
+    argon: Argon2<'static>,
+}
+
+impl Default for CustomKsf {
+    fn default() -> Self {
+        Self {
+            argon: Argon2::default(),
+        }
+    }
+}
+
+impl Ksf for CustomKsf {
+    fn hash<L: ArrayLength<u8>>(
+        &self,
+        input: GenericArray<u8, L>,
+    ) -> Result<GenericArray<u8, L>, InternalError> {
+        let mut output = GenericArray::default();
+        self.argon
+            .hash_password_into(&input, &[0; argon2::RECOMMENDED_SALT_LEN], &mut output)
+            .map_err(|_| InternalError::KsfError)?;
+        Ok(output)
+    }
+}
+
+fn get_custom_ksf(
+    iterations: Option<u32>,
+    memory: Option<u32>,
+    parallelism: Option<u32>,
+) -> Result<Option<CustomKsf>, Error> {
+    if iterations.is_none() && memory.is_none() && parallelism.is_none() {
+        return Ok(None);
+    }
+
+    let mut param_builder = ParamsBuilder::default();
+    if let Some(t) = iterations {
+        param_builder.t_cost(t);
+    }
+
+    if let Some(m) = memory {
+        param_builder.t_cost(m);
+    }
+
+    if let Some(p) = parallelism {
+        param_builder.t_cost(p);
+    }
+
+    if let Ok(params) = param_builder.build() {
+        let argon = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+        return Ok(Some(CustomKsf { argon }));
+    }
+
+    return Err(Error::Internal {
+        context: "Invalid argon parameter combination",
+        error: InternalError::KsfError,
+    });
+}
 
 fn base64_decode<T: AsRef<[u8]>>(context: &'static str, input: T) -> JsResult<Vec<u8>> {
     BASE64.decode(input).map_err(from_base64_error(context))
@@ -314,6 +383,15 @@ pub struct FinishClientLoginParams {
     password: String,
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
+    #[tsify(optional)]
+    #[serde(rename = "argonIterations")]
+    argon_iterations: Option<u32>,
+    #[tsify(optional)]
+    #[serde(rename = "argonMemory")]
+    argon_memory: Option<u32>,
+    #[tsify(optional)]
+    #[serde(rename = "argonParallelism")]
+    argon_parallelism: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -333,13 +411,22 @@ pub struct FinishClientLoginResult {
 pub fn finish_client_login(
     params: FinishClientLoginParams,
 ) -> Result<Option<FinishClientLoginResult>, JsError> {
+    let custom_ksf = get_custom_ksf(
+        params.argon_iterations,
+        params.argon_memory,
+        params.argon_parallelism,
+    )?;
+
     let credential_response_bytes = base64_decode("loginResponse", params.login_response)?;
     let state_bytes = base64_decode("clientLoginState", params.client_login_state)?;
     let state = ClientLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(from_protocol_error("deserialize clientLoginState"))?;
 
-    let finish_params =
-        ClientLoginFinishParameters::new(None, get_identifiers(&params.identifiers), None);
+    let finish_params = ClientLoginFinishParameters::new(
+        None,
+        get_identifiers(&params.identifiers),
+        custom_ksf.as_ref(),
+    );
 
     let result = state.finish(
         params.password.as_bytes(),
@@ -407,6 +494,15 @@ pub struct FinishClientRegistrationParams {
     client_registration_state: String,
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
+    #[tsify(optional)]
+    #[serde(rename = "argonIterations")]
+    argon_iterations: Option<u32>,
+    #[tsify(optional)]
+    #[serde(rename = "argonMemory")]
+    argon_memory: Option<u32>,
+    #[tsify(optional)]
+    #[serde(rename = "argonParallelism")]
+    argon_parallelism: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -424,6 +520,12 @@ pub struct FinishClientRegistrationResult {
 pub fn finish_client_registration(
     params: FinishClientRegistrationParams,
 ) -> Result<FinishClientRegistrationResult, JsError> {
+    let custom_ksf = get_custom_ksf(
+        params.argon_iterations,
+        params.argon_memory,
+        params.argon_parallelism,
+    )?;
+
     let registration_response_bytes =
         base64_decode("registrationResponse", params.registration_response)?;
     let mut rng: OsRng = OsRng;
@@ -432,8 +534,10 @@ pub fn finish_client_registration(
     let state = ClientRegistration::<DefaultCipherSuite>::deserialize(&client_registration)
         .map_err(from_protocol_error("deserialize clientRegistrationState"))?;
 
-    let finish_params =
-        ClientRegistrationFinishParameters::new(get_identifiers(&params.identifiers), None);
+    let finish_params = ClientRegistrationFinishParameters::new(
+        get_identifiers(&params.identifiers),
+        custom_ksf.as_ref(),
+    );
 
     let client_finish_registration_result = state
         .finish(
