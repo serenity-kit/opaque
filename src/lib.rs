@@ -133,11 +133,11 @@ fn get_custom_ksf(
     }
 
     if let Some(m) = memory {
-        param_builder.t_cost(m);
+        param_builder.m_cost(m);
     }
 
     if let Some(p) = parallelism {
-        param_builder.t_cost(p);
+        param_builder.p_cost(p);
     }
 
     if let Ok(params) = param_builder.build() {
