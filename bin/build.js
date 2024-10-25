@@ -1,5 +1,6 @@
 const sh = require("shelljs");
 const path = require("path");
+const fs = require("fs");
 
 // throw if a command fails
 sh.config.fatal = true;
@@ -69,6 +70,12 @@ opaque.ready.then(() => {
 });
 `);
 
+function fixArrayGeneric(filePath) {
+  const data = fs.readFileSync(filePath, "utf8");
+  const result = data.replace(/Array(?=\s*[;,)]|<\s*[^>]*\s*>)/g, "Array<any>");
+  fs.writeFileSync(filePath, result, "utf8");
+}
+
 function build_wbg() {
   sh.exec("cargo build --target=wasm32-unknown-unknown --release");
   sh.exec(
@@ -80,6 +87,15 @@ function build_wbg() {
   sh.exec(
     "wasm-bindgen --out-dir=build/wbg_p256 --target=web --omit-default-module-path target/wasm32-unknown-unknown/release/opaque.wasm",
   );
+
+  const files = [
+    "build/wbg_ristretto/opaque.d.ts",
+    "build/wbg_ristretto/opaque_bg.wasm.d.ts",
+    "build/wbg_p256/opaque.d.ts",
+    "build/wbg_p256/opaque_bg.wasm.d.ts",
+  ];
+
+  files.forEach(fixArrayGeneric);
 }
 
 function rollup(name) {
