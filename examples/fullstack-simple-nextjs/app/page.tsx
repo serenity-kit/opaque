@@ -35,6 +35,7 @@ async function register(userIdentifier: string, password: string) {
     clientRegistrationState,
     registrationResponse,
     password,
+    keyStretchingFunctionConfig: "memory-constrained",
   });
 
   const res = await request("POST", `/api/register/finish`, {
@@ -61,6 +62,7 @@ async function login(userIdentifier: string, password: string) {
     clientLoginState,
     loginResponse,
     password,
+    keyStretchingFunctionConfig: "memory-constrained",
   });
   console.log({ loginResult });
   if (!loginResult) {

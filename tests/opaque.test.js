@@ -482,7 +482,7 @@ describe("client.finishRegistration", () => {
           },
         });
     }).toThrow(
-      'Internal error at "Invalid argon parameter combination"; Computing the key stretching function failed',
+      'Internal error at "Invalid keyStretchingFunctionConfig (argon2id) combination"; Computing the key stretching function failed',
     );
   });
 
@@ -669,7 +669,7 @@ describe("client.finishLogin", () => {
         },
       });
     }).toThrow(
-      'Internal error at "Invalid argon parameter combination"; Computing the key stretching function failed',
+      'Internal error at "Invalid keyStretchingFunctionConfig (argon2id) combination"; Computing the key stretching function failed',
     );
   });
 
