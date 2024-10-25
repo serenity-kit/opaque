@@ -91,16 +91,9 @@ const BASE64: b64::GeneralPurpose = b64::URL_SAFE_NO_PAD;
 
 type JsResult<T> = Result<T, Error>;
 
+#[derive(Default)]
 struct CustomKsf {
     argon: Argon2<'static>,
-}
-
-impl Default for CustomKsf {
-    fn default() -> Self {
-        Self {
-            argon: Argon2::default(),
-        }
-    }
 }
 
 impl Ksf for CustomKsf {
@@ -131,10 +124,10 @@ fn build_argon2_ksf(
         return Ok(Some(CustomKsf { argon }));
     }
 
-    return Err(Error::Internal {
+    Err(Error::Internal {
         context: "Invalid keyStretchingFunctionConfig (argon2id) combination",
         error: InternalError::KsfError,
-    });
+    })
 }
 
 fn get_custom_ksf(
