@@ -244,7 +244,7 @@ function runFullServerClientFlow(
     password,
     clientRegistrationState,
     registrationResponse,
-    keyStretchingFunctionConfig: "recommended",
+    // keyStretchingFunctionConfig: "recommended",
     // keyStretchingFunctionConfig: "memory-constrained",
     // keyStretchingFunctionConfig: {
     //   "argon2id-custom": {
@@ -292,7 +292,7 @@ function runFullServerClientFlow(
     clientLoginState,
     loginResponse,
     password,
-    keyStretchingFunctionConfig: "recommended",
+    // keyStretchingFunctionConfig: "recommended",
     // keyStretchingFunctionConfig: "memory-constrained",
     // keyStretchingFunctionConfig: {
     //   "argon2id-custom": {

@@ -132,7 +132,7 @@ fn build_argon2_ksf(
     }
 
     return Err(Error::Internal {
-        context: "Invalid argon parameter combination",
+        context: "Invalid keyStretchingFunctionConfig (argon2id) combination",
         error: InternalError::KsfError,
     });
 }
