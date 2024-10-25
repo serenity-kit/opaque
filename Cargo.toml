@@ -29,6 +29,7 @@ serde = { version = "1.0.169", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
 tsify = { version = "0.4.5", features = ["js"] }
 js-sys = "0.3.67"
+generic-array = "0.14"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.40"
