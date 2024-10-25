@@ -281,7 +281,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState,
       });
     }).toThrow(
-      'base64 decoding failed at "registrationResponse"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "registrationResponse"; Invalid input length: 1',
     );
   });
 
@@ -321,7 +321,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState: "a",
       });
     }).toThrow(
-      'base64 decoding failed at "clientRegistrationState"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "clientRegistrationState"; Invalid input length: 1',
     );
   });
 });
@@ -401,7 +401,7 @@ describe("client.finishLogin", () => {
         password: "hunter2",
       }),
     ).toThrow(
-      'base64 decoding failed at "clientLoginState"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "clientLoginState"; Invalid input length: 1',
     );
   });
 
@@ -431,7 +431,7 @@ describe("client.finishLogin", () => {
         password: "hunter2",
       });
     }).toThrow(
-      'base64 decoding failed at "loginResponse"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "loginResponse"; Invalid input length: 1',
     );
   });
 });
@@ -502,7 +502,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest,
       });
     }).toThrow(
-      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "serverSetup"; Invalid input length: 1',
     );
   });
 
@@ -528,7 +528,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest: "a",
       });
     }).toThrow(
-      'base64 decoding failed at "registrationRequest"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "registrationRequest"; Invalid input length: 1',
     );
   });
 });
@@ -596,7 +596,7 @@ describe("server.startLogin", () => {
         userIdentifier: "",
       }),
     ).toThrow(
-      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "serverSetup"; Invalid input length: 1',
     );
   });
 
@@ -622,7 +622,7 @@ describe("server.startLogin", () => {
         userIdentifier: "",
       }),
     ).toThrow(
-      'base64 decoding failed at "startLoginRequest"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "startLoginRequest"; Invalid input length: 1',
     );
   });
 
@@ -711,7 +711,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState, finishLoginRequest: "a" });
     }).toThrow(
-      'base64 decoding failed at "finishLoginRequest"; Encoded text cannot have a 6-bit remainder',
+      'base64 decoding failed at "finishLoginRequest"; Invalid input length: 1',
     );
   });
 
@@ -773,7 +773,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState: "a", finishLoginRequest });
     }).toThrow(
-      'base64 decoding failed at "serverLoginState"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "serverLoginState"; Invalid input length: 1',
     );
   });
 });
@@ -786,7 +786,7 @@ describe("server.getPublicKey", () => {
   });
   test("invalid encoding", () => {
     expect(() => opaque.server.getPublicKey("a")).toThrow(
-      'base64 decoding failed at "serverSetup"; Encoded text cannot have a 6-bit remainder.',
+      'base64 decoding failed at "serverSetup"; Invalid input length: 1',
     );
   });
   test("incomplete server setup string", () => {
