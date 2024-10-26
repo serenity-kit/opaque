@@ -37,6 +37,7 @@ export async function register(userIdentifier: string, password: string) {
     clientRegistrationState,
     registrationResponse,
     password,
+    keyStretchingFunctionConfig: "memory-constrained",
   });
 
   const res = await request("POST", `/api/register/finish`, {
@@ -63,6 +64,7 @@ export async function login(userIdentifier: string, password: string) {
     clientLoginState,
     loginResponse,
     password,
+    keyStretchingFunctionConfig: "memory-constrained",
   });
   console.log({ loginResult });
   if (!loginResult) {
@@ -108,6 +110,7 @@ export async function registerRecovery({
       clientRegistrationState,
       registrationResponse,
       password: recoveryKey,
+      keyStretchingFunctionConfig: "memory-constrained",
     });
 
   const recoveryLockbox = createRecoveryLockbox({
@@ -139,6 +142,7 @@ export async function loginRecovery(userIdentifier: string, password: string) {
     clientLoginState,
     loginResponse,
     password,
+    keyStretchingFunctionConfig: "memory-constrained",
   });
   console.log({ loginResult });
   if (!loginResult) {

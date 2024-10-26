@@ -35,6 +35,7 @@ async function register(userIdentifier: string, password: string) {
     clientRegistrationState,
     registrationResponse,
     password,
+    keyStretchingFunctionConfig: "memory-constrained",
   });
 
   const res = await request("POST", `/api/register/finish`, {
@@ -61,6 +62,7 @@ async function login(userIdentifier: string, password: string) {
     clientLoginState,
     loginResponse,
     password,
+    keyStretchingFunctionConfig: "memory-constrained",
   });
   console.log({ loginResult });
   if (!loginResult) {
@@ -235,6 +237,7 @@ function runFullServerClientFlow(
   console.log();
   console.log("client.finishRegistration");
   console.log("------------------------");
+  const t1 = performance.now();
   const {
     registrationRecord,
     exportKey: clientRegExportKey,
@@ -243,7 +246,18 @@ function runFullServerClientFlow(
     password,
     clientRegistrationState,
     registrationResponse,
+    // keyStretchingFunctionConfig: "recommended",
+    // keyStretchingFunctionConfig: "memory-constrained",
+    // keyStretchingFunctionConfig: {
+    //   "argon2id-custom": {
+    //     iterations: 1,
+    //     memory: 65536,
+    //     parallelism: 4,
+    //   },
+    // },
   });
+  const t2 = performance.now();
+  console.log("Time taken: ", t2 - t1);
 
   console.log({
     clientRegExportKey,
@@ -275,11 +289,23 @@ function runFullServerClientFlow(
   console.log();
   console.log("client.finishLogin");
   console.log("-----------------");
+  const t3 = performance.now();
   const loginResult = opaque.client.finishLogin({
     clientLoginState,
     loginResponse,
     password,
+    // keyStretchingFunctionConfig: "recommended",
+    // keyStretchingFunctionConfig: "memory-constrained",
+    // keyStretchingFunctionConfig: {
+    //   "argon2id-custom": {
+    //     iterations: 1,
+    //     memory: 65536,
+    //     parallelism: 4,
+    //   },
+    // },
   });
+  const t4 = performance.now();
+  console.log("Time taken: ", t4 - t3);
 
   if (loginResult == null) {
     console.log("loginResult is NULL; login failed");
