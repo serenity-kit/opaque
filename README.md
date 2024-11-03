@@ -225,7 +225,7 @@ pnpm example:client-with-password-reset:dev
 
 ## Advanced usage
 
-### Key Stretching Function Config
+### Key Stretching
 
 The password input is passed through a key stretching function before being used in the OPRF. The key stretching function is [`argon2id`](https://www.rfc-editor.org/rfc/rfc9106.html). The [OPAQUE protocol](https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html) defines recommended parameters, but depending on the application these parameters can be adjusted using param `keyStretching` in the `opaque.client.startRegistration` and `opaque.client.startLogin` functions.
 
@@ -251,7 +251,7 @@ Parameters:
 
 #### Memory constrained
 
-This option is based on the recommendation for memory-constrained environments in the [Argon2 RFC](https://www.rfc-editor.org/rfc/rfc9106.html#name-recommendations).
+This option is based on the recommendation for memory-constrained environments in the [Argon2 RFC](https://www.rfc-editor.org/rfc/rfc9106.html#section-4-6.2).
 
 Parameters:
 

@@ -139,7 +139,7 @@ fn get_custom_ksf(
         // https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html#name-configurations
         // using the recommended parameters for Argon2id except we due 2^21-1 since 2^21 crashes in browsers
         KeyStretchingFunctionConfig::Recommended => build_argon2_ksf(1, u32::pow(2, 21) - 1, 4),
-        // https://www.rfc-editor.org/rfc/rfc9106.html#name-recommendations
+        // https://www.rfc-editor.org/rfc/rfc9106.html#section-4-6.2
         KeyStretchingFunctionConfig::MemoryConstrained => build_argon2_ksf(3, u32::pow(2, 16), 4),
         KeyStretchingFunctionConfig::Custom {
             iterations,
