@@ -125,7 +125,7 @@ fn build_argon2_ksf(
     }
 
     Err(Error::Internal {
-        context: "Invalid keyStretchingFunctionConfig (argon2id) combination",
+        context: "Invalid keyStretching (argon2id) combination",
         error: InternalError::KsfError,
     })
 }
@@ -399,7 +399,7 @@ pub struct FinishClientLoginParams {
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
     #[tsify(optional)]
-    #[serde(rename = "keyStretchingFunctionConfig")]
+    #[serde(rename = "keyStretching")]
     key_stretching_function_config: Option<KeyStretchingFunctionConfig>,
 }
 
@@ -500,7 +500,7 @@ pub struct FinishClientRegistrationParams {
     #[tsify(optional)]
     identifiers: Option<CustomIdentifiers>,
     #[tsify(optional)]
-    #[serde(rename = "keyStretchingFunctionConfig")]
+    #[serde(rename = "keyStretching")]
     key_stretching_function_config: Option<KeyStretchingFunctionConfig>,
 }
 

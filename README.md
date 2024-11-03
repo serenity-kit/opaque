@@ -227,7 +227,7 @@ pnpm example:client-with-password-reset:dev
 
 ### Key Stretching Function Config
 
-The password input is passed through a key stretching function before being used in the OPRF. The key stretching function is [`argon2id`](https://www.rfc-editor.org/rfc/rfc9106.html). The [OPAQUE protocol](https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html) defines recommended parameters, but depending on the application these parameters can be adjusted using param `keyStretchingFunctionConfig` in the `opaque.client.startRegistration` and `opaque.client.startLogin` functions.
+The password input is passed through a key stretching function before being used in the OPRF. The key stretching function is [`argon2id`](https://www.rfc-editor.org/rfc/rfc9106.html). The [OPAQUE protocol](https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html) defines recommended parameters, but depending on the application these parameters can be adjusted using param `keyStretching` in the `opaque.client.startRegistration` and `opaque.client.startLogin` functions.
 
 Available options are:
 
@@ -243,7 +243,7 @@ Parameters:
 
 ```ts
 {
-  keyStretchingFunctionConfig: "recommended";
+  keyStretching: "recommended";
 }
 ```
 
@@ -261,7 +261,7 @@ Parameters:
 
 ```ts
 {
-  keyStretchingFunctionConfig: "memory-constrained";
+  keyStretching: "memory-constrained";
 }
 ```
 
@@ -276,7 +276,7 @@ const memory = 65536;
 const iterations = 3;
 const parallelism = 1;
 {
-  keyStretchingFunctionConfig: {
+  keyStretching: {
     "argon2id-custom": {
       memory,
       iterations,
@@ -296,7 +296,7 @@ opaque.client.finishRegistration({
   clientRegistrationState,
   registrationResponse,
   password,
-  keyStretchingFunctionConfig: "memory-constrained",
+  keyStretching: "memory-constrained",
 });
 ```
 
@@ -308,7 +308,7 @@ opaque.client.finishLogin({
   clientLoginState,
   loginResponse,
   password,
-  keyStretchingFunctionConfig: "memory-constrained",
+  keyStretching: "memory-constrained",
 });
 ```
 

@@ -12,13 +12,13 @@ const opaque =
  * @param {string} userIdentifier
  * @param {string} password
  * @param {Identifiers|undefined} identifiers
- * @param {any} keyStretchingFunctionConfig
+ * @param {any} keyStretching
  */
 function setupAndRegister(
   userIdentifier,
   password,
   identifiers = undefined,
-  keyStretchingFunctionConfig = undefined,
+  keyStretching = undefined,
 ) {
   const serverSetup = opaque.server.createSetup();
   const { clientRegistrationState, registrationRequest } =
@@ -34,7 +34,7 @@ function setupAndRegister(
       registrationResponse,
       password,
       identifiers,
-      keyStretchingFunctionConfig,
+      keyStretching,
     });
 
   return {
@@ -80,7 +80,7 @@ test("full registration & login flow", () => {
     clientLoginState,
     loginResponse,
     password,
-    keyStretchingFunctionConfig: "memory-constrained",
+    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).not.toBeUndefined();
@@ -108,7 +108,7 @@ test("full registration & login flow", () => {
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow using default (recommended) keyStretchingFunctionConfig ", () => {
+test("full registration & login flow using default (recommended) keyStretching ", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -161,7 +161,7 @@ test("full registration & login flow using default (recommended) keyStretchingFu
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow using recommended keyStretchingFunctionConfig", () => {
+test("full registration & login flow using recommended keyStretching", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -187,7 +187,7 @@ test("full registration & login flow using recommended keyStretchingFunctionConf
     clientLoginState,
     loginResponse,
     password,
-    keyStretchingFunctionConfig: "recommended",
+    keyStretching: "recommended",
   });
 
   expect(loginResult).not.toBeUndefined();
@@ -215,7 +215,7 @@ test("full registration & login flow using recommended keyStretchingFunctionConf
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow using recommended keyStretchingFunctionConfig", () => {
+test("full registration & login flow using recommended keyStretching", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -247,7 +247,7 @@ test("full registration & login flow using recommended keyStretchingFunctionConf
     clientLoginState,
     loginResponse,
     password,
-    keyStretchingFunctionConfig: {
+    keyStretching: {
       "argon2id-custom": {
         memory: 65536,
         iterations: 1,
@@ -305,7 +305,7 @@ test("full registration & login with bad password", () => {
     clientLoginState,
     loginResponse,
     password: "hunter23",
-    keyStretchingFunctionConfig: "memory-constrained",
+    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).toBeUndefined();
@@ -344,7 +344,7 @@ test("full registration & login flow with mismatched custom client identifier on
     identifiers: {
       client: client + "abc",
     },
-    keyStretchingFunctionConfig: "memory-constrained",
+    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).toBeUndefined();
@@ -382,7 +382,7 @@ test("full registration & login attempt with mismatched server identifier", () =
     identifiers: {
       server: "server-ident",
     },
-    keyStretchingFunctionConfig: "memory-constrained",
+    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).toBeUndefined();
@@ -451,7 +451,7 @@ describe("client.finishRegistration", () => {
         password: "hunter2",
         registrationResponse: "",
         // @ts-expect-error intentional test of invalid input
-        keyStretchingFunctionConfig: "whatever",
+        keyStretching: "whatever",
       }),
     ).toThrow(
       "Error: unknown variant `whatever`, expected one of `recommended`, `memory-constrained`, `argon2id-custom`",
@@ -473,7 +473,7 @@ describe("client.finishRegistration", () => {
           password: "hunter2",
           registrationResponse,
           clientRegistrationState,
-          keyStretchingFunctionConfig: {
+          keyStretching: {
             "argon2id-custom": {
               memory: 1,
               iterations: 1,
@@ -482,7 +482,7 @@ describe("client.finishRegistration", () => {
           },
         });
     }).toThrow(
-      'Internal error at "Invalid keyStretchingFunctionConfig (argon2id) combination"; Computing the key stretching function failed',
+      'Internal error at "Invalid keyStretching (argon2id) combination"; Computing the key stretching function failed',
     );
   });
 
@@ -633,7 +633,7 @@ describe("client.finishLogin", () => {
         loginResponse,
         password,
         // @ts-expect-error intentional test of invalid input
-        keyStretchingFunctionConfig: "something",
+        keyStretching: "something",
       });
     }).toThrow(
       "Error: unknown variant `something`, expected one of `recommended`, `memory-constrained`, `argon2id-custom`",
@@ -660,7 +660,7 @@ describe("client.finishLogin", () => {
         clientLoginState,
         loginResponse,
         password,
-        keyStretchingFunctionConfig: {
+        keyStretching: {
           "argon2id-custom": {
             memory: 1,
             iterations: 1,
@@ -669,7 +669,7 @@ describe("client.finishLogin", () => {
         },
       });
     }).toThrow(
-      'Internal error at "Invalid keyStretchingFunctionConfig (argon2id) combination"; Computing the key stretching function failed',
+      'Internal error at "Invalid keyStretching (argon2id) combination"; Computing the key stretching function failed',
     );
   });
 
@@ -934,7 +934,7 @@ describe("server.startLogin", () => {
       clientLoginState,
       loginResponse,
       password,
-      keyStretchingFunctionConfig: "memory-constrained",
+      keyStretching: "memory-constrained",
     });
     expect(result).toBeUndefined();
   });
@@ -1030,7 +1030,7 @@ describe("server.finishLogin", () => {
       clientLoginState,
       loginResponse,
       password,
-      keyStretchingFunctionConfig: "memory-constrained",
+      keyStretching: "memory-constrained",
     });
     expect(result).not.toBeUndefined();
     if (!result) throw new TypeError();
@@ -1064,7 +1064,7 @@ describe("server.finishLogin", () => {
       clientLoginState,
       loginResponse,
       password,
-      keyStretchingFunctionConfig: "memory-constrained",
+      keyStretching: "memory-constrained",
     });
     expect(result).not.toBeUndefined();
     if (!result) throw new TypeError();

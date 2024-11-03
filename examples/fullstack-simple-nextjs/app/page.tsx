@@ -35,7 +35,7 @@ async function register(userIdentifier: string, password: string) {
     clientRegistrationState,
     registrationResponse,
     password,
-    keyStretchingFunctionConfig: "memory-constrained",
+    keyStretching: "memory-constrained",
   });
 
   const res = await request("POST", `/api/register/finish`, {
@@ -62,7 +62,7 @@ async function login(userIdentifier: string, password: string) {
     clientLoginState,
     loginResponse,
     password,
-    keyStretchingFunctionConfig: "memory-constrained",
+    keyStretching: "memory-constrained",
   });
   console.log({ loginResult });
   if (!loginResult) {
@@ -246,9 +246,9 @@ function runFullServerClientFlow(
     password,
     clientRegistrationState,
     registrationResponse,
-    // keyStretchingFunctionConfig: "recommended",
-    // keyStretchingFunctionConfig: "memory-constrained",
-    // keyStretchingFunctionConfig: {
+    // keyStretching: "recommended",
+    // keyStretching: "memory-constrained",
+    // keyStretching: {
     //   "argon2id-custom": {
     //     iterations: 1,
     //     memory: 65536,
@@ -294,9 +294,9 @@ function runFullServerClientFlow(
     clientLoginState,
     loginResponse,
     password,
-    // keyStretchingFunctionConfig: "recommended",
-    // keyStretchingFunctionConfig: "memory-constrained",
-    // keyStretchingFunctionConfig: {
+    // keyStretching: "recommended",
+    // keyStretching: "memory-constrained",
+    // keyStretching: {
     //   "argon2id-custom": {
     //     iterations: 1,
     //     memory: 65536,
