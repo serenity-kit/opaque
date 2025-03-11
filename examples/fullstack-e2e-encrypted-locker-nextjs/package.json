@@ -2,7 +2,7 @@
   "name": "opaque-fullstack-example-with-encrypted-locker-incl-recovery-token",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -11,27 +11,27 @@
   },
   "dependencies": {
     "@serenity-kit/opaque": "workspace:*",
-    "@types/node": "^20.17.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "autoprefixer": "^10.4.20",
     "canonicalize": "^2.0.0",
     "classnames": "^2.5.1",
-    "dotenv": "^16.4.5",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.16",
+    "dotenv": "^16.4.7",
     "libsodium-wrappers": "^0.7.15",
-    "next": "^14.2.16",
-    "postcss": "^8.4.47",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "next": "15.2.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "redis": "^4.7.0",
-    "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.3",
-    "zod": "^3.23.8"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/libsodium-wrappers": "^0.7.14",
-    "jest": "^29.7.0"
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.2",
+    "jest": "^29.7.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

@@ -7,7 +7,8 @@ import LogoutButton from "./LogoutButton";
 import RemoveRecoveryKeyButton from "./RemoveRecoveryKeyButton";
 
 export default async function PrivateHome() {
-  const sessionCookie = cookies().get("session");
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
   if (!sessionCookie) {
     redirect("/");
   }

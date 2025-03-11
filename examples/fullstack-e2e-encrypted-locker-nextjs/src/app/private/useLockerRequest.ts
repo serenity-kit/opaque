@@ -16,11 +16,18 @@ async function fetchLocker(): Promise<Locker | null> {
   return json;
 }
 
+const serverLockerSnapshot = {
+  isLoading: true,
+  data: null,
+  error: null,
+};
+
 export default function useLockerRequestState() {
   const lockerRequest = useMemo(() => new FetchRequest(fetchLocker), []);
   const lockerState = useSyncExternalStore(
     lockerRequest.subscribe,
     lockerRequest.getSnapshot,
+    () => serverLockerSnapshot,
   );
   return lockerState;
 }

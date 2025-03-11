@@ -1,6 +1,6 @@
 import * as opaque from "@serenity-kit/opaque";
 import { randomInt } from "crypto";
-import { cookies } from "next/dist/client/components/headers";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import database from "../../db";
 import { checkRateLimit } from "../../rateLimiter";
@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
 
   await db.removeLogin(userIdentifier);
 
-  const sessionCookie = cookies().get("session");
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
   if (sessionCookie) {
     await db.removeSession(sessionCookie.value);
   }
@@ -48,10 +49,9 @@ export async function POST(request: NextRequest) {
   const sessionId = generateSessionId();
   await db.setSession(sessionId, { userIdentifier, sessionKey });
 
-  return new NextResponse(JSON.stringify({ success: true }), {
-    status: 200,
-    headers: { "Set-Cookie": `session=${sessionId}; HttpOnly; Path=/` },
-  });
+  cookieStore.set("session", sessionId);
+
+  return new NextResponse(JSON.stringify({ success: true }));
 }
 
 function generateSessionId() {
