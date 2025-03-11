@@ -14,7 +14,10 @@ type Params = {
 
 /** Simple rate-limiter based on the IP */
 export const checkRateLimit = ({ request }: Params) => {
-  const ip = request.ip || "anonymous";
+  const ip =
+    request.headers.get("x-forwarded-for") ||
+    request.headers.get("x-real-ip") ||
+    "anonymous";
   const existingEntry = rateLimiter.get(ip);
   if (!existingEntry) {
     rateLimiter.set(ip, {

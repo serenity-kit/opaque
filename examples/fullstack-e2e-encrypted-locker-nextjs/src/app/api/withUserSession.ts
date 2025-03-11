@@ -6,7 +6,8 @@ export default async function withUserSession(
   db: Datastore,
   callback: (session: SessionEntry) => Promise<NextResponse> | NextResponse,
 ) {
-  const sessionCookie = cookies().get("session");
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
   if (!sessionCookie) {
     return NextResponse.json(
       { error: "missing session cookie" },

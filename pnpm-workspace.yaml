@@ -10,3 +10,4 @@ packages:
   - examples/server-with-password-reset
 onlyBuiltDependencies:
   - esbuild
+  - sharp

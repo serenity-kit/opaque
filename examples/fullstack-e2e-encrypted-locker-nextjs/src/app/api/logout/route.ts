@@ -4,10 +4,11 @@ import database from "../db";
 
 export async function POST(request: NextRequest) {
   const db = await database;
-  const sessionCookie = cookies().get("session");
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
   if (sessionCookie) {
     await db.removeSession(sessionCookie.value);
-    cookies().set({
+    cookieStore.set({
       name: "session",
       value: "",
       path: "/",

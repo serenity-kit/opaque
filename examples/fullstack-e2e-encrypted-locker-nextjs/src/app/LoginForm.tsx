@@ -1,10 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
 import { storeLoginKeys, usePrivateRedirect } from "./utils/auth";
 import { login } from "./utils/client";
-import dynamic from "next/dynamic";
 
 // we are importing the form dynamically with disabled ssr to prevent
 // server-side rendering of the form so that our e2e tests will not
@@ -40,6 +40,7 @@ export default function LoginForm() {
                 `User "${username}" logged in successfully; sessionKey = ${loginResult.sessionKey}`,
               );
               storeLoginKeys(loginResult);
+              console.log("redirecting to private page");
               redirectPrivate();
               return;
             } else {

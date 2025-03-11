@@ -5,7 +5,8 @@ import LoginForm from "./LoginForm";
 import database from "./api/db";
 
 export default async function Home() {
-  const sessionCookie = cookies().get("session");
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
   if (sessionCookie) {
     const db = await database;
     const session = await db.getSession(sessionCookie.value);

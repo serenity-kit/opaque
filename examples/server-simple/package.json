@@ -5,11 +5,11 @@
   "dependencies": {
     "@serenity-kit/opaque": "workspace:*",
     "cookie-parser": "^1.4.7",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "redis": "^4.7.0",
-    "zod": "^3.23.8"
+    "zod": "^3.24.2"
   },
   "scripts": {
     "dev": "node ./src/server.js"

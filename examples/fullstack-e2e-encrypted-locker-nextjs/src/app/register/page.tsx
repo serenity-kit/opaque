@@ -4,7 +4,8 @@ import database from "../api/db";
 import RegistrationForm from "./RegistrationForm";
 
 export default async function RegistrationPage() {
-  const sessionCookie = cookies().get("session");
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
   if (sessionCookie) {
     const db = await database;
     const session = await db.getSession(sessionCookie.value);
