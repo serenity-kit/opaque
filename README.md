@@ -227,13 +227,31 @@ pnpm example:client-with-password-reset:dev
 
 ### Key Stretching
 
-The password input is passed through a key stretching function before being used in the OPRF. The key stretching function is [`argon2id`](https://www.rfc-editor.org/rfc/rfc9106.html). The [OPAQUE protocol](https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html) defines recommended parameters, but depending on the application these parameters can be adjusted using param `keyStretching` in the `opaque.client.startRegistration` and `opaque.client.startLogin` functions.
+The password input is passed through a key stretching function before being used in the OPRF. The key stretching function is [`argon2id`](https://www.rfc-editor.org/rfc/rfc9106.html). Depending on the application these parameters can be adjusted using param `keyStretching` in the `opaque.client.startRegistration` and `opaque.client.startLogin` functions.
 
 Available options are:
 
-#### Recommended (default)
+#### Memory constrained (default)
 
-This is the default in case the option is omitted. It is based on the recommendation in the [Configurations section in the OPAQUE protocol](https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html#name-configurations) with the exception that the memory is set to (2^21)-1 instead of (2^21) since we noticed (2^21) caused it to crash when running the registration in a browser environment.
+This is the default in case the option is omitted. It is based on the recommendation for memory-constrained environments in the [Argon2 RFC](https://www.rfc-editor.org/rfc/rfc9106.html#section-4-6.2). It was chosen as a default based on this [feedback](https://github.com/cfrg/draft-irtf-cfrg-opaque/issues/467#issuecomment-2489262322).
+
+Parameters:
+
+- Memory: 2^16
+- Iterations: 3
+- Parallelism: 4
+
+```ts
+{
+  keyStretching: "memory-constrained";
+}
+```
+
+**Note**: This configuration is faster, but less secure. `client.finishRegistration` and `client.finishLogin` each take around 1 seconds to complete on a MacBook Pro M1, 2020, 16 GB Memory.
+
+#### RFC Draft Recommended
+
+This options is based on the recommendation in the [Configurations section in the OPAQUE protocol](https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html#name-configurations) with the exception that the memory is set to (2^21)-1 instead of (2^21) since we noticed (2^21) caused it to crash when running the registration in a browser environment.
 
 Parameters:
 
@@ -243,29 +261,11 @@ Parameters:
 
 ```ts
 {
-  keyStretching: "recommended";
+  keyStretching: "rfc-draft-recommended";
 }
 ```
 
-**Note**: The recommended configuration is the most secure but also the slowest. `client.finishRegistration` and `client.finishLogin` each take around 13 seconds to complete on a MacBook Pro M1, 2020, 16 GB Memory.
-
-#### Memory constrained
-
-This option is based on the recommendation for memory-constrained environments in the [Argon2 RFC](https://www.rfc-editor.org/rfc/rfc9106.html#section-4-6.2).
-
-Parameters:
-
-- Memory: 2^16
-- Iterations: 3
-- Parallelism: 1
-
-```ts
-{
-  keyStretching: "memory-constrained";
-}
-```
-
-**Note**: This configuration is faster, but less secure. `client.finishRegistration` and `client.finishLogin` each take around 1 seconds to complete on a MacBook Pro M1, 2020, 16 GB Memory.
+**Note**: This configuration is the most secure but also the slowest. `client.finishRegistration` and `client.finishLogin` each take around 13 seconds to complete on a MacBook Pro M1, 2020, 16 GB Memory.
 
 #### Custom
 
@@ -296,7 +296,6 @@ opaque.client.finishRegistration({
   clientRegistrationState,
   registrationResponse,
   password,
-  keyStretching: "memory-constrained",
 });
 ```
 
@@ -308,7 +307,6 @@ opaque.client.finishLogin({
   clientLoginState,
   loginResponse,
   password,
-  keyStretching: "memory-constrained",
 });
 ```
 

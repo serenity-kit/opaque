@@ -58,12 +58,7 @@ test("full registration & login flow", () => {
     registrationRecord,
     exportKey: registrationExportKey,
     serverStaticPublicKey: registrationServerStaticPublicKey,
-  } = setupAndRegister(
-    userIdentifier,
-    password,
-    undefined,
-    "memory-constrained",
-  );
+  } = setupAndRegister(userIdentifier, password, undefined);
 
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
     password,
@@ -80,7 +75,6 @@ test("full registration & login flow", () => {
     clientLoginState,
     loginResponse,
     password,
-    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).not.toBeUndefined();
@@ -108,7 +102,7 @@ test("full registration & login flow", () => {
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow using default (recommended) keyStretching ", () => {
+test("full registration & login flow using default (memory-constrained) keyStretching ", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -161,7 +155,7 @@ test("full registration & login flow using default (recommended) keyStretching "
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow using recommended keyStretching", () => {
+test("full registration & login flow using rfc-draft-recommended keyStretching", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -170,7 +164,12 @@ test("full registration & login flow using recommended keyStretching", () => {
     registrationRecord,
     exportKey: registrationExportKey,
     serverStaticPublicKey: registrationServerStaticPublicKey,
-  } = setupAndRegister(userIdentifier, password, undefined, "recommended");
+  } = setupAndRegister(
+    userIdentifier,
+    password,
+    undefined,
+    "rfc-draft-recommended",
+  );
 
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
     password,
@@ -187,7 +186,7 @@ test("full registration & login flow using recommended keyStretching", () => {
     clientLoginState,
     loginResponse,
     password,
-    keyStretching: "recommended",
+    keyStretching: "rfc-draft-recommended",
   });
 
   expect(loginResult).not.toBeUndefined();
@@ -215,7 +214,7 @@ test("full registration & login flow using recommended keyStretching", () => {
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow using recommended keyStretching", () => {
+test("full registration & login flow using custom keyStretching", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -288,7 +287,6 @@ test("full registration & login with bad password", () => {
     userIdentifier,
     "hunter42",
     undefined,
-    "memory-constrained",
   );
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
     password: "hunter42",
@@ -305,7 +303,6 @@ test("full registration & login with bad password", () => {
     clientLoginState,
     loginResponse,
     password: "hunter23",
-    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).toBeUndefined();
@@ -320,7 +317,6 @@ test("full registration & login flow with mismatched custom client identifier on
     userIdentifier,
     password,
     { client },
-    "memory-constrained",
   );
 
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
@@ -344,7 +340,6 @@ test("full registration & login flow with mismatched custom client identifier on
     identifiers: {
       client: client + "abc",
     },
-    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).toBeUndefined();
@@ -358,7 +353,6 @@ test("full registration & login attempt with mismatched server identifier", () =
     userIdentifier,
     password,
     { server: "server-ident" },
-    "memory-constrained",
   );
 
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
@@ -382,7 +376,6 @@ test("full registration & login attempt with mismatched server identifier", () =
     identifiers: {
       server: "server-ident",
     },
-    keyStretching: "memory-constrained",
   });
 
   expect(loginResult).toBeUndefined();
@@ -454,7 +447,7 @@ describe("client.finishRegistration", () => {
         keyStretching: "whatever",
       }),
     ).toThrow(
-      "Error: unknown variant `whatever`, expected one of `recommended`, `memory-constrained`, `argon2id-custom`",
+      "Error: unknown variant `whatever`, expected one of `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
     );
     expect(() => {
       const serverSetup = opaque.server.createSetup();
@@ -617,7 +610,6 @@ describe("client.finishLogin", () => {
         username,
         password,
         undefined,
-        "memory-constrained",
       );
       const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
         password,
@@ -636,7 +628,7 @@ describe("client.finishLogin", () => {
         keyStretching: "something",
       });
     }).toThrow(
-      "Error: unknown variant `something`, expected one of `recommended`, `memory-constrained`, `argon2id-custom`",
+      "Error: unknown variant `something`, expected one of `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
     );
     expect(() => {
       const username = "user123";
@@ -645,7 +637,6 @@ describe("client.finishLogin", () => {
         username,
         password,
         undefined,
-        "memory-constrained",
       );
       const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
         password,
@@ -934,7 +925,6 @@ describe("server.startLogin", () => {
       clientLoginState,
       loginResponse,
       password,
-      keyStretching: "memory-constrained",
     });
     expect(result).toBeUndefined();
   });
@@ -1015,7 +1005,6 @@ describe("server.finishLogin", () => {
       username,
       password,
       undefined,
-      "memory-constrained",
     );
     const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
       password,
@@ -1030,7 +1019,6 @@ describe("server.finishLogin", () => {
       clientLoginState,
       loginResponse,
       password,
-      keyStretching: "memory-constrained",
     });
     expect(result).not.toBeUndefined();
     if (!result) throw new TypeError();
@@ -1049,7 +1037,6 @@ describe("server.finishLogin", () => {
       username,
       password,
       undefined,
-      "memory-constrained",
     );
     const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
       password,
@@ -1064,7 +1051,6 @@ describe("server.finishLogin", () => {
       clientLoginState,
       loginResponse,
       password,
-      keyStretching: "memory-constrained",
     });
     expect(result).not.toBeUndefined();
     if (!result) throw new TypeError();

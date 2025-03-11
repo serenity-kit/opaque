@@ -87,7 +87,6 @@ async function register(userIdentifier, password) {
     clientRegistrationState,
     registrationResponse,
     password,
-    keyStretching: "memory-constrained",
   });
 
   const res = await request("POST", `/register/finish`, {
@@ -116,7 +115,6 @@ async function login(userIdentifier, password) {
     clientLoginState,
     loginResponse,
     password,
-    keyStretching: "memory-constrained",
   });
 
   if (!loginResult) {
@@ -215,7 +213,6 @@ async function handleSubmitPasswordResetConfirm(e) {
       clientRegistrationState,
       registrationResponse,
       password,
-      keyStretching: "memory-constrained",
     });
 
     const res = await request("POST", `/password-reset/confirm-finish`, {
@@ -329,7 +326,6 @@ function runFullServerClientFlow(serverSetup, username, password) {
     password,
     clientRegistrationState,
     registrationResponse,
-    keyStretching: "memory-constrained",
   });
 
   console.log({
@@ -366,7 +362,6 @@ function runFullServerClientFlow(serverSetup, username, password) {
     clientLoginState,
     loginResponse,
     password,
-    keyStretching: "memory-constrained",
   });
 
   if (loginResult == null) {

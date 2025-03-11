@@ -50,7 +50,6 @@ function runFullServerClientFlow(
     password,
     clientRegistrationState,
     registrationResponse,
-    keyStretching: "memory-constrained",
   });
 
   console.log({
@@ -87,7 +86,6 @@ function runFullServerClientFlow(
     clientLoginState,
     loginResponse,
     password,
-    keyStretching: "memory-constrained",
   });
 
   if (loginResult == null) {

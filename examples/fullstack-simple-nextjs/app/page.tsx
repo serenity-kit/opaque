@@ -35,7 +35,6 @@ async function register(userIdentifier: string, password: string) {
     clientRegistrationState,
     registrationResponse,
     password,
-    keyStretching: "memory-constrained",
   });
 
   const res = await request("POST", `/api/register/finish`, {
@@ -62,7 +61,6 @@ async function login(userIdentifier: string, password: string) {
     clientLoginState,
     loginResponse,
     password,
-    keyStretching: "memory-constrained",
   });
   console.log({ loginResult });
   if (!loginResult) {
@@ -246,7 +244,7 @@ function runFullServerClientFlow(
     password,
     clientRegistrationState,
     registrationResponse,
-    // keyStretching: "recommended",
+    // keyStretching: "rfc-draft-recommended",
     // keyStretching: "memory-constrained",
     // keyStretching: {
     //   "argon2id-custom": {
@@ -294,7 +292,7 @@ function runFullServerClientFlow(
     clientLoginState,
     loginResponse,
     password,
-    // keyStretching: "recommended",
+    // keyStretching: "rfc-draft-recommended",
     // keyStretching: "memory-constrained",
     // keyStretching: {
     //   "argon2id-custom": {
