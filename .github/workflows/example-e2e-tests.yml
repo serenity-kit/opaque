@@ -25,7 +25,7 @@ jobs:
       - name: run client-simple-webpack tests
         working-directory: examples/client-simple-webpack
         run: npx playwright test
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
@@ -35,7 +35,7 @@ jobs:
       - name: run client-with-password-reset tests
         working-directory: examples/client-with-password-reset
         run: npx playwright test
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
@@ -45,7 +45,7 @@ jobs:
       - name: run fullstack-e2e-encrypted-locker-nextjs tests
         working-directory: examples/fullstack-e2e-encrypted-locker-nextjs
         run: npx playwright test
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report

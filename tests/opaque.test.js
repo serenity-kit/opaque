@@ -12,8 +12,14 @@ const opaque =
  * @param {string} userIdentifier
  * @param {string} password
  * @param {Identifiers|undefined} identifiers
+ * @param {any} keyStretching
  */
-function setupAndRegister(userIdentifier, password, identifiers = undefined) {
+function setupAndRegister(
+  userIdentifier,
+  password,
+  identifiers = undefined,
+  keyStretching = undefined,
+) {
   const serverSetup = opaque.server.createSetup();
   const { clientRegistrationState, registrationRequest } =
     opaque.client.startRegistration({ password });
@@ -28,6 +34,7 @@ function setupAndRegister(userIdentifier, password, identifiers = undefined) {
       registrationResponse,
       password,
       identifiers,
+      keyStretching,
     });
 
   return {
@@ -43,6 +50,59 @@ beforeAll(async () => {
 });
 
 test("full registration & login flow", () => {
+  const userIdentifier = "user123";
+  const password = "hunter42";
+
+  const {
+    serverSetup,
+    registrationRecord,
+    exportKey: registrationExportKey,
+    serverStaticPublicKey: registrationServerStaticPublicKey,
+  } = setupAndRegister(userIdentifier, password, undefined);
+
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  const { serverLoginState, loginResponse } = opaque.server.startLogin({
+    serverSetup,
+    userIdentifier,
+    registrationRecord,
+    startLoginRequest,
+  });
+
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
+    password,
+  });
+
+  expect(loginResult).not.toBeUndefined();
+
+  if (!loginResult) throw new TypeError(); // for typescript
+
+  const {
+    sessionKey: clientSessionKey,
+    finishLoginRequest,
+    exportKey: loginExportKey,
+    serverStaticPublicKey: loginServerStaticPublicKey,
+  } = loginResult;
+
+  expect(registrationExportKey).toEqual(loginExportKey);
+  expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
+  expect(loginServerStaticPublicKey).toEqual(
+    opaque.server.getPublicKey(serverSetup),
+  );
+
+  const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
+    serverLoginState,
+    finishLoginRequest,
+  });
+
+  expect(serverSessionKey).toEqual(clientSessionKey);
+});
+
+test("full registration & login flow using default (memory-constrained) keyStretching ", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -95,12 +155,138 @@ test("full registration & login flow", () => {
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
+test("full registration & login flow using rfc-draft-recommended keyStretching", () => {
+  const userIdentifier = "user123";
+  const password = "hunter42";
+
+  const {
+    serverSetup,
+    registrationRecord,
+    exportKey: registrationExportKey,
+    serverStaticPublicKey: registrationServerStaticPublicKey,
+  } = setupAndRegister(
+    userIdentifier,
+    password,
+    undefined,
+    "rfc-draft-recommended",
+  );
+
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  const { serverLoginState, loginResponse } = opaque.server.startLogin({
+    serverSetup,
+    userIdentifier,
+    registrationRecord,
+    startLoginRequest,
+  });
+
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
+    password,
+    keyStretching: "rfc-draft-recommended",
+  });
+
+  expect(loginResult).not.toBeUndefined();
+
+  if (!loginResult) throw new TypeError(); // for typescript
+
+  const {
+    sessionKey: clientSessionKey,
+    finishLoginRequest,
+    exportKey: loginExportKey,
+    serverStaticPublicKey: loginServerStaticPublicKey,
+  } = loginResult;
+
+  expect(registrationExportKey).toEqual(loginExportKey);
+  expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
+  expect(loginServerStaticPublicKey).toEqual(
+    opaque.server.getPublicKey(serverSetup),
+  );
+
+  const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
+    serverLoginState,
+    finishLoginRequest,
+  });
+
+  expect(serverSessionKey).toEqual(clientSessionKey);
+});
+
+test("full registration & login flow using custom keyStretching", () => {
+  const userIdentifier = "user123";
+  const password = "hunter42";
+
+  const {
+    serverSetup,
+    registrationRecord,
+    exportKey: registrationExportKey,
+    serverStaticPublicKey: registrationServerStaticPublicKey,
+  } = setupAndRegister(userIdentifier, password, undefined, {
+    "argon2id-custom": {
+      memory: 65536,
+      iterations: 1,
+      parallelism: 4,
+    },
+  });
+
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  const { serverLoginState, loginResponse } = opaque.server.startLogin({
+    serverSetup,
+    userIdentifier,
+    registrationRecord,
+    startLoginRequest,
+  });
+
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
+    password,
+    keyStretching: {
+      "argon2id-custom": {
+        memory: 65536,
+        iterations: 1,
+        parallelism: 4,
+      },
+    },
+  });
+
+  expect(loginResult).not.toBeUndefined();
+
+  if (!loginResult) throw new TypeError(); // for typescript
+
+  const {
+    sessionKey: clientSessionKey,
+    finishLoginRequest,
+    exportKey: loginExportKey,
+    serverStaticPublicKey: loginServerStaticPublicKey,
+  } = loginResult;
+
+  expect(registrationExportKey).toEqual(loginExportKey);
+  expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
+  expect(loginServerStaticPublicKey).toEqual(
+    opaque.server.getPublicKey(serverSetup),
+  );
+
+  const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
+    serverLoginState,
+    finishLoginRequest,
+  });
+
+  expect(serverSessionKey).toEqual(clientSessionKey);
+});
+
 test("full registration & login with bad password", () => {
   const userIdentifier = "user123";
 
   const { serverSetup, registrationRecord } = setupAndRegister(
     userIdentifier,
     "hunter42",
+    undefined,
   );
   const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
     password: "hunter42",
@@ -253,6 +439,44 @@ describe("client.finishRegistration", () => {
         registrationResponse: "",
       }),
     ).toThrow("Error: missing field `clientRegistrationState`");
+    expect(() =>
+      opaque.client.finishRegistration({
+        password: "hunter2",
+        registrationResponse: "",
+        // @ts-expect-error intentional test of invalid input
+        keyStretching: "whatever",
+      }),
+    ).toThrow(
+      "Error: unknown variant `whatever`, expected one of `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
+    );
+    expect(() => {
+      const serverSetup = opaque.server.createSetup();
+      const { clientRegistrationState, registrationRequest } =
+        opaque.client.startRegistration({ password: "hunter2" });
+      const { registrationResponse } = opaque.server.createRegistrationResponse(
+        {
+          serverSetup,
+          userIdentifier: "user1",
+          registrationRequest,
+        },
+      );
+
+      const { registrationRecord, exportKey, serverStaticPublicKey } =
+        opaque.client.finishRegistration({
+          password: "hunter2",
+          registrationResponse,
+          clientRegistrationState,
+          keyStretching: {
+            "argon2id-custom": {
+              memory: 1,
+              iterations: 1,
+              parallelism: 100,
+            },
+          },
+        });
+    }).toThrow(
+      'Internal error at "Invalid keyStretching (argon2id) combination"; Computing the key stretching function failed',
+    );
   });
 
   test("registrationResponse invalid", () => {
@@ -379,6 +603,65 @@ describe("client.finishLogin", () => {
       // @ts-expect-error intentional test of invalid input
       opaque.client.finishLogin({ clientLoginState: "", loginResponse: "" }),
     ).toThrow("missing field `password`");
+    expect(() => {
+      const username = "user123";
+      const password = "hunter2";
+      const { serverSetup, registrationRecord } = setupAndRegister(
+        username,
+        password,
+        undefined,
+      );
+      const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
+        password,
+      });
+      const { loginResponse } = opaque.server.startLogin({
+        registrationRecord,
+        serverSetup,
+        startLoginRequest,
+        userIdentifier: username,
+      });
+      const result = opaque.client.finishLogin({
+        clientLoginState,
+        loginResponse,
+        password,
+        // @ts-expect-error intentional test of invalid input
+        keyStretching: "something",
+      });
+    }).toThrow(
+      "Error: unknown variant `something`, expected one of `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
+    );
+    expect(() => {
+      const username = "user123";
+      const password = "hunter2";
+      const { serverSetup, registrationRecord } = setupAndRegister(
+        username,
+        password,
+        undefined,
+      );
+      const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
+        password,
+      });
+      const { loginResponse } = opaque.server.startLogin({
+        registrationRecord,
+        serverSetup,
+        startLoginRequest,
+        userIdentifier: username,
+      });
+      opaque.client.finishLogin({
+        clientLoginState,
+        loginResponse,
+        password,
+        keyStretching: {
+          "argon2id-custom": {
+            memory: 1,
+            iterations: 1,
+            parallelism: 100,
+          },
+        },
+      });
+    }).toThrow(
+      'Internal error at "Invalid keyStretching (argon2id) combination"; Computing the key stretching function failed',
+    );
   });
 
   test("clientLoginState invalid", () => {
@@ -721,6 +1004,7 @@ describe("server.finishLogin", () => {
     const { serverSetup, registrationRecord } = setupAndRegister(
       username,
       password,
+      undefined,
     );
     const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
       password,
@@ -752,6 +1036,7 @@ describe("server.finishLogin", () => {
     const { serverSetup, registrationRecord } = setupAndRegister(
       username,
       password,
+      undefined,
     );
     const { startLoginRequest, clientLoginState } = opaque.client.startLogin({
       password,
