@@ -1,10 +1,12 @@
 packages:
-  - "build/p256"
-  - "build/ristretto"
-  - "examples/client-simple-vite"
-  - "examples/client-simple-webpack"
-  - "examples/client-with-password-reset"
-  - "examples/fullstack-e2e-encrypted-locker-nextjs"
-  - "examples/fullstack-simple-nextjs"
-  - "examples/server-simple"
-  - "examples/server-with-password-reset"
+  - build/p256
+  - build/ristretto
+  - examples/client-simple-vite
+  - examples/client-simple-webpack
+  - examples/client-with-password-reset
+  - examples/fullstack-e2e-encrypted-locker-nextjs
+  - examples/fullstack-simple-nextjs
+  - examples/server-simple
+  - examples/server-with-password-reset
+onlyBuiltDependencies:
+  - esbuild
