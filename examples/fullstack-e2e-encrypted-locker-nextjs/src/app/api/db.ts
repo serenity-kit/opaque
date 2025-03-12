@@ -4,7 +4,7 @@ import { DB_FILE, ENABLE_REDIS, REDIS_URL } from "./env";
 import FileStore from "./FileStore";
 import RedisStore from "./RedisStore";
 
-async function setupInMemoryStore(): Promise<Datastore> {
+async function setupFileStore(): Promise<Datastore> {
   const file = DB_FILE;
   console.log(`initializing FileStore with file "${file}"`);
   const db = new FileStore(file);
@@ -34,8 +34,7 @@ const db = opaque.ready.then(() => {
   if (ENABLE_REDIS) {
     return setupRedis();
   } else {
-    console.log("initializing InMemoryStore");
-    return setupInMemoryStore();
+    return setupFileStore();
   }
 });
 

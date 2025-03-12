@@ -1,27 +1,13 @@
 import * as opaque from "@serenity-kit/opaque";
 import { Datastore } from "./Datastore";
-import InMemoryStore, {
-  readDatabaseFile,
-  writeDatabaseFile,
-} from "./InMemoryStore";
+import { ENABLE_REDIS, REDIS_URL } from "./env";
+import FileStore from "./FileStore";
 import RedisStore from "./RedisStore";
-import { REDIS_URL, ENABLE_REDIS } from "./env";
 
-async function setupInMemoryStore(): Promise<Datastore> {
-  console.log("initializing InMemoryStore");
+async function setupFileStore(): Promise<Datastore> {
   const file = "data.json";
-  const db = await readDatabaseFile(file).catch((err) => {
-    if ("code" in err && err.code == "ENOENT") {
-      console.log("No database file found, initializing empty database.");
-    } else {
-      console.error(
-        "ERROR: failed to read database file, initializing empty database.",
-      );
-      console.error(err);
-    }
-    return InMemoryStore.empty();
-  });
-  db.addListener(() => writeDatabaseFile(file, db));
+  console.log(`initializing FileStore with file "${file}"`);
+  const db = new FileStore(file);
   return db;
 }
 
@@ -48,7 +34,7 @@ const db = opaque.ready.then(() => {
   if (ENABLE_REDIS) {
     return setupRedis();
   } else {
-    return setupInMemoryStore();
+    return setupFileStore();
   }
 });
 
