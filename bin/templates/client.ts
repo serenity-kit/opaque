@@ -14,7 +14,7 @@ export type {
   StartClientRegistrationParams as StartRegistrationParams,
   StartClientRegistrationResult as StartRegistrationResult,
   FinishClientRegistrationParams as FinishRegistrationParams,
-  FinishClientRegistrationResult as FinishRegistrationPesult,
+  FinishClientRegistrationResult as FinishRegistrationResult,
   StartClientLoginParams as StartLoginParams,
   StartClientLoginResult as StartLoginResult,
   FinishClientLoginResult as FinishLoginResult,
