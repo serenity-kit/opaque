@@ -39,5 +39,5 @@
     "typecheck:fullstack-simple-nextjs": "cd examples/fullstack-simple-nextjs && tsc --noEmit",
     "typecheck:fullstack-e2e-encrypted-locker-nextjs": "cd examples/fullstack-e2e-encrypted-locker-nextjs && tsc --noEmit"
   },
-  "packageManager": "pnpm@10.6.2"
+  "packageManager": "pnpm@10.20.0"
 }
