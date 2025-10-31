@@ -381,6 +381,44 @@ test("full registration & login attempt with mismatched server identifier", () =
   expect(loginResult).toBeUndefined();
 });
 
+test("full registration & login attempt with client and server identifier", () => {
+  const userIdentifier = "client123";
+  const password = "hunter2";
+
+  const { serverSetup, registrationRecord } = setupAndRegister(
+    userIdentifier,
+    password,
+    { client: "client-ident", server: "server-ident" },
+  );
+
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  const { loginResponse } = opaque.server.startLogin({
+    serverSetup,
+    registrationRecord,
+    startLoginRequest,
+    userIdentifier,
+    identifiers: {
+      client: "client-ident",
+      server: "server-ident",
+    },
+  });
+
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
+    password,
+    identifiers: {
+      client: "client-ident",
+      server: "server-ident",
+    },
+  });
+
+  expect(loginResult).toBeDefined();
+});
+
 describe("client.startRegistration", () => {
   test("invalid argument type", () => {
     expect(() => {
