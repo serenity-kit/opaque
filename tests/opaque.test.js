@@ -770,7 +770,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest,
       });
     }).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
+      'opaque protocol error at "deserialize serverSetup"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
     );
   });
 
@@ -866,7 +866,7 @@ describe("server.startLogin", () => {
         userIdentifier: "",
       }),
     ).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
+      'opaque protocol error at "deserialize serverSetup"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
     );
   });
 
@@ -977,7 +977,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState, finishLoginRequest: "" });
     }).toThrow(
-      'opaque protocol error at "deserialize finishLoginRequest"; Internal error encountered',
+      'opaque protocol error at "deserialize finishLoginRequest"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
     );
   });
 
@@ -1026,7 +1026,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState: "", finishLoginRequest });
     }).toThrow(
-      'opaque protocol error at "deserialize serverLoginState"; Internal error encountered',
+      'opaque protocol error at "deserialize serverLoginState"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
     );
   });
 
@@ -1066,7 +1066,7 @@ describe("server.finishLogin", () => {
 describe("server.getPublicKey", () => {
   test("empty string", () => {
     expect(() => opaque.server.getPublicKey("")).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
+      'opaque protocol error at "deserialize serverSetup"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
     );
   });
   test("invalid encoding", () => {
@@ -1076,11 +1076,11 @@ describe("server.getPublicKey", () => {
   });
   test("incomplete server setup string", () => {
     expect(() =>
+      // correct one for ristretto: KNM3PutZ-g3HDN7TJOyrWfTMA-XuQ1j_NWQO05EgnD9xhtTC_MBdWL1NathBtlJ4gz6WIK9rg4NaxKe9gKwRR6DUCOozpp9oUfBnj-fwhA6l5m_DcMFjKxGkN3Q4Lx4CZoA3t-FrnRiBRB2an26puIg41k7-Bw98tsbISmoG12M
+      // it was decoded, the last byte removed and the base64 encoded again
       opaque.server.getPublicKey(
-        "pdT3ISgoWCP1G1lOTpU6uopNEMabryz4N3d1R-dRmF2jmigPsYk-aOL4J0cpPpqBXzEc900G7dZgIxjjzkItIbfzzo9cSh92xq7XZjuvlSs21BDddsKC5TmvRP8QT-wCucEXnwDy2aDLJmzZl-tRHb2Mz5my_vGZeO3KeNS_wA",
+        "KNM3PutZ-g3HDN7TJOyrWfTMA-XuQ1j_NWQO05EgnD9xhtTC_MBdWL1NathBtlJ4gz6WIK9rg4NaxKe9gKwRR6DUCOozpp9oUfBnj-fwhA6l5m_DcMFjKxGkN3Q4Lx4CZoA3t-FrnRiBRB2an26puIg41k7-Bw98tsbISmoG1w",
       ),
-    ).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Internal error encountered',
-    );
+    ).toThrow('opaque protocol error at "deserialize serverSetup";');
   });
 });

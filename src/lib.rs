@@ -7,7 +7,7 @@ use opaque_ke::{
     ClientLogin, ClientLoginFinishParameters, ClientRegistration,
     ClientRegistrationFinishParameters, CredentialFinalization, CredentialRequest,
     CredentialResponse, Identifiers, RegistrationRequest, RegistrationResponse, ServerLogin,
-    ServerLoginStartParameters, ServerRegistration, ServerSetup,
+    ServerLoginParameters, ServerRegistration, ServerSetup,
 };
 
 use base64::{engine::general_purpose as b64, Engine as _};
@@ -74,16 +74,14 @@ struct DefaultCipherSuite;
 #[cfg(not(feature = "p256"))]
 impl CipherSuite for DefaultCipherSuite {
     type OprfCs = opaque_ke::Ristretto255;
-    type KeGroup = opaque_ke::Ristretto255;
-    type KeyExchange = opaque_ke::key_exchange::tripledh::TripleDh;
+    type KeyExchange = opaque_ke::TripleDh<opaque_ke::Ristretto255, sha2::Sha512>;
     type Ksf = CustomKsf;
 }
 
 #[cfg(feature = "p256")]
 impl CipherSuite for DefaultCipherSuite {
     type OprfCs = p256::NistP256;
-    type KeGroup = p256::NistP256;
-    type KeyExchange = opaque_ke::key_exchange::tripledh::TripleDh;
+    type KeyExchange = opaque_ke::TripleDh<p256::NistP256, sha2::Sha256>;
     type Ksf = CustomKsf;
 }
 
@@ -183,7 +181,7 @@ pub struct CustomIdentifiers {
     server: Option<String>,
 }
 
-fn get_identifiers(idents: &Option<CustomIdentifiers>) -> Identifiers {
+fn get_identifiers(idents: &Option<CustomIdentifiers>) -> Identifiers<'_> {
     Identifiers {
         client: idents
             .as_ref()
@@ -297,7 +295,7 @@ pub fn start_server_login(
         None => None,
     };
 
-    let start_params = ServerLoginStartParameters {
+    let start_params = ServerLoginParameters {
         identifiers: get_identifiers(&params.identifiers),
         context: None,
     };
@@ -330,6 +328,8 @@ pub struct FinishServerLoginParams {
     server_login_state: String,
     #[serde(rename = "finishLoginRequest")]
     finish_login_request: String,
+    #[tsify(optional)]
+    identifiers: Option<CustomIdentifiers>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
@@ -348,10 +348,17 @@ pub fn finish_server_login(
     let state_bytes = base64_decode("serverLoginState", params.server_login_state)?;
     let state = ServerLogin::<DefaultCipherSuite>::deserialize(&state_bytes)
         .map_err(from_protocol_error("deserialize serverLoginState"))?;
+
+    let finish_params = ServerLoginParameters {
+        identifiers: get_identifiers(&params.identifiers),
+        context: None,
+    };
+
     let server_login_finish_result = state
         .finish(
             CredentialFinalization::deserialize(&credential_finalization_bytes)
                 .map_err(from_protocol_error("deserialize finishLoginRequest"))?,
+            finish_params,
         )
         .map_err(from_protocol_error("finish server login"))?;
     Ok(FinishServerLoginResult {
@@ -422,6 +429,7 @@ pub struct FinishClientLoginResult {
 pub fn finish_client_login(
     params: FinishClientLoginParams,
 ) -> Result<Option<FinishClientLoginResult>, JsError> {
+    let mut client_rng = OsRng;
     let custom_ksf = get_custom_ksf(params.key_stretching_function_config)?;
 
     let credential_response_bytes = base64_decode("loginResponse", params.login_response)?;
@@ -436,6 +444,7 @@ pub fn finish_client_login(
     );
 
     let result = state.finish(
+        &mut client_rng,
         params.password.as_bytes(),
         CredentialResponse::deserialize(&credential_response_bytes)
             .map_err(from_protocol_error("deserialize loginResponse"))?,
