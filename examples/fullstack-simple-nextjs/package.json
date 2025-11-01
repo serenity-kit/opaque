@@ -9,22 +9,22 @@
   },
   "dependencies": {
     "@serenity-kit/opaque": "workspace:*",
-    "dotenv": "^16.4.7",
-    "next": "15.2.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "redis": "^4.7.0",
-    "zod": "^3.24.2"
+    "dotenv": "^17.2.3",
+    "next": "16.0.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "redis": "^5.9.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.1.16",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.2.2",
-    "tailwindcss": "^4",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "16.0.1",
+    "tailwindcss": "^4.1.16",
     "typescript": "^5"
   }
 }
