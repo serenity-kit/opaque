@@ -15,8 +15,8 @@
     "cross-env": "^10.1.0",
     "jest": "^29.7.0",
     "prettier": "^3.6.2",
-    "rollup": "^4.35.0",
-    "rollup-plugin-dts": "^6.1.1",
+    "rollup": "^4.52.5",
+    "rollup-plugin-dts": "^6.2.3",
     "shelljs": "^0.10.0",
     "typescript": "5.1.3"
   },
