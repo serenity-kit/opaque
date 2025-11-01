@@ -1,4 +1,5 @@
 import sodium from "libsodium-wrappers";
+import { beforeAll, expect, it } from "vitest";
 import { createLocker } from "../client/createLocker";
 import { LockerWithServerVerificationMac } from "../types";
 import { isValidLocker } from "./isValidLocker";

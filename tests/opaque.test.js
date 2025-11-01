@@ -1,5 +1,6 @@
 import * as opaqueP256 from "../build/p256";
 import * as opaqueRistretto from "../build/ristretto";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const opaque =
   process.env.OPAQUE_BUILD === "p256" ? opaqueP256 : opaqueRistretto;
