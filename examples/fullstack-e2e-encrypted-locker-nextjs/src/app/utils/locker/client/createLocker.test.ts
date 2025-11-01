@@ -1,5 +1,6 @@
 import canonicalize from "canonicalize";
 import sodium from "libsodium-wrappers";
+import { beforeAll, expect, it } from "vitest";
 import { createLocker } from "./createLocker";
 
 const data = JSON.stringify({ secretNotes: [{ id: "1", text: "secret" }] });

@@ -1,4 +1,5 @@
 import sodium from "libsodium-wrappers";
+import { beforeAll, expect, it } from "vitest";
 import { Locker } from "../types";
 import { createLocker } from "./createLocker";
 import { decryptLocker } from "./decryptLocker";
