@@ -15,7 +15,7 @@
     "classnames": "^2.5.1",
     "dotenv": "^17.2.3",
     "libsodium-wrappers": "^0.7.15",
-    "next": "16.0.1",
+    "next": "16.0.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "redis": "^5.9.0",
