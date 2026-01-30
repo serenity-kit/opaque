@@ -5,13 +5,7 @@ const fs = require("fs");
 // throw if a command fails
 sh.config.fatal = true;
 
-const ristrettoPackageJson = JSON.parse(
-  sh
-    .cat(path.join(__dirname, "..", "build", "ristretto", "package.json"))
-    .toString(),
-);
-
-const packageJson = function (name) {
+const packageJson = function (name, version) {
   return new sh.ShellString(`{
   "name": "@serenity-kit/${name}",
   "description": "Secure password based client-server authentication without the server ever obtaining knowledge of the password. Implementation of the OPAQUE protocol.",
@@ -19,7 +13,7 @@ const packageJson = function (name) {
     "Stefan Oestreicher <oestef@gmail.com>",
     "Nik Graf <nik@nikgraf.com>"
   ],
-  "version": "${ristrettoPackageJson.version}",
+  "version": "${version}",
   "license": "MIT",
   "files": [
     "index.d.ts",
@@ -135,8 +129,8 @@ function main() {
   rollup("p256");
 
   // write package json
-  packageJson("opaque").to("build/ristretto/package.json");
-  packageJson("opaque-p256").to("build/p256/package.json");
+  packageJson("opaque", "1.0.0").to("build/ristretto/package.json");
+  packageJson("opaque-p256", "1.0.0").to("build/p256/package.json");
 
   // create bin folder
   sh.mkdir("build/ristretto/bin", "build/p256/bin");

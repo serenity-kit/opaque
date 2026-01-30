@@ -8,7 +8,7 @@
 // wasm does not have a default export
 import wasmData from "./opaque_bg.wasm";
 import init from "./opaque";
-export const ready = init(wasmData()).then(() => {
+export const ready = init({ module_or_path: wasmData() }).then(() => {
   // this .then callback only serves to drop the return value of the promise
   // so that the type of our export is Promise<void>
 });
