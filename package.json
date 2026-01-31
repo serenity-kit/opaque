@@ -35,7 +35,8 @@
     "changeset-publish": "pnpm build && pnpm changeset publish",
     "typecheck": "tsc --noEmit && pnpm typecheck:fullstack-simple-nextjs && pnpm typecheck:fullstack-e2e-encrypted-locker-nextjs",
     "typecheck:fullstack-simple-nextjs": "cd examples/fullstack-simple-nextjs && tsc --noEmit",
-    "typecheck:fullstack-e2e-encrypted-locker-nextjs": "cd examples/fullstack-e2e-encrypted-locker-nextjs && tsc --noEmit"
+    "typecheck:fullstack-e2e-encrypted-locker-nextjs": "cd examples/fullstack-e2e-encrypted-locker-nextjs && tsc --noEmit",
+    "format": "prettier --write ."
   },
   "packageManager": "pnpm@10.20.0"
 }
