@@ -133,7 +133,6 @@ const rateLimitMiddleware = setRateLimit({
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-// @ts-expect-error express-rate-limit types not fully compatible with express 5
 app.use(rateLimitMiddleware);
 
 /**
