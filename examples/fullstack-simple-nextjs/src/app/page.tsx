@@ -242,7 +242,7 @@ function runFullServerClientFlow(
     password,
     clientRegistrationState,
     registrationResponse,
-    // keyStretching: "rfc-draft-recommended",
+    // keyStretching: "rfc-recommended",
     // keyStretching: "memory-constrained",
     // keyStretching: {
     //   "argon2id-custom": {
@@ -290,7 +290,7 @@ function runFullServerClientFlow(
     clientLoginState,
     loginResponse,
     password,
-    // keyStretching: "rfc-draft-recommended",
+    // keyStretching: "rfc-recommended",
     // keyStretching: "memory-constrained",
     // keyStretching: {
     //   "argon2id-custom": {

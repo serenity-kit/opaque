@@ -2,7 +2,7 @@
 
 Secure password based client-server authentication without the server ever obtaining knowledge of the password.
 
-A JavaScript implementation of the [OPAQUE protocol](https://datatracker.ietf.org/doc/draft-irtf-cfrg-opaque/) based on [opaque-ke](https://github.com/facebook/opaque-ke).
+A JavaScript implementation of the [OPAQUE protocol](https://www.rfc-editor.org/rfc/rfc9807.html) based on [opaque-ke](https://github.com/facebook/opaque-ke).
 
 ## Benefits
 
@@ -249,9 +249,9 @@ Parameters:
 
 **Note**: This configuration is faster, but less secure. `client.finishRegistration` and `client.finishLogin` each take around 1 seconds to complete on a MacBook Pro M1, 2020, 16 GB Memory.
 
-#### RFC Draft Recommended
+#### RFC Recommended
 
-This options is based on the recommendation in the [Configurations section in the OPAQUE protocol](https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html#name-configurations) with the exception that the memory is set to (2^21)-1 instead of (2^21) since we noticed (2^21) caused it to crash when running the registration in a browser environment.
+This options is based on the recommendation in the [Configurations section in the OPAQUE protocol (RFC 9807)](https://www.rfc-editor.org/rfc/rfc9807.html#name-configurations) with the exception that the memory is set to (2^21)-1 instead of (2^21) since we noticed (2^21) caused it to crash when running the registration in a browser environment.
 
 Parameters:
 
@@ -261,9 +261,11 @@ Parameters:
 
 ```ts
 {
-  keyStretching: "rfc-draft-recommended";
+  keyStretching: "rfc-recommended";
 }
 ```
+
+**Note**: The previous option `"rfc-draft-recommended"` is deprecated but still supported for backwards compatibility.
 
 **Note**: This configuration is the most secure but also the slowest. `client.finishRegistration` and `client.finishLogin` each take around 13 seconds to complete on a MacBook Pro M1, 2020, 16 GB Memory.
 
