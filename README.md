@@ -251,7 +251,7 @@ Parameters:
 
 #### RFC Recommended
 
-This options is based on the recommendation in the [Configurations section in the OPAQUE protocol (RFC 9807)](https://www.rfc-editor.org/rfc/rfc9807.html#name-configurations) with the exception that the memory is set to (2^21)-1 instead of (2^21) since we noticed (2^21) caused it to crash when running the registration in a browser environment.
+This option is based on the recommendation in the [Configurations section in the OPAQUE protocol (RFC 9807)](https://www.rfc-editor.org/rfc/rfc9807.html#name-configurations) with the exception that the memory is set to (2^21)-1 instead of (2^21) since we noticed (2^21) caused it to crash when running the registration in a browser environment.
 
 Parameters:
 
