@@ -11,6 +11,6 @@
     "@serenity-kit/opaque": "workspace:*"
   },
   "devDependencies": {
-    "vite": "^7.1.12"
+    "vite": "^7.3.1"
   }
 }

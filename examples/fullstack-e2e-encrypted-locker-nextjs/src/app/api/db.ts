@@ -8,6 +8,7 @@ async function setupFileStore(): Promise<Datastore> {
   const file = DB_FILE;
   console.log(`initializing FileStore with file "${file}"`);
   const db = new FileStore(file);
+  await db.initialize();
   return db;
 }
 

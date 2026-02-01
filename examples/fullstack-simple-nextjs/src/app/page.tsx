@@ -112,14 +112,12 @@ export default function Home() {
       <form
         id="form"
         className="p-12 space-y-4 max-w-xl"
-        onSubmit={(
-          e: React.FormEvent<HTMLFormElement> & {
-            nativeEvent: { submitter: HTMLButtonElement };
-          },
-        ) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          const action = e.nativeEvent.submitter.value;
-          handleSubmit(action, username, password);
+          const submitter = (e.nativeEvent as SubmitEvent).submitter;
+          if (submitter instanceof HTMLButtonElement) {
+            handleSubmit(submitter.value, username, password);
+          }
         }}
       >
         <h1 className="text-xl font-semibold">Login/Register</h1>
