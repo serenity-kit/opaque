@@ -134,9 +134,10 @@ fn get_custom_ksf(
     let config = ksf_config.unwrap_or(KeyStretchingFunctionConfig::MemoryConstrained);
 
     match config {
-        // https://www.ietf.org/archive/id/draft-irtf-cfrg-opaque-17.html#name-configurations
+        // https://www.rfc-editor.org/rfc/rfc9807.html#name-configurations
         // using the recommended parameters for Argon2id except we use 2^21-1 since 2^21 crashes in browsers
-        KeyStretchingFunctionConfig::RfcDraftRecommended => {
+        KeyStretchingFunctionConfig::RfcRecommended
+        | KeyStretchingFunctionConfig::RfcDraftRecommended => {
             build_argon2_ksf(1, u32::pow(2, 21) - 1, 4)
         }
         // https://www.rfc-editor.org/rfc/rfc9106.html#section-4-6.2
@@ -195,6 +196,9 @@ fn get_identifiers(idents: &Option<CustomIdentifiers>) -> Identifiers<'_> {
 #[derive(Debug, Serialize, Deserialize, Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 enum KeyStretchingFunctionConfig {
+    #[serde(rename = "rfc-recommended")]
+    RfcRecommended,
+    /// Deprecated: use `rfc-recommended` instead
     #[serde(rename = "rfc-draft-recommended")]
     RfcDraftRecommended,
     #[serde(rename = "memory-constrained")]

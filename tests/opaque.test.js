@@ -156,7 +156,61 @@ test("full registration & login flow using default (memory-constrained) keyStret
   expect(serverSessionKey).toEqual(clientSessionKey);
 });
 
-test("full registration & login flow using rfc-draft-recommended keyStretching", () => {
+test("full registration & login flow using rfc-recommended keyStretching", () => {
+  const userIdentifier = "user123";
+  const password = "hunter42";
+
+  const {
+    serverSetup,
+    registrationRecord,
+    exportKey: registrationExportKey,
+    serverStaticPublicKey: registrationServerStaticPublicKey,
+  } = setupAndRegister(userIdentifier, password, undefined, "rfc-recommended");
+
+  const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+    password,
+  });
+
+  const { serverLoginState, loginResponse } = opaque.server.startLogin({
+    serverSetup,
+    userIdentifier,
+    registrationRecord,
+    startLoginRequest,
+  });
+
+  const loginResult = opaque.client.finishLogin({
+    clientLoginState,
+    loginResponse,
+    password,
+    keyStretching: "rfc-recommended",
+  });
+
+  expect(loginResult).not.toBeUndefined();
+
+  if (!loginResult) throw new TypeError(); // for typescript
+
+  const {
+    sessionKey: clientSessionKey,
+    finishLoginRequest,
+    exportKey: loginExportKey,
+    serverStaticPublicKey: loginServerStaticPublicKey,
+  } = loginResult;
+
+  expect(registrationExportKey).toEqual(loginExportKey);
+  expect(registrationServerStaticPublicKey).toEqual(loginServerStaticPublicKey);
+  expect(loginServerStaticPublicKey).toEqual(
+    opaque.server.getPublicKey(serverSetup),
+  );
+
+  const { sessionKey: serverSessionKey } = opaque.server.finishLogin({
+    serverLoginState,
+    finishLoginRequest,
+  });
+
+  expect(serverSessionKey).toEqual(clientSessionKey);
+}, 30000);
+
+test("full registration & login flow using deprecated rfc-draft-recommended keyStretching", () => {
   const userIdentifier = "user123";
   const password = "hunter42";
 
@@ -213,7 +267,7 @@ test("full registration & login flow using rfc-draft-recommended keyStretching",
   });
 
   expect(serverSessionKey).toEqual(clientSessionKey);
-});
+}, 30000);
 
 test("full registration & login flow using custom keyStretching", () => {
   const userIdentifier = "user123";
@@ -486,7 +540,7 @@ describe("client.finishRegistration", () => {
         keyStretching: "whatever",
       }),
     ).toThrow(
-      "Error: unknown variant `whatever`, expected one of `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
+      "Error: unknown variant `whatever`, expected one of `rfc-recommended`, `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
     );
     expect(() => {
       const serverSetup = opaque.server.createSetup();
@@ -667,7 +721,7 @@ describe("client.finishLogin", () => {
         keyStretching: "something",
       });
     }).toThrow(
-      "Error: unknown variant `something`, expected one of `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
+      "Error: unknown variant `something`, expected one of `rfc-recommended`, `rfc-draft-recommended`, `memory-constrained`, `argon2id-custom`",
     );
     expect(() => {
       const username = "user123";
