@@ -6,7 +6,8 @@
       "Bash(pnpm test:*)",
       "Bash(pnpm build:*)",
       "Bash(git checkout:*)",
-      "Bash(pnpm typecheck:*)"
+      "Bash(pnpm typecheck:*)",
+      "WebSearch"
     ]
   }
 }
