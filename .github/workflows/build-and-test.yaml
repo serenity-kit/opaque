@@ -1,0 +1,236 @@
+# Builds the Rust native library for every supported runtime identifier and runs the .NET test
+# suite against each one on a runner of that exact architecture.
+#
+# This is the gate for pull requests into main. It is also exposed via workflow_call so that
+# native-binaries.yaml can reuse the matrix rather than duplicate it — jobs from a called workflow
+# run inside the same workflow run, so the artifacts uploaded here are downloadable by the caller.
+#
+# Deliberately uses only first-party actions/* plus rustup, preinstalled on GitHub runners.
+
+name: Build and test
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+# Literal prefix rather than ${{ github.workflow }}: inside a called workflow that expression
+# resolves to the *caller's* name, which would let the two entry points share a group and cancel
+# each other.
+concurrency:
+  group: build-and-test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_test:
+    name: Build and test (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The two Linux targets are built through cargo-zigbuild against an explicit glibc
+          # floor rather than natively. A native build would link against the runner image's own
+          # glibc (2.39 on Ubuntu 24.04) and the published package would then refuse to load on
+          # Debian 11/12, RHEL 8/9, Amazon Linux 2 and older Ubuntu LTS releases. They are still
+          # *tested* natively, on a runner of their own architecture, further down.
+          - rid: linux-x64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            zig_target: x86_64-unknown-linux-gnu.2.17
+            cargo_out: libopaque.so
+            committed: libopaque.so
+            expect_arch: x86-64
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            zig_target: aarch64-unknown-linux-gnu.2.17
+            cargo_out: libopaque.so
+            committed: libopaque-linux-arm64.so
+            expect_arch: aarch64
+          - rid: win-x64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            zig_target: ''
+            cargo_out: opaque.dll
+            committed: opaque.dll
+            expect_arch: x86-64
+          - rid: win-arm64
+            os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            zig_target: ''
+            cargo_out: opaque.dll
+            committed: opaque-arm64.dll
+            # file(1) builds disagree on how they spell PE ARM64.
+            expect_arch: aarch64|arm64
+          - rid: osx-x64
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            zig_target: ''
+            cargo_out: libopaque.dylib
+            committed: libopaque-x64.dylib
+            expect_arch: x86_64
+          - rid: osx-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
+            zig_target: ''
+            cargo_out: libopaque.dylib
+            committed: libopaque.dylib
+            expect_arch: arm64
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Rust ships in the standard runner images, but the ARM64 images are newer and their contents
+      # are less settled, so install rustup if it is absent rather than assume it.
+      - name: Ensure rustup is available
+        run: |
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+              | sh -s -- -y --profile minimal --default-toolchain none
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
+
+      # rust-toolchain.toml pins the version; `rustup show` installs it if it is not present.
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          rustup target add "${{ matrix.target }}"
+          rustc --version --verbose
+          cargo --version
+
+      - name: Cache cargo registry and build directory
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            ~/.cargo/bin
+            target/${{ matrix.target }}
+          key: cargo-${{ matrix.rid }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: |
+            cargo-${{ matrix.rid }}-
+
+      # Zig acts as the cross-linker and carries its own glibc stubs, which is what makes an
+      # explicit glibc floor possible. Installed from PyPI because that is far quicker than a
+      # source build of Zig itself.
+      - name: Install cargo-zigbuild
+        if: matrix.zig_target != ''
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet --user ziglang
+          if ! command -v cargo-zigbuild >/dev/null 2>&1; then
+            cargo install --locked cargo-zigbuild
+          fi
+          cargo zigbuild --version
+
+      # --locked so the build fails loudly rather than silently resolving a different dependency
+      # graph than the one Cargo.lock records; the output of this step gets committed.
+      - name: Build native library
+        run: |
+          set -euo pipefail
+          if [ -n "${{ matrix.zig_target }}" ]; then
+            cargo zigbuild --release --locked --target "${{ matrix.zig_target }}"
+          else
+            cargo build --release --locked --target "${{ matrix.target }}"
+          fi
+
+      # Cheap guard against a silently mis-targeted build. A wrong-architecture library would not
+      # fail the tests loudly either: FunctionHelper.TryExecute swallows the load failure and the
+      # API just returns false.
+      - name: Verify the built library's architecture
+        run: |
+          set -euo pipefail
+          built="target/${{ matrix.target }}/release/${{ matrix.cargo_out }}"
+          test -f "$built" || { echo "::error::cargo did not produce $built"; exit 1; }
+
+          if command -v file >/dev/null 2>&1; then
+            described=$(file -b "$built")
+          else
+            # Windows runners have no file(1); read the PE machine field instead.
+            described=$(powershell -NoProfile -Command "
+              \$fs = [IO.File]::OpenRead('$built')
+              \$br = New-Object IO.BinaryReader(\$fs)
+              \$fs.Position = 0x3C
+              \$fs.Position = \$br.ReadUInt32() + 4
+              switch (\$br.ReadUInt16()) {
+                0x8664  { 'x86-64' }
+                0xAA64  { 'aarch64' }
+                default { 'unknown' }
+              }")
+          fi
+
+          # Case-insensitive: file(1) reports "aarch64" on Linux but "Aarch64" for a Windows PE.
+          echo "$built -> $described"
+          if printf '%s' "$described" | grep -Eiq '${{ matrix.expect_arch }}'; then
+            echo "Architecture matches ${{ matrix.rid }}."
+          else
+            echo "::error::Expected /${{ matrix.expect_arch }}/i for ${{ matrix.rid }}, got: $described"
+            exit 1
+          fi
+
+      # The whole point of building Linux through zigbuild is the glibc floor, so assert it rather
+      # than trust it. A silently raised floor would only surface as install failures downstream.
+      - name: Verify the glibc floor
+        if: matrix.zig_target != ''
+        run: |
+          set -euo pipefail
+          built="target/${{ matrix.target }}/release/${{ matrix.cargo_out }}"
+          floor="${{ matrix.zig_target }}"
+          floor="${floor##*-gnu.}"
+
+          highest=$(objdump -T "$built" \
+            | grep -oE 'GLIBC_[0-9]+\.[0-9]+(\.[0-9]+)?' \
+            | sed 's/GLIBC_//' \
+            | sort -V \
+            | tail -1)
+          echo "Highest glibc symbol required: ${highest:-none}  (floor: $floor)"
+
+          if [ -n "$highest" ] && [ "$(printf '%s\n%s\n' "$highest" "$floor" | sort -V | tail -1)" != "$floor" ]; then
+            echo "::error::Library needs glibc $highest, above the intended $floor floor"
+            exit 1
+          fi
+
+      # Overwrite the committed binary so the tests below exercise what we just built rather than
+      # whatever is checked in. The csproj copies the file matching this host's RID into the test
+      # output directory, which is exactly this one.
+      - name: Stage the built library
+        run: |
+          set -euo pipefail
+          cp "target/${{ matrix.target }}/release/${{ matrix.cargo_out }}" \
+             ".Net/OPAQUE.Net/${{ matrix.committed }}"
+          ls -l ".Net/OPAQUE.Net/${{ matrix.committed }}"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Build and test through the solution, not the individual projects. The solution pins
+      # Platform=x64, which puts the output under bin/x64/; running `dotnet test` against
+      # Test.csproj directly would default to Platform=AnyCPU and look in bin/ instead, and
+      # --no-build would then fail to find the assembly that was just built.
+      - name: Build
+        run: dotnet build .Net/OPAQUE.Net/OPAQUE.Net.sln --configuration Release
+
+      - name: Test
+        run: dotnet test .Net/OPAQUE.Net/OPAQUE.Net.sln --configuration Release --no-build
+
+      - name: Upload native library
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.rid }}
+          path: .Net/OPAQUE.Net/${{ matrix.committed }}
+          if-no-files-found: error
+          retention-days: 7

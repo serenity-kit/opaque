@@ -15,9 +15,20 @@ A C# implementation of the [OPAQUE protocol](https://datatracker.ietf.org/doc/dr
 
 In depth documentation can be found at [https://opaque-auth.com/](https://opaque-auth.com/) (written for the original repo)
 
-## Requirements
+## Supported platforms
 
-This package will only work when running on the x64 platform. This is due to the rust dll. See [Configuring build platforms](https://learn.microsoft.com/en-us/visualstudio/ide/how-to-configure-projects-to-target-platforms?view=vs-2022) for assistance.
+The package wraps a Rust library, so it ships a native binary per platform. Targeting .NET 8 or
+later, these are supported:
+
+| OS | x64 | ARM64 |
+| --- | --- | --- |
+| Windows | `win-x64` | `win-arm64` |
+| Linux | `linux-x64` | `linux-arm64` |
+| macOS | `osx-x64` | `osx-arm64` |
+
+The correct binary is selected automatically by the runtime identifier, so no build-platform
+configuration is required. Each one is compiled from source and exercised by the test suite on a
+runner of that architecture before release — see [BUILDING.md](BUILDING.md).
 
 
 ## Install

@@ -1,0 +1,5 @@
+# The compiled native libraries are committed to this repo (see BUILDING.md). Mark them binary so
+# no checkout applies line-ending conversion and no diff heuristic tries to render them as text.
+*.so     binary
+*.dll    binary
+*.dylib  binary

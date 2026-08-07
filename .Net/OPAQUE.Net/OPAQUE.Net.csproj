@@ -1,24 +1,36 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Platforms>x64</Platforms>
-	<EnablePackageValidation>true</EnablePackageValidation>
-	<GenerateDocumentationFile>True</GenerateDocumentationFile>
-	<NoWarn>$(NoWarn);CS1591</NoWarn>
-	<PackageTags>Opaque, library</PackageTags>
-	<PackageId>Vaultic.OPAQUE.Net</PackageId>
-	<Title>Vaultic.OPAQUE.Net</Title>
-	<Authors>Tyler Wanta</Authors>
-	<Company>Vaultic</Company>
-	<Description>Opaque protocal implementation</Description>
-	<RepositoryUrl>https://github.com/Vaultic-LLC/OPAQUE.Net</RepositoryUrl>
-	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<PackageLicenseFile>LICENSE</PackageLicenseFile>
-	<PlatformTarget>x64</PlatformTarget>
-	<Version>1.3.0</Version>
+    <Platforms>x64;arm64</Platforms>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <PackageTags>Opaque, library</PackageTags>
+    <PackageId>Vaultic.OPAQUE.Net</PackageId>
+    <Title>Vaultic.OPAQUE.Net</Title>
+    <Authors>Tyler Wanta</Authors>
+    <Company>Vaultic</Company>
+    <Description>Opaque protocal implementation</Description>
+    <RepositoryUrl>https://github.com/Vaultic-LLC/OPAQUE.Net</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <!-- The managed assembly is architecture neutral; the native library is selected per RID. -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Version>1.4.0</Version>
+  </PropertyGroup>
+
+  <!--
+    The RID we are building for. When a RuntimeIdentifier is set explicitly it wins; otherwise fall
+    back to the RID of the SDK doing the build. This decides which native library gets copied next
+    to the managed assembly so that `dotnet run`/`dotnet test` work straight out of the build output.
+  -->
+  <PropertyGroup>
+    <OpaqueHostRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</OpaqueHostRid>
+    <OpaqueHostRid Condition="'$(OpaqueHostRid)' == ''">$(NETCoreSdkPortableRuntimeIdentifier)</OpaqueHostRid>
+    <OpaqueHostRid Condition="'$(OpaqueHostRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</OpaqueHostRid>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,17 +44,85 @@
     </None>
   </ItemGroup>
 
+  <!--
+    Native libraries, one per supported RID. See BUILDING.md; CI rebuilds and refreshes these.
+
+    Two things happen to each file:
+      * Pack     - it goes to runtimes/<rid>/native/ under the file name P/Invoke probes for on that
+                   OS. PackagePath names the destination file explicitly, because several of these
+                   are stored under disambiguated names in the repo (a directory can only hold one
+                   "libopaque.so").
+      * Copy     - exactly one of them, the one matching OpaqueHostRid, is copied to the build output
+                   and renamed via Link to that same canonical name. Without the RID condition an
+                   arm64 build would copy the x64 library and every P/Invoke would fail silently,
+                   because Helpers/FunctionHelper.TryExecute swallows the load exception.
+  -->
   <ItemGroup>
-	<None Update="libopaque.so">
-		<Pack>True</Pack>
-		<PackagePath>runtimes/linux-x64/native/</PackagePath>
-		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</None>
+    <!-- Linux x64 -->
+    <None Update="libopaque.so">
+      <Pack>True</Pack>
+      <PackagePath>runtimes/linux-x64/native/libopaque.so</PackagePath>
+      <Link Condition="'$(OpaqueHostRid)' == 'linux-x64'">libopaque.so</Link>
+      <CopyToOutputDirectory Condition="'$(OpaqueHostRid)' == 'linux-x64'">PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <!-- Linux arm64 -->
+    <None Update="libopaque-linux-arm64.so">
+      <Pack>True</Pack>
+      <PackagePath>runtimes/linux-arm64/native/libopaque.so</PackagePath>
+      <Link Condition="'$(OpaqueHostRid)' == 'linux-arm64'">libopaque.so</Link>
+      <CopyToOutputDirectory Condition="'$(OpaqueHostRid)' == 'linux-arm64'">PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <!-- Windows x64 -->
     <None Update="opaque.dll">
       <Pack>True</Pack>
-      <PackagePath>runtimes/win-x64/native/</PackagePath>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <PackagePath>runtimes/win-x64/native/opaque.dll</PackagePath>
+      <Link Condition="'$(OpaqueHostRid)' == 'win-x64'">opaque.dll</Link>
+      <CopyToOutputDirectory Condition="'$(OpaqueHostRid)' == 'win-x64'">PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <!-- Windows arm64 -->
+    <None Update="opaque-arm64.dll">
+      <Pack>True</Pack>
+      <PackagePath>runtimes/win-arm64/native/opaque.dll</PackagePath>
+      <Link Condition="'$(OpaqueHostRid)' == 'win-arm64'">opaque.dll</Link>
+      <CopyToOutputDirectory Condition="'$(OpaqueHostRid)' == 'win-arm64'">PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <!-- macOS arm64 (Apple silicon) -->
+    <None Update="libopaque.dylib">
+      <Pack>True</Pack>
+      <PackagePath>runtimes/osx-arm64/native/libopaque.dylib</PackagePath>
+      <Link Condition="'$(OpaqueHostRid)' == 'osx-arm64'">libopaque.dylib</Link>
+      <CopyToOutputDirectory Condition="'$(OpaqueHostRid)' == 'osx-arm64'">PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <!-- macOS x64 (Intel) -->
+    <None Update="libopaque-x64.dylib">
+      <Pack>True</Pack>
+      <PackagePath>runtimes/osx-x64/native/libopaque.dylib</PackagePath>
+      <Link Condition="'$(OpaqueHostRid)' == 'osx-x64'">libopaque.dylib</Link>
+      <CopyToOutputDirectory Condition="'$(OpaqueHostRid)' == 'osx-x64'">PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <OpaqueNativeAsset Include="libopaque.so" />
+    <OpaqueNativeAsset Include="libopaque-linux-arm64.so" />
+    <OpaqueNativeAsset Include="opaque.dll" />
+    <OpaqueNativeAsset Include="opaque-arm64.dll" />
+    <OpaqueNativeAsset Include="libopaque.dylib" />
+    <OpaqueNativeAsset Include="libopaque-x64.dylib" />
+  </ItemGroup>
+
+  <!--
+    A missing file makes <None Update> a silent no-op, which would produce a package quietly missing
+    a platform. Fail the pack instead.
+  -->
+  <Target Name="ValidateNativeAssets" BeforeTargets="Pack">
+    <Error Condition="!Exists('$(MSBuildProjectDirectory)\%(OpaqueNativeAsset.Identity)')"
+           Text="Native library '%(OpaqueNativeAsset.Identity)' is missing from $(MSBuildProjectDirectory). Packing now would ship $(PackageId) without support for that platform. See BUILDING.md." />
+  </Target>
 
 </Project>

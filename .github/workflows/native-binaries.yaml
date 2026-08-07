@@ -1,0 +1,152 @@
+# On a merge to main, rebuilds every native library, tests each on its own architecture, and opens
+# a pull request with any that changed.
+#
+# The build/test matrix itself lives in build-and-test.yaml and is reused here via `uses:` so it is
+# defined exactly once. Jobs from a called workflow run inside this same workflow run, so the
+# artifacts they upload are downloadable by propose_binaries below with no cross-run plumbing.
+#
+# Every binary that lands in this repo is therefore compiled by CI from the source in this repo and
+# proven by the test suite before a human is ever asked to merge it.
+
+name: Native binaries
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: native-binaries-${{ github.ref }}
+  # Not cancel-in-progress: let each merge finish proposing rather than dropping its binaries.
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_test:
+    # Circuit breaker. The binaries PR is opened with CI_BINARIES_TOKEN, so unlike a
+    # GITHUB_TOKEN-authored PR it *does* trigger workflows — which means merging it pushes to main
+    # and re-enters this workflow. The "byte-identical, nothing to propose" check in
+    # propose_binaries is the primary terminator; this is the backstop for a build that turns out
+    # not to be bit-reproducible. Covers all three merge styles: squash (PR title), merge commit
+    # (branch name in the message) and rebase (original commit message). On workflow_dispatch there
+    # is no head_commit, which coerces to '' and lets the run through.
+    if: >-
+      !contains(github.event.head_commit.message, 'ci: rebuild native libraries')
+      && !contains(github.event.head_commit.message, 'ci/native-binaries')
+    uses: ./.github/workflows/build-and-test.yaml
+    permissions:
+      contents: read
+
+  propose_binaries:
+    name: Propose refreshed binaries
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    # GITHUB_TOKEN stays read-only; the push and the PR are authenticated with CI_BINARIES_TOKEN,
+    # which carries its own scope. A PAT is required rather than cosmetic: a PR opened with
+    # GITHUB_TOKEN never triggers workflows, so its required status checks would never report and
+    # the PR could never satisfy branch protection on main.
+    permissions:
+      contents: read
+    env:
+      BRANCH: ci/native-binaries
+    steps:
+      # First, so a missing secret reports itself instead of surfacing as an anonymous clone that
+      # only fails much later on the push, with a bare 403.
+      - name: Check for the binaries token
+        env:
+          GH_TOKEN: ${{ secrets.CI_BINARIES_TOKEN }}
+        run: |
+          [ -n "${GH_TOKEN:-}" ] || {
+            echo "::error::CI_BINARIES_TOKEN is not set. See the CI secrets section of BUILDING.md."
+            exit 1
+          }
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CI_BINARIES_TOKEN }}
+
+      - name: Download every built library
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          merge-multiple: true
+          path: .Net/OPAQUE.Net
+
+      - name: Open or update the binaries pull request
+        env:
+          GH_TOKEN: ${{ secrets.CI_BINARIES_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Named explicitly rather than adding the whole directory, so this job can only ever
+          # commit native libraries — never a stray source or project file.
+          libs=(
+            .Net/OPAQUE.Net/libopaque.so
+            .Net/OPAQUE.Net/libopaque-linux-arm64.so
+            .Net/OPAQUE.Net/opaque.dll
+            .Net/OPAQUE.Net/opaque-arm64.dll
+            .Net/OPAQUE.Net/libopaque.dylib
+            .Net/OPAQUE.Net/libopaque-x64.dylib
+          )
+
+          for lib in "${libs[@]}"; do
+            test -f "$lib" || { echo "::error::$lib was not produced by the build jobs"; exit 1; }
+          done
+
+          # --porcelain rather than `git diff`, so newly added libraries (untracked on the first
+          # run of this workflow) count as a change too.
+          changes=$(git status --porcelain -- "${libs[@]}")
+          if [ -z "$changes" ]; then
+            echo "Rebuilt libraries are byte-identical to the committed ones. Nothing to propose."
+            exit 0
+          fi
+
+          echo "Changed:"
+          echo "$changes"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B "$BRANCH"
+          git add -- "${libs[@]}"
+          git commit -m "ci: rebuild native libraries from ${GITHUB_SHA:0:7}" \
+                     -m "Built and tested on native runners for all six supported RIDs."
+          git push --force origin "$BRANCH"
+
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "Updated existing PR #$existing."
+            exit 0
+          fi
+
+          cat > /tmp/pr-body.md <<EOF
+          Rebuilt from \`${GITHUB_SHA}\` by the \`Native binaries\` workflow.
+
+          Each library was compiled from this repository's Rust source on a GitHub-hosted runner of
+          its own architecture, checked for the expected machine type, and exercised by the full
+          MSTest suite on that architecture before this PR was opened.
+
+          | RID | Runner | Rust target |
+          | --- | --- | --- |
+          | linux-x64 | ubuntu-latest | x86_64-unknown-linux-gnu |
+          | linux-arm64 | ubuntu-24.04-arm | aarch64-unknown-linux-gnu |
+          | win-x64 | windows-latest | x86_64-pc-windows-msvc |
+          | win-arm64 | windows-11-arm | aarch64-pc-windows-msvc |
+          | osx-x64 | macos-15-intel | x86_64-apple-darwin |
+          | osx-arm64 | macos-latest | aarch64-apple-darwin |
+
+          This PR is opened with a dedicated token rather than \`GITHUB_TOKEN\`, so the
+          \`Build and test\` matrix runs on it normally and its required checks report. Merging it
+          will not start another binaries PR: the follow-up run is skipped by the circuit breaker
+          in \`native-binaries.yaml\`, and a reproducible rebuild would propose nothing anyway.
+          EOF
+
+          gh pr create \
+            --base "${{ github.ref_name }}" \
+            --head "$BRANCH" \
+            --title "ci: rebuild native libraries" \
+            --body-file /tmp/pr-body.md

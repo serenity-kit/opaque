@@ -1,0 +1,13 @@
+# Pinned deliberately rather than tracking "stable".
+#
+# CI rebuilds the native libraries on every merge to main and only opens a pull request when the
+# resulting bytes differ from what is committed. An unpinned toolchain would silently change the
+# compiler out from under that comparison, so an unrelated merge would produce a binaries PR whose
+# diff has no reviewable cause. With this pin plus `cargo build --locked`, the binaries stay stable
+# until either src/, Cargo.lock, or this file is changed on purpose.
+#
+# Bumping: change the channel, let CI rebuild, and review the resulting binaries PR as a normal
+# toolchain upgrade.
+[toolchain]
+channel = "1.97.1"
+profile = "minimal"

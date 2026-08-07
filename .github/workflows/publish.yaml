@@ -16,55 +16,78 @@ defaults:
   run:
     shell: pwsh
 
+permissions:
+  contents: read
+
 jobs:
   create_nuget:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Get all history to allow automatic versioning using MinVer
 
-    # Install the .NET SDK indicated in the global.json file
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
 
-    # Create the NuGet package in the folder from the environment variable NuGetDirectory
+    # The native libraries are committed to the repo, built and tested by the Native workflow.
+    # OPAQUE.Net.csproj fails the pack if any of them is missing.
     - run: dotnet pack .Net/OPAQUE.Net/OPAQUE.Net.csproj --configuration Release --output ${{ env.NuGetDirectory }}
 
+    # A package that silently lost a platform is worse than a failed publish, so assert the layout
+    # before anything reaches nuget.org.
+    - name: Verify the package carries every supported runtime
+      run: |
+        $expected = @(
+          'runtimes/linux-x64/native/libopaque.so'
+          'runtimes/linux-arm64/native/libopaque.so'
+          'runtimes/win-x64/native/opaque.dll'
+          'runtimes/win-arm64/native/opaque.dll'
+          'runtimes/osx-x64/native/libopaque.dylib'
+          'runtimes/osx-arm64/native/libopaque.dylib'
+          'lib/net8.0/OPAQUE.Net.dll'
+        )
+        $package = Get-ChildItem "${{ env.NuGetDirectory }}" -Filter *.nupkg | Select-Object -First 1
+        if (-not $package) { throw "dotnet pack produced no .nupkg" }
+        Write-Host "Inspecting $($package.Name)"
+
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $zip = [IO.Compression.ZipFile]::OpenRead($package.FullName)
+        try { $entries = $zip.Entries | ForEach-Object { $_.FullName -replace '\\', '/' } }
+        finally { $zip.Dispose() }
+
+        $missing = $expected | Where-Object { $entries -notcontains $_ }
+        if ($missing) {
+          Write-Host "Package contains:"
+          $entries | ForEach-Object { Write-Host "  $_" }
+          throw "Package is missing: $($missing -join ', ')"
+        }
+        Write-Host "All $($expected.Count) expected entries are present."
+
     # Publish the NuGet package as an artifact, so they can be used in the following jobs
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: nuget
         if-no-files-found: error
         retention-days: 7
         path: ${{ env.NuGetDirectory }}/*.nupkg
 
-  # run_test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - name: Setup .NET
-  #     uses: actions/setup-dotnet@v4
-  #   - name: Run tests
-  #     run: dotnet test .Net/Test/Test.csproj --configuration Release
-
   deploy:
-    # Publish only when creating a GitHub Release
-    # https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
-    # You can update this logic if you want to manage releases differently
-    #if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    #needs: [ run_test ]
+    needs: create_nuget
     steps:
       # Download the NuGet package created in the previous job
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: nuget
           path: ${{ env.NuGetDirectory }}
 
-      # Install the .NET SDK indicated in the global.json file
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
       # Publish all NuGet packages to NuGet.org
       # Use --skip-duplicate to prevent errors if a package with the same version already exists.
