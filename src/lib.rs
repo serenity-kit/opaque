@@ -56,7 +56,7 @@ impl From<Error> for JsError {
     fn from(err: Error) -> Self {
         let msg = match err {
             Error::Protocol { context, error } => {
-                format!("opaque protocol error at \"{}\"; {}", context, error)
+                format!("opaque protocol error at \"{}\"; {:?}", context, error)
             }
             Error::Base64 { context, error } => {
                 format!("base64 decoding failed at \"{}\"; {}", context, error)
