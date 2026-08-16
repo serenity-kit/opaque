@@ -57,10 +57,18 @@ Is managed via Changesets and the Github CI. This means every change should also
 npx changeset
 ```
 
-You can bump a version running the `version` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml
+You can bump a version running the `Bump Package Version` action here: https://github.com/serenity-kit/opaque/actions/workflows/bump-version.yml
+
+It opens a `Version Packages` pull request which bumps both packages and turns the pending changesets into changelog entries.
+
+## Changelog
+
+The changelog is generated from the changesets, so the text you write in a changeset is what users end up reading. It is written to `build/ristretto/CHANGELOG.md` and `build/p256/CHANGELOG.md` (both are committed and shipped to npm) and mirrored to the [CHANGELOG.md](./CHANGELOG.md) in the repository root. Don't edit these files by hand.
 
 ## Publish
 
 Is managed via the Github CI
 
-You can publish running the `publish` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml
+You can publish running the `Release` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml
+
+Besides publishing to npm this also creates a git tag and a Github release per package, using the changelog entry of the released version as release notes.
