@@ -5,6 +5,10 @@ import { beforeAll, describe, expect, test } from "vitest";
 const opaque =
   process.env.OPAQUE_BUILD === "p256" ? opaqueP256 : opaqueRistretto;
 
+// Ristretto255 pairs with SHA-512, P-256 with SHA-256, so the byte lengths
+// reported in deserialization errors differ between the two builds.
+const hashLen = process.env.OPAQUE_BUILD === "p256" ? 32 : 64;
+
 /**
  * @typedef {{client?:string;server?:string}} Identifiers
  */
@@ -583,7 +587,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState,
       });
     }).toThrow(
-      'opaque protocol error at "deserialize registrationResponse"; Internal error encountered',
+      'opaque protocol error at "deserialize registrationResponse"; LibraryError(OprfError(Deserialization))',
     );
   });
 
@@ -618,7 +622,7 @@ describe("client.finishRegistration", () => {
         clientRegistrationState: "",
       });
     }).toThrow(
-      'opaque protocol error at "deserialize clientRegistrationState"; Internal error encountered',
+      'opaque protocol error at "deserialize clientRegistrationState"; LibraryError(OprfError(Deserialization))',
     );
   });
 
@@ -765,7 +769,7 @@ describe("client.finishLogin", () => {
         password: "hunter2",
       }),
     ).toThrow(
-      'opaque protocol error at "deserialize clientLoginState"; Internal error encountered',
+      'opaque protocol error at "deserialize clientLoginState"; LibraryError(OprfError(Deserialization))',
     );
   });
 
@@ -792,7 +796,7 @@ describe("client.finishLogin", () => {
         password: "hunter2",
       });
     }).toThrow(
-      'opaque protocol error at "deserialize loginResponse"; Internal error encountered',
+      'opaque protocol error at "deserialize loginResponse"; LibraryError(OprfError(Deserialization))',
     );
   });
 
@@ -863,7 +867,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest,
       });
     }).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
+      `opaque protocol error at "deserialize serverSetup"; SizeError { name: "OPRF seed", len: ${hashLen}, actual_len: 3 }`,
     );
   });
 
@@ -891,7 +895,7 @@ describe("server.createRegistrationResponse", () => {
         registrationRequest: "",
       });
     }).toThrow(
-      'opaque protocol error at "deserialize registrationRequest"; Internal error encountered',
+      'opaque protocol error at "deserialize registrationRequest"; LibraryError(OprfError(Deserialization))',
     );
   });
 
@@ -959,7 +963,7 @@ describe("server.startLogin", () => {
         userIdentifier: "",
       }),
     ).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
+      `opaque protocol error at "deserialize serverSetup"; SizeError { name: "OPRF seed", len: ${hashLen}, actual_len: 0 }`,
     );
   });
 
@@ -985,7 +989,7 @@ describe("server.startLogin", () => {
         userIdentifier: "",
       }),
     ).toThrow(
-      'opaque protocol error at "deserialize startLoginRequest"; Internal error encountered',
+      'opaque protocol error at "deserialize startLoginRequest"; LibraryError(OprfError(Deserialization))',
     );
   });
 
@@ -1070,7 +1074,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState, finishLoginRequest: "" });
     }).toThrow(
-      'opaque protocol error at "deserialize finishLoginRequest"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
+      `opaque protocol error at "deserialize finishLoginRequest"; SizeError { name: "mac", len: ${hashLen}, actual_len: 0 }`,
     );
   });
 
@@ -1119,7 +1123,7 @@ describe("server.finishLogin", () => {
     expect(() => {
       opaque.server.finishLogin({ serverLoginState: "", finishLoginRequest });
     }).toThrow(
-      'opaque protocol error at "deserialize serverLoginState"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
+      `opaque protocol error at "deserialize serverLoginState"; SizeError { name: "session key", len: ${hashLen}, actual_len: 0 }`,
     );
   });
 
@@ -1159,7 +1163,7 @@ describe("server.finishLogin", () => {
 describe("server.getPublicKey", () => {
   test("empty string", () => {
     expect(() => opaque.server.getPublicKey("")).toThrow(
-      'opaque protocol error at "deserialize serverSetup"; Invalid length for `name`: expected `len`, but is actually `actual_len`.',
+      `opaque protocol error at "deserialize serverSetup"; SizeError { name: "OPRF seed", len: ${hashLen}, actual_len: 0 }`,
     );
   });
   test("invalid encoding", () => {
