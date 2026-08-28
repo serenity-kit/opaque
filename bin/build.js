@@ -61,9 +61,29 @@ opaque.ready.then(() => {
       console.error("Did you supply a valid SERVER_SETUP string?");
       process.exit(1);
     }
+  } else if (
+    process.argv[process.argv.length - 1] === "migrate-server-setup-from-v3"
+  ) {
+    console.error("ERROR: missing argument <OLD_SERVER_SETUP>");
+    process.exit(1);
+  } else if (
+    process.argv[process.argv.length - 2] === "migrate-server-setup-from-v3"
+  ) {
+    try {
+      console.log(
+        opaque.server.migrateSetupFromV3(process.argv[process.argv.length - 1])
+      );
+    } catch (err) {
+      console.error("ERROR! Failed to migrate server setup.");
+      console.error(err.message + "\\n");
+      console.error(
+        "Did you supply a valid opaque-ke v3 (opaque 0.9.x) SERVER_SETUP string, from a build with the same cipher suite (ristretto/p256) as this one?"
+      );
+      process.exit(1);
+    }
   } else {
     console.error(
-      "ERROR: missing argument <create-server-setup|get-server-public-key>"
+      "ERROR: missing argument <create-server-setup|get-server-public-key|migrate-server-setup-from-v3>"
     );
     process.exit(1);
   }
