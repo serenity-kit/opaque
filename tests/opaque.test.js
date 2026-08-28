@@ -1181,3 +1181,110 @@ describe("server.getPublicKey", () => {
     ).toThrow('opaque protocol error at "deserialize serverSetup";');
   });
 });
+
+describe("server.migrateSetupFromV3", () => {
+  // Builds a byte-compatible stand-in for a v3 (opaque-ke 3.x / opaque 0.9.x)
+  // serverSetup -- oprfSeed || realAkeSk || dummyAkeSk, all canonical scalars
+  // -- without depending on the old crate version. We get canonical scalars
+  // for free by slicing them out of two real v4 setups: v4's own layout is
+  // oprfSeed || realAkeSk || dummyAkePk, so the first 32/64+32 bytes of any
+  // v4 setup are already a valid seed+privkey pair for this build's group.
+  function buildV3ShapedSetup() {
+    const a = new Uint8Array(
+      Buffer.from(opaque.server.createSetup(), "base64url"),
+    );
+    const b = new Uint8Array(
+      Buffer.from(opaque.server.createSetup(), "base64url"),
+    );
+    const seedAndRealSk = a.slice(0, hashLen + 32);
+    const dummySk = b.slice(hashLen, hashLen + 32); // another setup's real sk, reused as our synthetic dummy sk
+    return Buffer.from(
+      Uint8Array.from([...seedAndRealSk, ...dummySk]),
+    ).toString("base64url");
+  }
+
+  test("preserves the oprfSeed and real AKE private key bytes unchanged", () => {
+    // The real key material -- everything a registrationRecord is actually
+    // bound to -- must pass through byte-for-byte; only the trailing
+    // dummy-key field's encoding changes. (We can't drive a real protocol
+    // call with the *unmigrated* v3-shaped bytes here to prove this
+    // end-to-end in-repo, since for P-256 they're a byte too short for a v4
+    // parser by construction -- that mismatch is exactly the bug this
+    // function fixes. That end-to-end case -- a genuine 0.9.x registration
+    // read by a genuine 1.x login after migration -- was verified directly
+    // against the published 0.9.0 and 1.1.0 npm packages during development
+    // of this feature.)
+    const v3Setup = buildV3ShapedSetup();
+    const migratedSetup = opaque.server.migrateSetupFromV3(v3Setup);
+
+    const preservedLen = hashLen + 32; // oprfSeed || realAkeSk
+    const v3Bytes = Buffer.from(v3Setup, "base64url");
+    const migratedBytes = Buffer.from(migratedSetup, "base64url");
+    expect(migratedBytes.subarray(0, preservedLen)).toEqual(
+      v3Bytes.subarray(0, preservedLen),
+    );
+  });
+
+  test("migrated setup is fully functional for registration and login", () => {
+    const userIdentifier = "migrated-user";
+    const password = "hunter42";
+    const migratedSetup =
+      opaque.server.migrateSetupFromV3(buildV3ShapedSetup());
+
+    const { clientRegistrationState, registrationRequest } =
+      opaque.client.startRegistration({ password });
+    const { registrationResponse } = opaque.server.createRegistrationResponse({
+      serverSetup: migratedSetup,
+      userIdentifier,
+      registrationRequest,
+    });
+    const { registrationRecord, exportKey: exportKeyAtRegistration } =
+      opaque.client.finishRegistration({
+        clientRegistrationState,
+        registrationResponse,
+        password,
+      });
+
+    const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+      password,
+    });
+    const { loginResponse } = opaque.server.startLogin({
+      serverSetup: migratedSetup,
+      registrationRecord,
+      startLoginRequest,
+      userIdentifier,
+    });
+    const loginResult = opaque.client.finishLogin({
+      clientLoginState,
+      loginResponse,
+      password,
+    });
+
+    expect(loginResult).not.toBeUndefined();
+    if (!loginResult) throw new TypeError(); // for typescript
+
+    expect(loginResult.exportKey).toEqual(exportKeyAtRegistration);
+  });
+
+  test("migration is not a no-op: it actually rewrites the trailing dummy-key field", () => {
+    // For Ristretto255 the dummy private scalar and its derived public point
+    // are both 32 bytes, so a v3-shaped setup happens to be the same total
+    // length as a real v4 one -- but the trailing field's *content* changes
+    // (a private scalar is not its own public key), which is the whole
+    // reason a real, unmigrated v3 setup fails against a v4 build.
+    const v3Setup = buildV3ShapedSetup();
+    expect(opaque.server.migrateSetupFromV3(v3Setup)).not.toEqual(v3Setup);
+  });
+
+  test("wrong length", () => {
+    expect(() => opaque.server.migrateSetupFromV3("")).toThrow(
+      "unexpected opaque-ke v3 serverSetup length: got 0 bytes",
+    );
+  });
+
+  test("invalid encoding", () => {
+    expect(() => opaque.server.migrateSetupFromV3("a")).toThrow(
+      'base64 decoding failed at "serverSetup (opaque-ke v3)"; Invalid input length: 1',
+    );
+  });
+});
