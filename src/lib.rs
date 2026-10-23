@@ -12,8 +12,9 @@ use opaque_ke::{
 
 use base64::{engine::general_purpose as b64, Engine as _};
 use generic_array::{ArrayLength, GenericArray};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use tsify::Tsify;
+use tsify::{Ts, Tsify};
 use wasm_bindgen::prelude::*;
 
 // #[wasm_bindgen]
@@ -42,6 +43,9 @@ enum Error {
         context: &'static str,
         error: InternalError,
     },
+    Conversion {
+        error: tsify::Error,
+    },
 }
 
 fn from_base64_error(context: &'static str) -> impl Fn(base64::DecodeError) -> Error {
@@ -64,6 +68,13 @@ impl From<Error> for JsError {
             Error::Internal { context, error } => {
                 format!("Internal error at \"{}\"; {}", context, error)
             }
+            // Only the serde message, e.g. "Error: missing field `password`",
+            // so messages stay as they were when tsify deserialized params at
+            // the wasm boundary.
+            Error::Conversion { error } => match std::error::Error::source(&error) {
+                Some(source) => source.to_string(),
+                None => error.to_string(),
+            },
         };
         JsError::new(&msg)
     }
@@ -153,6 +164,19 @@ fn base64_decode<T: AsRef<[u8]>>(context: &'static str, input: T) -> JsResult<Ve
     BASE64.decode(input).map_err(from_base64_error(context))
 }
 
+// Params cross the wasm boundary as `Ts<T>` and are deserialized here, so
+// invalid input returns an error instead of throwing past Rust frames and
+// leaking their memory (https://github.com/madonoharu/tsify/issues/65).
+fn from_ts<T>(params: Ts<T>) -> JsResult<T>
+where
+    T: Tsify + DeserializeOwned,
+    T::JsType: Clone,
+{
+    params
+        .to_rust()
+        .map_err(|error| Error::Conversion { error })
+}
+
 #[wasm_bindgen(js_name = createServerSetup)]
 pub fn create_server_setup() -> String {
     let mut rng: OsRng = OsRng;
@@ -194,7 +218,6 @@ fn get_identifiers(idents: &Option<CustomIdentifiers>) -> Identifiers<'_> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 enum KeyStretchingFunctionConfig {
     #[serde(rename = "rfc-recommended")]
     RfcRecommended,
@@ -215,7 +238,6 @@ enum KeyStretchingFunctionConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct CreateServerRegistrationResponseParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
@@ -226,7 +248,6 @@ pub struct CreateServerRegistrationResponseParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct CreateServerRegistrationResponseResult {
     #[serde(rename = "registrationResponse")]
     registration_response: String,
@@ -234,8 +255,9 @@ pub struct CreateServerRegistrationResponseResult {
 
 #[wasm_bindgen(js_name = createServerRegistrationResponse)]
 pub fn create_server_registration_response(
-    params: CreateServerRegistrationResponseParams,
-) -> Result<CreateServerRegistrationResponseResult, JsError> {
+    params: Ts<CreateServerRegistrationResponseParams>,
+) -> Result<Ts<CreateServerRegistrationResponseResult>, JsError> {
+    let params = from_ts(params)?;
     let server_setup = decode_server_setup(params.server_setup)?;
     let registration_request_bytes =
         base64_decode("registrationRequest", params.registration_request)?;
@@ -248,13 +270,13 @@ pub fn create_server_registration_response(
     .map_err(from_protocol_error("start server registration"))?;
     let registration_response_bytes = server_registration_start_result.message.serialize();
 
-    Ok(CreateServerRegistrationResponseResult {
+    let result = CreateServerRegistrationResponseResult {
         registration_response: BASE64.encode(registration_response_bytes),
-    })
+    };
+    Ok(result.into_ts()?)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct StartServerLoginParams {
     #[serde(rename = "serverSetup")]
     server_setup: String,
@@ -270,7 +292,6 @@ pub struct StartServerLoginParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct StartServerLoginResult {
     #[serde(rename = "serverLoginState")]
     server_login_state: String,
@@ -280,8 +301,9 @@ pub struct StartServerLoginResult {
 
 #[wasm_bindgen(js_name = startServerLogin)]
 pub fn start_server_login(
-    params: StartServerLoginParams,
-) -> Result<StartServerLoginResult, JsError> {
+    params: Ts<StartServerLoginParams>,
+) -> Result<Ts<StartServerLoginResult>, JsError> {
+    let params = from_ts(params)?;
     let server_setup = decode_server_setup(params.server_setup)?;
     let registration_record_bytes = match params.registration_record {
         Some(pw) => base64_decode("registrationRecord", pw).map(Some),
@@ -322,11 +344,10 @@ pub fn start_server_login(
         server_login_state,
         login_response,
     };
-    Ok(result)
+    Ok(result.into_ts()?)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct FinishServerLoginParams {
     #[serde(rename = "serverLoginState")]
     server_login_state: String,
@@ -337,7 +358,6 @@ pub struct FinishServerLoginParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct FinishServerLoginResult {
     #[serde(rename = "sessionKey")]
     session_key: String,
@@ -345,8 +365,9 @@ pub struct FinishServerLoginResult {
 
 #[wasm_bindgen(js_name = finishServerLogin)]
 pub fn finish_server_login(
-    params: FinishServerLoginParams,
-) -> Result<FinishServerLoginResult, JsError> {
+    params: Ts<FinishServerLoginParams>,
+) -> Result<Ts<FinishServerLoginResult>, JsError> {
+    let params = from_ts(params)?;
     let credential_finalization_bytes =
         base64_decode("finishLoginRequest", params.finish_login_request)?;
     let state_bytes = base64_decode("serverLoginState", params.server_login_state)?;
@@ -365,19 +386,18 @@ pub fn finish_server_login(
             finish_params,
         )
         .map_err(from_protocol_error("finish server login"))?;
-    Ok(FinishServerLoginResult {
+    let result = FinishServerLoginResult {
         session_key: BASE64.encode(server_login_finish_result.session_key),
-    })
+    };
+    Ok(result.into_ts()?)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct StartClientLoginParams {
     password: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct StartClientLoginResult {
     #[serde(rename = "clientLoginState")]
     client_login_state: String,
@@ -387,8 +407,9 @@ pub struct StartClientLoginResult {
 
 #[wasm_bindgen(js_name = startClientLogin)]
 pub fn start_client_login(
-    params: StartClientLoginParams,
-) -> Result<StartClientLoginResult, JsError> {
+    params: Ts<StartClientLoginParams>,
+) -> Result<Ts<StartClientLoginResult>, JsError> {
+    let params = from_ts(params)?;
     let mut client_rng = OsRng;
     let client_login_start_result =
         ClientLogin::<DefaultCipherSuite>::start(&mut client_rng, params.password.as_bytes())
@@ -398,11 +419,10 @@ pub fn start_client_login(
         client_login_state: BASE64.encode(client_login_start_result.state.serialize()),
         start_login_request: BASE64.encode(client_login_start_result.message.serialize()),
     };
-    Ok(result)
+    Ok(result.into_ts()?)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct FinishClientLoginParams {
     #[serde(rename = "clientLoginState")]
     client_login_state: String,
@@ -417,7 +437,6 @@ pub struct FinishClientLoginParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct FinishClientLoginResult {
     #[serde(rename = "finishLoginRequest")]
     finish_login_request: String,
@@ -431,8 +450,9 @@ pub struct FinishClientLoginResult {
 
 #[wasm_bindgen(js_name = finishClientLogin)]
 pub fn finish_client_login(
-    params: FinishClientLoginParams,
-) -> Result<Option<FinishClientLoginResult>, JsError> {
+    params: Ts<FinishClientLoginParams>,
+) -> Result<Option<Ts<FinishClientLoginResult>>, JsError> {
+    let params = from_ts(params)?;
     let mut client_rng = OsRng;
     let custom_ksf = get_custom_ksf(params.key_stretching_function_config)?;
 
@@ -461,22 +481,21 @@ pub fn finish_client_login(
     }
     let client_login_finish_result = result.unwrap();
 
-    Ok(Some(FinishClientLoginResult {
+    let result = FinishClientLoginResult {
         finish_login_request: BASE64.encode(client_login_finish_result.message.serialize()),
         session_key: BASE64.encode(client_login_finish_result.session_key),
         export_key: BASE64.encode(client_login_finish_result.export_key),
         server_static_public_key: BASE64.encode(client_login_finish_result.server_s_pk.serialize()),
-    }))
+    };
+    Ok(Some(result.into_ts()?))
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct StartClientRegistrationParams {
     password: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct StartClientRegistrationResult {
     #[serde(rename = "clientRegistrationState")]
     client_registration_state: String,
@@ -486,8 +505,9 @@ pub struct StartClientRegistrationResult {
 
 #[wasm_bindgen(js_name = startClientRegistration)]
 pub fn start_client_registration(
-    params: StartClientRegistrationParams,
-) -> Result<StartClientRegistrationResult, JsError> {
+    params: Ts<StartClientRegistrationParams>,
+) -> Result<Ts<StartClientRegistrationResult>, JsError> {
+    let params = from_ts(params)?;
     let mut client_rng = OsRng;
 
     let client_registration_start_result = ClientRegistration::<DefaultCipherSuite>::start(
@@ -501,11 +521,10 @@ pub fn start_client_registration(
             .encode(client_registration_start_result.state.serialize()),
         registration_request: BASE64.encode(client_registration_start_result.message.serialize()),
     };
-    Ok(result)
+    Ok(result.into_ts()?)
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct FinishClientRegistrationParams {
     password: String,
     #[serde(rename = "registrationResponse")]
@@ -520,7 +539,6 @@ pub struct FinishClientRegistrationParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct FinishClientRegistrationResult {
     #[serde(rename = "registrationRecord")]
     registration_record: String,
@@ -532,8 +550,9 @@ pub struct FinishClientRegistrationResult {
 
 #[wasm_bindgen(js_name = finishClientRegistration)]
 pub fn finish_client_registration(
-    params: FinishClientRegistrationParams,
-) -> Result<FinishClientRegistrationResult, JsError> {
+    params: Ts<FinishClientRegistrationParams>,
+) -> Result<Ts<FinishClientRegistrationResult>, JsError> {
+    let params = from_ts(params)?;
     let custom_ksf = get_custom_ksf(params.key_stretching_function_config)?;
 
     let registration_response_bytes =
@@ -566,5 +585,5 @@ pub fn finish_client_registration(
         server_static_public_key: BASE64
             .encode(client_finish_registration_result.server_s_pk.serialize()),
     };
-    Ok(result)
+    Ok(result.into_ts()?)
 }
