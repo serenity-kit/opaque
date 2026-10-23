@@ -74,3 +74,5 @@ Is managed via the Github CI
 You can publish running the `Release` action here: https://github.com/serenity-kit/opaque/actions/workflows/release.yml
 
 Besides publishing to npm this also creates a git tag and a Github release per package, using the changelog entry of the released version as release notes.
+
+Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so there is no npm token stored in the repository. Both packages have `serenity-kit/opaque` with the workflow file `release.yml` configured as trusted publisher on npmjs.com. If you rename that workflow file, update the trusted publisher of both packages too.
