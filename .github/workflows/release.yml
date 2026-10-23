@@ -32,6 +32,9 @@ jobs:
         with:
           version: pnpm changeset-version
           publish: pnpm changeset-publish
+        # no NPM_TOKEN on purpose: npm authenticates the publish with trusted
+        # publishing (OIDC via `id-token: write`), configured on npmjs.com for
+        # this workflow file. With an NPM_TOKEN set, changesets/action would
+        # write it to .npmrc instead.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
