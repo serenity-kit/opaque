@@ -14,13 +14,16 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v6
+      # @changesets/changelog-github is ESM only and needs a Node version that
+      # supports require(esm), so don't rely on the runner's default Node
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
       - name: install wasm-bindgen-cli
         run: cargo install wasm-bindgen-cli
       - name: install wasm-unknown-unknown target
         run: rustup target add wasm32-unknown-unknown
       - uses: pnpm/action-setup@v4
-      - name: install dependencies
-        run: pnpm install
       - name: install dependencies
         run: pnpm install
       - name: Create Release Pull Request or Publish to npm

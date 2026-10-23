@@ -1,8 +1,11 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
-  "changelog": "@changesets/cli/changelog",
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "serenity-kit/opaque" }
+  ],
   "commit": false,
-  "fixed": [],
+  "fixed": [["@serenity-kit/opaque", "@serenity-kit/opaque-p256"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

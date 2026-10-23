@@ -6,4 +6,5 @@ wasm-pack.log
 node_modules
 /build/*/**
 !/build/*/package.json
+!/build/*/CHANGELOG.md
 .env
