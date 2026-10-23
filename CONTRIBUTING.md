@@ -65,6 +65,8 @@ It opens a `Version Packages` pull request which bumps both packages and turns t
 
 The changelog is generated from the changesets, so the text you write in a changeset is what users end up reading. It is written to `build/ristretto/CHANGELOG.md` and `build/p256/CHANGELOG.md` (both are committed and shipped to npm) and mirrored to the [CHANGELOG.md](./CHANGELOG.md) in the repository root. Don't edit these files by hand.
 
+Both packages always get the same entry. If a changeset names only one of them, `pnpm changeset-version` adds the other one before generating the changelogs.
+
 ## Publish
 
 Is managed via the Github CI

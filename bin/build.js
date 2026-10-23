@@ -133,6 +133,17 @@ function tsc(entry) {
 function main() {
   sh.rm("-rf", "build");
 
+  // write the committed files back right away, so a failing build step below
+  // can't delete them (the next build reads the version from package.json)
+  sh.mkdir("-p", "build/ristretto", "build/p256");
+  packageJson("opaque").to("build/ristretto/package.json");
+  packageJson("opaque-p256").to("build/p256/package.json");
+  Object.entries(changelogs).forEach(([buildName, changelog]) => {
+    if (changelog != null) {
+      fs.writeFileSync(`build/${buildName}/CHANGELOG.md`, changelog);
+    }
+  });
+
   // build rust code and generate wasm bindings
   build_wbg();
 
@@ -147,17 +158,6 @@ function main() {
   // run rollup to bundle the js with wasm inlined and also bundle d.ts files
   rollup("ristretto");
   rollup("p256");
-
-  // write package json
-  packageJson("opaque").to("build/ristretto/package.json");
-  packageJson("opaque-p256").to("build/p256/package.json");
-
-  // restore the changelogs removed by the `rm -rf build` above
-  Object.entries(changelogs).forEach(([buildName, changelog]) => {
-    if (changelog != null) {
-      fs.writeFileSync(`build/${buildName}/CHANGELOG.md`, changelog);
-    }
-  });
 
   // create bin folder
   sh.mkdir("build/ristretto/bin", "build/p256/bin");

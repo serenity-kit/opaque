@@ -32,7 +32,7 @@
     "test:p256": "cross-env OPAQUE_BUILD=p256 vitest run",
     "test:ristretto": "vitest run",
     "test": "pnpm test:p256 && pnpm test:ristretto",
-    "changeset-version": "pnpm changeset version && node ./bin/sync-changelog.js && pnpm prettier --write CHANGELOG.md",
+    "changeset-version": "node ./bin/sync-fixed-changesets.js && pnpm changeset version && node ./bin/sync-changelog.js && pnpm prettier --write CHANGELOG.md",
     "changeset-publish": "pnpm build && pnpm changeset publish",
     "typecheck": "tsc --noEmit && pnpm typecheck:fullstack-simple-nextjs && pnpm typecheck:fullstack-e2e-encrypted-locker-nextjs",
     "typecheck:fullstack-simple-nextjs": "cd examples/fullstack-simple-nextjs && tsc --noEmit",
