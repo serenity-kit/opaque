@@ -1181,3 +1181,36 @@ describe("server.getPublicKey", () => {
     ).toThrow('opaque protocol error at "deserialize serverSetup";');
   });
 });
+
+describe("invalid params", () => {
+  // Params used to be deserialized at the wasm boundary, where a failure threw
+  // past Rust frames without unwinding them. A few thousand such calls
+  // exhausted the wasm stack and every later call failed with
+  // "memory access out of bounds".
+  test("repeated failures leave the instance usable", () => {
+    const serverSetup = opaque.server.createSetup();
+    const { registrationRequest } = opaque.client.startRegistration({
+      password: "hunter2",
+    });
+    for (let i = 0; i < 20000; i++) {
+      expect(() =>
+        opaque.server.createRegistrationResponse({
+          serverSetup,
+          userIdentifier: "user1",
+          // @ts-expect-error intentional test of invalid input
+          registrationRequest: 123,
+        }),
+      ).toThrow("invalid type: floating point `123.0`, expected a string");
+      expect(() =>
+        // @ts-expect-error intentional test of invalid input
+        opaque.client.startLogin({}),
+      ).toThrow("missing field `password`");
+    }
+    const { registrationResponse } = opaque.server.createRegistrationResponse({
+      serverSetup,
+      userIdentifier: "user1",
+      registrationRequest,
+    });
+    expect(typeof registrationResponse).toBe("string");
+  });
+});
