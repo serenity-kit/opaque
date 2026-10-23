@@ -3,6 +3,16 @@
 All notable changes to `@serenity-kit/opaque` and `@serenity-kit/opaque-p256`.
 Both packages are released together and share the same version and entries.
 
+## 1.1.1
+
+### Patch Changes
+
+- [#188](https://github.com/serenity-kit/opaque/pull/188) [`d0c76db`](https://github.com/serenity-kit/opaque/commit/d0c76db7ace3bd01b64bcf399b5897f05c8ca34e) Thanks [@nikgraf](https://github.com/nikgraf)! - Ship a `CHANGELOG.md` with the package. The changelog generated from the changesets was previously discarded by the build and never committed, so releases had no release notes.
+
+- [#187](https://github.com/serenity-kit/opaque/pull/187) [`c89f6f5`](https://github.com/serenity-kit/opaque/commit/c89f6f5853b806dff1a681a7fb447316603b18d8) Thanks [@forty](https://github.com/forty)! - Include more detail in protocol error messages. Previously distinct failures were collapsed into a generic `Internal error encountered`, and length mismatches rendered unsubstituted placeholders (``Invalid length for `name`: expected `len`, but is actually `actual_len`.``). Errors now carry the underlying cause, e.g. `LibraryError(OprfError(Deserialization))` and `SizeError { name: "mac", len: 64, actual_len: 0 }`. Note that the text of these messages has changed; do not match on it programmatically.
+
+- [#190](https://github.com/serenity-kit/opaque/pull/190) [`d0db6d4`](https://github.com/serenity-kit/opaque/commit/d0db6d485fdd4f391ad10eccc8fb090c36c4c571) Thanks [@nikgraf](https://github.com/nikgraf)! - Fix a memory leak when a client or server function is called with params of the wrong shape, for example a missing field, a number where a string belongs, or an unknown `keyStretching` value. Each such call leaked WASM memory, and after a few thousand of them the instance broke: every later call, valid or not, threw `RuntimeError: memory access out of bounds` until the process restarted. A server that passes unvalidated request bodies to `server.createRegistrationResponse`, `server.startLogin` or `server.finishLogin` could be pushed into that state by malformed requests. These calls now throw the same error as before and leave the instance usable. Types and error messages are unchanged.
+
 ## 1.1.0
 
 ### Minor Changes
