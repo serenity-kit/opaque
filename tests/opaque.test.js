@@ -1181,3 +1181,238 @@ describe("server.getPublicKey", () => {
     ).toThrow('opaque protocol error at "deserialize serverSetup";');
   });
 });
+
+describe("server.migrateSetupFromV3", () => {
+  // Created with the published @serenity-kit/opaque@0.9.0 and
+  // @serenity-kit/opaque-p256@0.9.0 (opaque-ke 3.x). Neither setup loads in
+  // 1.x without migration.
+  const v090Fixtures = {
+    ristretto: {
+      serverSetup:
+        "f7GoiUTbU4qyEjxW7V4KqlzFk9bzl9jLtCE67eDFVGlpSMyvTsp5Pldxws49YPR_UUwiEUI4u6YNWKlJHFPg0Nfll1JEWwUjHkyHd6PNOWIEmJJC_N1g6dzCGMCMkssJVcItSSAlX3Z3OvNgwczxjQZDFP3f2V7Qb-ILRfH41Qs",
+      userIdentifier: "user-registered-with-0.9.0",
+      password: "password-from-0.9.0",
+      registrationRecord:
+        "BjDSKUN49bG4SRzntLQL5oVNHA3HhiK2Udm6rvys7EnR_XMOlHhdrssrA0gt-e_zJEHWoO221Ave_PHpcDsltwRoia-A0KSmX8nwo2XjubY73rOp9CFdGJvtab2DfBYs7jvLtTq2h_uyi7_E1ZjA2tY84ymoXMXwY-kFAJyo7p_790kFKVqA6ZWjmr1cPuD8HdGCgr5AdETCSupS3XTE-F-C2qou0ZLtkP_684PWN8HlJS-GRYgkj8eTTGotOC4k",
+      exportKey:
+        "_KDhrNESr3AEXOYEw5OmESjU-jKLJj6S7_WjghvdapTrsYCC3ztfLJwEE2ck_TYNQC0kpeN5kzVa-gshXbYFDA",
+      serverStaticPublicKey: "dC4D1Wt4wpqPEWyai8aDaHGUM8HL4oeR2H7ygMF1qms",
+    },
+    p256: {
+      serverSetup:
+        "EKalZwHxW5VzqRKswOmgIO3STwdJLT80hkVRf15KepOa3Nk0peyFpGJ7J-7WySuCHKIxAJPdCPlrGO7ZZXCX7Wn3PmNoplas8eesxw9KQ_BQo_h5gKbB8MKZttTYVzSO",
+      userIdentifier: "user-registered-with-0.9.0",
+      password: "password-from-0.9.0",
+      registrationRecord:
+        "AgzIw1LsZjpxTiy4MmpIwHgmpC7aOZvc88Yp-uyBGo44pvaj_9S4Y7cb83jTYGdCSYYi5DDKzehfMexzUpSlIBGruZ3-JyQhu0GaykhS8LPsikkYJJ-BjHG2g44jjT_L2zNPFAaFBig_pbQzi48lVI7nUZ7h52Rri-RMoS7Fgs2W",
+      exportKey: "NiJ2-2sbNq35pMUov-0BcHe08w8-U8VrlnIGb4jvDto",
+      serverStaticPublicKey: "AiVZUBHuBy5olyQ5i9Ug9XdlGsfVTUnXAtIfObwp6bwH",
+    },
+  };
+  const isP256 = process.env.OPAQUE_BUILD === "p256";
+  const v090 = isP256 ? v090Fixtures.p256 : v090Fixtures.ristretto;
+  const v090OtherCurve = isP256 ? v090Fixtures.ristretto : v090Fixtures.p256;
+  const packageName = isP256
+    ? "@serenity-kit/opaque-p256"
+    : "@serenity-kit/opaque";
+
+  /**
+   * @param {string} serverSetup
+   * @param {string} registrationRecord
+   * @param {string} userIdentifier
+   * @param {string} password
+   */
+  function login(serverSetup, registrationRecord, userIdentifier, password) {
+    const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+      password,
+    });
+    const { serverLoginState, loginResponse } = opaque.server.startLogin({
+      serverSetup,
+      registrationRecord,
+      startLoginRequest,
+      userIdentifier,
+    });
+    const loginResult = opaque.client.finishLogin({
+      clientLoginState,
+      loginResponse,
+      password,
+    });
+    if (!loginResult) return undefined;
+    const { sessionKey } = opaque.server.finishLogin({
+      serverLoginState,
+      finishLoginRequest: loginResult.finishLoginRequest,
+    });
+    return { ...loginResult, serverSessionKey: sessionKey };
+  }
+
+  // Builds a byte-compatible stand-in for a v3 (opaque-ke 3.x / opaque 0.9.x)
+  // serverSetup -- oprfSeed || realAkeSk || dummyAkeSk, all canonical scalars
+  // -- without depending on the old crate version. We get canonical scalars
+  // for free by slicing them out of two real v4 setups: v4's own layout is
+  // oprfSeed || realAkeSk || dummyAkePk, so the first 32/64+32 bytes of any
+  // v4 setup are already a valid seed+privkey pair for this build's group.
+  // The result shares its oprfSeed and real AKE key with `serverSetup`.
+  function buildV3ShapedSetup(serverSetup = opaque.server.createSetup()) {
+    const a = new Uint8Array(Buffer.from(serverSetup, "base64url"));
+    const b = new Uint8Array(
+      Buffer.from(opaque.server.createSetup(), "base64url"),
+    );
+    const seedAndRealSk = a.slice(0, hashLen + 32);
+    const dummySk = b.slice(hashLen, hashLen + 32); // another setup's real sk, reused as our synthetic dummy sk
+    return Buffer.from(
+      Uint8Array.from([...seedAndRealSk, ...dummySk]),
+    ).toString("base64url");
+  }
+
+  test("preserves the oprfSeed and real AKE private key bytes unchanged", () => {
+    // The real key material -- everything a registrationRecord is actually
+    // bound to -- must pass through byte-for-byte; only the trailing
+    // dummy-key field's encoding changes.
+    const v3Setup = buildV3ShapedSetup();
+    const migratedSetup = opaque.server.migrateSetupFromV3(v3Setup);
+
+    const preservedLen = hashLen + 32; // oprfSeed || realAkeSk
+    const v3Bytes = Buffer.from(v3Setup, "base64url");
+    const migratedBytes = Buffer.from(migratedSetup, "base64url");
+    expect(migratedBytes.subarray(0, preservedLen)).toEqual(
+      v3Bytes.subarray(0, preservedLen),
+    );
+  });
+
+  test("migrated setup is fully functional for registration and login", () => {
+    const userIdentifier = "migrated-user";
+    const password = "hunter42";
+    const migratedSetup =
+      opaque.server.migrateSetupFromV3(buildV3ShapedSetup());
+
+    const { clientRegistrationState, registrationRequest } =
+      opaque.client.startRegistration({ password });
+    const { registrationResponse } = opaque.server.createRegistrationResponse({
+      serverSetup: migratedSetup,
+      userIdentifier,
+      registrationRequest,
+    });
+    const { registrationRecord, exportKey: exportKeyAtRegistration } =
+      opaque.client.finishRegistration({
+        clientRegistrationState,
+        registrationResponse,
+        password,
+      });
+
+    const { clientLoginState, startLoginRequest } = opaque.client.startLogin({
+      password,
+    });
+    const { loginResponse } = opaque.server.startLogin({
+      serverSetup: migratedSetup,
+      registrationRecord,
+      startLoginRequest,
+      userIdentifier,
+    });
+    const loginResult = opaque.client.finishLogin({
+      clientLoginState,
+      loginResponse,
+      password,
+    });
+
+    expect(loginResult).not.toBeUndefined();
+    if (!loginResult) throw new TypeError(); // for typescript
+
+    expect(loginResult.exportKey).toEqual(exportKeyAtRegistration);
+  });
+
+  test("registration records created before migration keep working", () => {
+    const userIdentifier = "user-registered-before-migration";
+    const password = "hunter42";
+    // Registration only uses the oprfSeed and the real AKE key, which the
+    // v3-shaped setup shares with serverSetup.
+    const { serverSetup, registrationRecord, exportKey } = setupAndRegister(
+      userIdentifier,
+      password,
+    );
+    const migratedSetup = opaque.server.migrateSetupFromV3(
+      buildV3ShapedSetup(serverSetup),
+    );
+
+    const result = login(
+      migratedSetup,
+      registrationRecord,
+      userIdentifier,
+      password,
+    );
+    expect(result).not.toBeUndefined();
+    if (!result) throw new TypeError(); // for typescript
+    expect(result.exportKey).toEqual(exportKey);
+    expect(result.sessionKey).toEqual(result.serverSessionKey);
+  });
+
+  test("a 0.9.0 setup can't be used without migration", () => {
+    expect(() => opaque.server.getPublicKey(v090.serverSetup)).toThrow(
+      'opaque protocol error at "deserialize serverSetup"',
+    );
+  });
+
+  test("registration records created with 0.9.0 log in after migration", () => {
+    const migratedSetup = opaque.server.migrateSetupFromV3(v090.serverSetup);
+    expect(opaque.server.getPublicKey(migratedSetup)).toEqual(
+      v090.serverStaticPublicKey,
+    );
+
+    const result = login(
+      migratedSetup,
+      v090.registrationRecord,
+      v090.userIdentifier,
+      v090.password,
+    );
+    expect(result).not.toBeUndefined();
+    if (!result) throw new TypeError(); // for typescript
+    expect(result.exportKey).toEqual(v090.exportKey);
+    expect(result.serverStaticPublicKey).toEqual(v090.serverStaticPublicKey);
+    expect(result.sessionKey).toEqual(result.serverSessionKey);
+
+    expect(
+      login(
+        migratedSetup,
+        v090.registrationRecord,
+        v090.userIdentifier,
+        "wrong-password",
+      ),
+    ).toBeUndefined();
+  });
+
+  test("migration is not a no-op: it actually rewrites the trailing dummy-key field", () => {
+    // For Ristretto255 the dummy private scalar and its derived public point
+    // are both 32 bytes, so a v3-shaped setup happens to be the same total
+    // length as a real v4 one -- but the trailing field's *content* changes
+    // (a private scalar is not its own public key), which is the whole
+    // reason a real, unmigrated v3 setup fails against a v4 build.
+    const v3Setup = buildV3ShapedSetup();
+    expect(opaque.server.migrateSetupFromV3(v3Setup)).not.toEqual(v3Setup);
+  });
+
+  test("wrong length", () => {
+    expect(() => opaque.server.migrateSetupFromV3("")).toThrow(
+      "unexpected opaque-ke v3 serverSetup length: got 0 bytes",
+    );
+  });
+
+  test("setup that is already migrated", () => {
+    const migratedSetup = opaque.server.migrateSetupFromV3(v090.serverSetup);
+    expect(() => opaque.server.migrateSetupFromV3(migratedSetup)).toThrow(
+      "serverSetup is already in the opaque-ke v4 format",
+    );
+  });
+
+  test("setup from the other curve", () => {
+    expect(() =>
+      opaque.server.migrateSetupFromV3(v090OtherCurve.serverSetup),
+    ).toThrow(
+      `Was the old serverSetup created with the same package (${packageName}) you are running now?`,
+    );
+  });
+
+  test("invalid encoding", () => {
+    expect(() => opaque.server.migrateSetupFromV3("a")).toThrow(
+      'base64 decoding failed at "serverSetup (opaque-ke v3)"; Invalid input length: 1',
+    );
+  });
+});

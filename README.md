@@ -462,6 +462,22 @@ if (!loginResult) {
 const { finishLoginRequest, sessionKey } = loginResult;
 ```
 
+### Migrating a Server Setup from 0.9.x
+
+Version 1.0.0 upgraded opaque-ke to 4.0.0, which changed how the server setup is stored. A server setup created with 0.9.x has to be converted once before 1.x can use it:
+
+```bash
+npx @serenity-kit/opaque@latest migrate-server-setup-from-v3 "<old server setup string>"
+```
+
+Alternatively the functionality is exposed via
+
+```ts
+const serverSetup = opaque.server.migrateSetupFromV3(oldServerSetup);
+```
+
+The OPRF seed and the server's private key are kept, so existing registration records and the server static public key keep working. Run the migration only once, on the setup created with 0.9.x, and use `@serenity-kit/opaque-p256` for a setup created with the P-256 package.
+
 ### P256 Support
 
 The default implementation uses [ristretto255](https://ristretto.group/) for the OPRF and the group mode.

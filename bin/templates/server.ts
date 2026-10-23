@@ -9,6 +9,7 @@ export {
   finishServerLogin as finishLogin,
   createServerRegistrationResponse as createRegistrationResponse,
   getServerPublicKey as getPublicKey,
+  migrateServerSetupFromV3 as migrateSetupFromV3,
 } from "./opaque";
 
 export type {

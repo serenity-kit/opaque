@@ -1,6 +1,7 @@
 use argon2::{Algorithm, Argon2, ParamsBuilder, Version};
 use opaque_ke::ciphersuite::CipherSuite;
 use opaque_ke::errors::{InternalError, ProtocolError};
+use opaque_ke::keypair::PrivateKey;
 use opaque_ke::ksf::Ksf;
 use opaque_ke::rand::rngs::OsRng;
 use opaque_ke::{
@@ -84,6 +85,33 @@ impl CipherSuite for DefaultCipherSuite {
     type KeyExchange = opaque_ke::TripleDh<p256::NistP256, sha2::Sha256>;
     type Ksf = CustomKsf;
 }
+
+// Used only by `migrate_server_setup_from_v3` below. Must match the group
+// backing `DefaultCipherSuite::KeyExchange` for the active build (Ristretto255
+// or P-256): opaque-ke 4.x's `TripleDh<G, H>` sets its `Group` associated type
+// to `G` directly, so this is the same group either build already uses.
+#[cfg(not(feature = "p256"))]
+type MigrationGroup = opaque_ke::Ristretto255;
+#[cfg(feature = "p256")]
+type MigrationGroup = p256::NistP256;
+
+// opaque-ke v3 (the version behind opaque 0.9.x) OPRF seed length: the output
+// size of the cipher suite's hash function (Sha512 for Ristretto255, Sha256
+// for P-256). Unchanged in v4 -- only the trailing dummy-key field differs.
+#[cfg(not(feature = "p256"))]
+const V3_OPRF_SEED_LEN: usize = 64;
+#[cfg(feature = "p256")]
+const V3_OPRF_SEED_LEN: usize = 32;
+
+// Private scalar length, identical for the real and dummy keys, unchanged
+// between v3 and v4 (32 bytes for both Ristretto255 and P-256).
+const V3_SK_LEN: usize = 32;
+
+// npm package this build ships as, named in migration error messages.
+#[cfg(not(feature = "p256"))]
+const PACKAGE_NAME: &str = "@serenity-kit/opaque";
+#[cfg(feature = "p256")]
+const PACKAGE_NAME: &str = "@serenity-kit/opaque-p256";
 
 const BASE64: b64::GeneralPurpose = b64::URL_SAFE_NO_PAD;
 
@@ -172,6 +200,91 @@ pub fn get_server_public_key(data: String) -> Result<String, JsError> {
     let server_setup = decode_server_setup(data)?;
     let pub_key = server_setup.keypair().public().serialize();
     Ok(BASE64.encode(pub_key))
+}
+
+/// Converts a `serverSetup` produced by opaque-ke v3 (the version behind
+/// `@serenity-kit/opaque` 0.9.x) into the format required by opaque-ke v4
+/// (the version this build uses). This is a re-encoding, not a key rotation:
+/// the OPRF seed and the real server AKE private key are copied through
+/// unchanged, since opaque-ke 4.0.0 only changed how the internal "dummy
+/// user" record is stored -- a private scalar in v3, the corresponding
+/// public key in v4 (see opaque-ke's CHANGELOG.md, 4.0.0 entry). Because the
+/// real key material is untouched, existing `registrationRecord`s keep
+/// working against the migrated setup with no changes of their own.
+///
+/// Only supports the cipher suite this build was compiled for: if the old
+/// setup was produced by a P-256 build, this must also be run from a P-256
+/// build (and likewise for the default Ristretto255 build) -- the two
+/// curves are unrelated groups and neither can substitute for the other.
+///
+/// Run it exactly once, on the setup created with 0.9.x. A setup that is
+/// already in the v4 format is rejected whenever it can be told apart, but
+/// for Ristretto255 both formats have the same length, so roughly one in ten
+/// v4 setups also parses as a v3 one and would be re-encoded again.
+#[wasm_bindgen(js_name = migrateServerSetupFromV3)]
+pub fn migrate_server_setup_from_v3(data: String) -> Result<String, JsError> {
+    // Unlike the other functions in this file, this one's primary use case
+    // is a value pasted in from a shell/config file, which commonly carries
+    // a trailing newline or stray whitespace -- trim it rather than making
+    // every caller do so.
+    let bytes = base64_decode("serverSetup (opaque-ke v3)", data.trim())?;
+
+    let expected_len = V3_OPRF_SEED_LEN + V3_SK_LEN + V3_SK_LEN;
+    if bytes.len() != expected_len {
+        if is_v4_server_setup(&bytes) {
+            return Err(already_migrated_error());
+        }
+        return Err(JsError::new(&format!(
+            "unexpected opaque-ke v3 serverSetup length: got {} bytes, expected {} \
+             (oprfSeed {} + realAkeSk {} + dummyAkeSk {}). Was the old serverSetup \
+             created with the same package ({}) you are running now?",
+            bytes.len(),
+            expected_len,
+            V3_OPRF_SEED_LEN,
+            V3_SK_LEN,
+            V3_SK_LEN,
+            PACKAGE_NAME,
+        )));
+    }
+
+    let (unchanged, dummy_sk_bytes) = bytes.split_at(V3_OPRF_SEED_LEN + V3_SK_LEN);
+
+    let dummy_sk = PrivateKey::<MigrationGroup>::deserialize(dummy_sk_bytes).map_err(|error| {
+        if is_v4_server_setup(&bytes) {
+            already_migrated_error()
+        } else {
+            from_protocol_error("deserialize v3 dummy private key")(error).into()
+        }
+    })?;
+    let dummy_pk_bytes = dummy_sk.public_key().serialize();
+
+    let mut migrated = unchanged.to_vec();
+    migrated.extend_from_slice(&dummy_pk_bytes);
+
+    // Confirm the result actually parses as a v4 ServerSetup before handing
+    // it back, so a layout mistake surfaces here rather than at the next
+    // registration/login attempt.
+    ServerSetup::<DefaultCipherSuite>::deserialize(&migrated)
+        .map_err(from_protocol_error("deserialize migrated serverSetup"))?;
+
+    Ok(BASE64.encode(migrated))
+}
+
+// v4 deserialization ignores trailing bytes, so also require the setup to
+// serialize back to exactly the input.
+fn is_v4_server_setup(bytes: &[u8]) -> bool {
+    ServerSetup::<DefaultCipherSuite>::deserialize(bytes)
+        .map(|setup| setup.serialize().as_slice() == bytes)
+        .unwrap_or(false)
+}
+
+fn already_migrated_error() -> JsError {
+    JsError::new(&format!(
+        "serverSetup is already in the opaque-ke v4 format used by {} 1.x and \
+         needs no migration. Only run the migration once, on the setup created \
+         with 0.9.x.",
+        PACKAGE_NAME,
+    ))
 }
 
 #[derive(Debug, Serialize, Deserialize, Tsify)]
